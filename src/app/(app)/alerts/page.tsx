@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react"
 import { useCalendarContext } from "@/context/calendar"
 import { fetchNotices, createNotice, deleteNotice } from "@/lib/notices"
-import { HEAD_DOCTOR_EMAIL } from "@/lib/constants"
 import { Notice } from "@/types"
 
 function timeAgo(iso: string): string {
@@ -19,14 +18,14 @@ function timeAgo(iso: string): string {
 }
 
 export default function AlertsPage() {
-  const { user, triggerBanner } = useCalendarContext()
+  const { user, triggerBanner, role } = useCalendarContext()
   const [notices, setNotices] = useState<Notice[]>([])
   const [loading, setLoading] = useState(true)
   const [text, setText] = useState("")
   const [publishing, setPublishing] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  const isHead = user.email === HEAD_DOCTOR_EMAIL
+  const isHead = role === "head"
 
   const load = useCallback(async () => {
     setLoading(true)

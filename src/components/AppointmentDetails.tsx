@@ -12,6 +12,7 @@ type Props = {
   onClose: () => void
   onEdit: (appt: Appointment) => void
   onDeleted: () => void
+  canSeePrices?: boolean
 }
 
 export default function AppointmentDetails({
@@ -19,6 +20,7 @@ export default function AppointmentDetails({
   onClose,
   onEdit,
   onDeleted,
+  canSeePrices = false,
 }: Props) {
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -73,7 +75,7 @@ export default function AppointmentDetails({
             <span className="text-[12px] text-[var(--muted-col)]">
               {durationLabel(durMins)}
             </span>
-            {appointment.price > 0 && (
+            {canSeePrices && appointment.price > 0 && (
               <>
                 <span className="text-[var(--line)]">·</span>
                 <span className="text-[13px] font-bold" style={{ color: color.border }}>

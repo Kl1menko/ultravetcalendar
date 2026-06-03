@@ -14,10 +14,6 @@ export const SUPABASE_ANON = requiredPublicEnv(
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
-export const HEAD_DOCTOR_EMAIL = requiredPublicEnv(
-  "NEXT_PUBLIC_HEAD_DOCTOR_EMAIL",
-  process.env.NEXT_PUBLIC_HEAD_DOCTOR_EMAIL
-)
 export const HOUR_START = 8
 export const HOUR_END = 20
 export const MAX_APPOINTMENTS_PER_DAY = 8

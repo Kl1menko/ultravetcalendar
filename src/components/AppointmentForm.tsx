@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Appointment } from "@/types"
 import { DOCTORS } from "@/lib/doctors"
+import { SERVICES } from "@/lib/services"
 import { DURATIONS } from "@/lib/constants"
 import { isoDate, minutesFromTime, timeFromMinutes } from "@/lib/utils-app"
 import { createAppointment, updateAppointment } from "@/lib/appointments"
@@ -16,6 +17,7 @@ type Props = {
   prefillTime?: string
   editing?: Appointment | null
   userId?: string
+  canSeePrices?: boolean
 }
 
 export default function AppointmentForm({
@@ -26,6 +28,7 @@ export default function AppointmentForm({
   prefillTime,
   editing,
   userId,
+  canSeePrices = false,
 }: Props) {
   const [date, setDate] = useState("")
   const [start, setStart] = useState("09:00")
@@ -95,10 +98,12 @@ export default function AppointmentForm({
       pet: pet.trim(),
       animal: (animal || pet).trim(),
       service: service.trim(),
-      price: Number(price) || 0,
       doctor,
       comment: comment.trim(),
       created_by: userId,
+      // Ціну редагує лише головний лікар. Інші ролі поля не бачать —
+      // при редагуванні зберігаємо наявне значення, при створенні залишаємо 0.
+      ...(canSeePrices ? { price: Number(price) || 0 } : {}),
     }
 
     let err: Error | null
@@ -189,13 +194,22 @@ export default function AppointmentForm({
 
           <label className={labelClass}>
             Послуга
-            <input type="text" required value={service} onChange={(e) => setService(e.target.value)} placeholder="Вакцинація" className={fieldClass} />
+            <select required value={service} onChange={(e) => setService(e.target.value)} className={fieldClass}>
+              <option value="" disabled>Оберіть послугу</option>
+              {SERVICES.map((s) => <option key={s} value={s}>{s}</option>)}
+              {/* Підтримка записів зі старою/нестандартною послугою */}
+              {service && !SERVICES.includes(service as never) && (
+                <option value={service}>{service}</option>
+              )}
+            </select>
           </label>
 
-          <label className={labelClass}>
-            Ціна (₴) <span className="normal-case text-[10px] font-normal text-[var(--muted-col)]">— необов&apos;язково</span>
-            <input type="number" min={0} step={10} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" className={fieldClass} />
-          </label>
+          {canSeePrices && (
+            <label className={labelClass}>
+              Ціна (₴) <span className="normal-case text-[10px] font-normal text-[var(--muted-col)]">— необов&apos;язково</span>
+              <input type="number" min={0} step={1} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" className={fieldClass} />
+            </label>
+          )}
 
           <label className={labelClass}>
             Відповідальний лікар

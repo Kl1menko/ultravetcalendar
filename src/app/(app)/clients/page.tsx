@@ -114,7 +114,7 @@ function ChevronIcon({ open }: { open: boolean }) {
 }
 
 export default function ClientsPage() {
-  const { appointments, reload } = useCalendarContext()
+  const { appointments, reload, canSeeClients } = useCalendarContext()
   const [query, setQuery] = useState("")
   const [expanded, setExpanded] = useState<string | null>(null)
   const [confirmDeleteKey, setConfirmDeleteKey] = useState<string | null>(null)
@@ -141,6 +141,22 @@ export default function ClientsPage() {
   }, [allClients, query])
 
   const toggle = (key: string) => setExpanded((prev) => (prev === key ? null : key))
+
+  if (!canSeeClients) {
+    return (
+      <div className="px-4 pt-4 md:px-0 md:pt-0">
+        <header className="pb-4 md:desktop-page-header md:px-6 md:py-5">
+          <h1 className="text-[22px] font-black text-[var(--ink)] md:text-[28px]">Клієнти</h1>
+        </header>
+        <div className="mx-auto mt-6 max-w-md rounded-2xl border border-dashed border-[var(--line)] bg-white/70 px-5 py-8 text-center">
+          <p className="text-[15px] font-bold text-[var(--ink)]">Доступ обмежено</p>
+          <p className="mt-1.5 text-[13px] text-[var(--muted-col)]">
+            База клієнтів доступна лише лікарям. Зверніться до головного лікаря.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="pb-6 md:flex md:flex-col md:gap-5 md:px-0 md:pt-0">

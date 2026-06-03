@@ -7,7 +7,12 @@ import { User } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase"
 import { useAppointments } from "@/hooks/useAppointments"
 import { fetchNotices } from "@/lib/notices"
-import { HEAD_DOCTOR_EMAIL } from "@/lib/constants"
+import {
+  canSeeClients as canSeeClientsFn,
+  canSeePrices as canSeePricesFn,
+  doctorForEmail,
+  roleForEmail,
+} from "@/lib/doctors"
 import AppShell from "@/components/AppShell"
 import AppointmentForm from "@/components/AppointmentForm"
 import AppointmentDetails from "@/components/AppointmentDetails"
@@ -35,7 +40,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return d
   })
 
-  const { appointments, reload } = useAppointments()
+  const userCanSeePrices = canSeePricesFn(user?.email)
+  const { appointments, reload } = useAppointments(userCanSeePrices)
 
   // Alerts badge
   const [alertsBadge, setAlertsBadge] = useState(0)
@@ -64,7 +70,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Realtime: показуємо банер коли head публікує нове сповіщення
   useEffect(() => {
     if (!user) return
-    const isHead = user.email === HEAD_DOCTOR_EMAIL
+    const isHead = roleForEmail(user.email) === "head"
 
     const channel = supabase
       .channel("notices-realtime")
@@ -153,6 +159,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           selectedDate,
           setSelectedDate,
           user,
+          role: roleForEmail(user.email),
+          currentDoctor: doctorForEmail(user.email),
+          canSeePrices: userCanSeePrices,
+          canSeeClients: canSeeClientsFn(user.email),
           reload,
           openDetailsAppt: setDetailsAppt,
           openNewAppointmentAtTime,
@@ -172,6 +182,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         prefillTime={prefillTime}
         editing={editingAppt}
         userId={user.id}
+        canSeePrices={userCanSeePrices}
       />
 
       <AppointmentDetails
@@ -179,6 +190,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         onClose={() => setDetailsAppt(null)}
         onEdit={(appt) => { setDetailsAppt(null); openEditAppointment(appt) }}
         onDeleted={reload}
+        canSeePrices={userCanSeePrices}
       />
 
       <SearchDialog

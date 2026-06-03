@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { User } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase"
-import { HEAD_DOCTOR_EMAIL } from "@/lib/constants"
+import { canSeeClients, roleForEmail, roleLabel } from "@/lib/doctors"
 
 type Props = {
   user: User
@@ -54,7 +54,8 @@ const LogoutIcon = () => (
 export default function AppShell({ user, children, alertsBadge = 0, onNewAppointment, onSearch }: Props) {
   const pathname = usePathname()
   const router = useRouter()
-  const isHead = user.email === HEAD_DOCTOR_EMAIL
+  const role = roleForEmail(user.email)
+  const showClients = canSeeClients(user.email)
   const metadata = user.user_metadata ?? {}
   const displayName =
     (typeof metadata.display_name === "string" && metadata.display_name.trim()) ||
@@ -68,7 +69,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
 
   const navItems = [
     { href: "/calendar",  label: "Записи",      icon: <CalendarIcon /> },
-    { href: "/clients",   label: "Клієнти",     icon: <ClientsIcon /> },
+    ...(showClients ? [{ href: "/clients", label: "Клієнти", icon: <ClientsIcon /> }] : []),
     { href: "/alerts", label: "Сповіщення", icon: <AlertsIcon /> },
     { href: "/analytics", label: "Аналітика",   icon: <AnalyticsIcon /> },
     { href: "/profile",   label: "Профіль",     icon: <ProfileIcon /> },
@@ -145,7 +146,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
             <div className="min-w-0">
               <div className="truncate text-[12px] font-black text-[var(--ink)]">{displayName}</div>
               <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--muted-col)]">
-                {isHead ? "Головний лікар" : "Лікар"}
+                {roleLabel(role)}
               </div>
             </div>
           </div>

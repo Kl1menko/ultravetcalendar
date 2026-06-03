@@ -8,8 +8,7 @@ import { useCalendarContext } from "@/context/calendar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { HEAD_DOCTOR_EMAIL } from "@/lib/constants"
-import { DOCTORS } from "@/lib/doctors"
+import { roleForEmail, roleLabel } from "@/lib/doctors"
 import { supabase } from "@/lib/supabase"
 import { useAuth } from "@/hooks/useAuth"
 
@@ -21,10 +20,6 @@ function initials(name: string) {
     .map((part) => part[0])
     .join("")
     .toUpperCase()
-}
-
-function doctorFromDisplayName(name: string) {
-  return DOCTORS.find((doctor) => doctor === name || doctor.startsWith(name))
 }
 
 function mostPopular(values: string[]) {
@@ -41,7 +36,7 @@ function mostPopular(values: string[]) {
 export default function ProfilePage() {
   const router = useRouter()
   const { user, loading } = useAuth()
-  const { appointments } = useCalendarContext()
+  const { appointments, currentDoctor } = useCalendarContext()
   const metadata = user?.user_metadata ?? {}
   const metadataName =
     typeof metadata.display_name === "string"
@@ -51,8 +46,8 @@ export default function ProfilePage() {
         : ""
   const fallbackName = user?.email?.split("@")[0] ?? "Користувач"
   const displayName = metadataName || fallbackName
-  const currentDoctorName = doctorFromDisplayName(displayName)
-  const isHeadDoctor = user?.email === HEAD_DOCTOR_EMAIL
+  const currentDoctorName = currentDoctor
+  const role = roleForEmail(user?.email)
 
   const [nameDraft, setNameDraft] = useState<string | null>(null)
   const [newPassword, setNewPassword] = useState("")
@@ -162,7 +157,7 @@ export default function ProfilePage() {
               <h2 className="truncate text-[20px] font-black text-[var(--ink)]">{displayName}</h2>
               <p className="truncate text-[14px] text-[var(--muted-col)]">{user?.email}</p>
               <p className="mt-1 text-[13px] font-semibold text-[var(--teal-dark)]">
-                {isHeadDoctor ? "Головний лікар" : "Лікар"}
+                {roleLabel(role)}
               </p>
             </div>
           </div>
@@ -184,7 +179,7 @@ export default function ProfilePage() {
 
           {!currentDoctorName && (
             <p className="mt-3 rounded-lg bg-[var(--teal-light)] px-3 py-2 text-[13px] text-[var(--teal-dark)]">
-              Для персональної статистики збережіть ім’я так, як воно вказане у списку лікарів.
+              Цей акаунт не прив’язано до лікаря. Зверніться до головного лікаря, щоб додати ваш email у налаштування доступу.
             </p>
           )}
         </section>
