@@ -91,7 +91,7 @@ function Bar({ value, max, label, sublabel, colorIdx = 0 }: {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-2xl border border-[var(--line)] shadow-sm overflow-hidden">
+    <div className="desktop-card-hover overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-sm">
       <div className="px-4 py-3 border-b border-[var(--line)]">
         <h2 className="text-[13px] font-bold text-[var(--ink)]">{title}</h2>
       </div>
@@ -120,47 +120,51 @@ export default function AnalyticsPage() {
   const noData = <p className="text-[13px] text-[var(--muted-col)] py-2">Немає даних</p>
 
   return (
-    <div className="px-3.5 pt-3 pb-6 md:px-0 md:pt-0 flex flex-col gap-4">
-      <header className="pb-1 md:pb-4">
+    <div className="flex flex-col gap-4 px-3.5 pt-3 pb-6 md:gap-5 md:px-0 md:pt-0">
+      <header className="pb-1 md:desktop-page-header md:px-6 md:py-5">
         <h1 className="text-[22px] md:text-[28px] font-black tracking-tight text-[var(--ink)]">
           Аналітика
         </h1>
       </header>
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2 md:gap-4">
         {[
           { value: String(total), label: "всього записів" },
           { value: peakHour?.count > 0 ? `${peakHour.hour}:00` : "—", label: "пікова година" },
           { value: peakDay?.count > 0 ? peakDay.name : "—", label: "піковий день" },
         ].map((item) => (
-          <div key={item.label} className="bg-white rounded-2xl border border-[var(--line)] shadow-sm p-3 flex flex-col gap-1">
+          <div key={item.label} className="desktop-card-hover flex flex-col gap-1 rounded-2xl border border-[var(--line)] bg-white p-3 shadow-sm md:p-5">
             <span className="text-[22px] font-black text-[var(--teal)] leading-none">{item.value}</span>
             <span className="text-[10px] font-semibold text-[var(--muted-col)] leading-tight">{item.label}</span>
           </div>
         ))}
       </div>
 
-      {/* Peak hours */}
-      <Section title="Записи по годинах">
-        {total === 0 ? noData : hours.map((h, i) => (
-          <Bar key={h.hour} label={`${h.hour}`} value={h.count} max={maxHour} colorIdx={i} />
-        ))}
-      </Section>
+      <div className="grid gap-4 xl:grid-cols-2">
+        {/* Peak hours */}
+        <Section title="Записи по годинах">
+          {total === 0 ? noData : hours.map((h, i) => (
+            <Bar key={h.hour} label={`${h.hour}`} value={h.count} max={maxHour} colorIdx={i} />
+          ))}
+        </Section>
 
-      {/* Peak weekdays — sorted by count desc */}
-      <Section title="Записи по днях тижня">
-        {total === 0 ? noData : weekdays.map((d, i) => (
-          <Bar key={d.name} label={d.name} value={d.count} max={maxDay} colorIdx={i} />
-        ))}
-      </Section>
+        {/* Peak weekdays — sorted by count desc */}
+        <Section title="Записи по днях тижня">
+          {total === 0 ? noData : weekdays.map((d, i) => (
+            <Bar key={d.name} label={d.name} value={d.count} max={maxDay} colorIdx={i} />
+          ))}
+        </Section>
 
-      {/* Top services — normalized to lowercase then capitalized */}
-      <Section title="Популярні послуги">
-        {services.length === 0 ? noData : services.map((s, i) => (
-          <Bar key={s.name} label={`${s.count}`} value={s.count} max={maxService} sublabel={s.name} colorIdx={i} />
-        ))}
-      </Section>
+        {/* Top services — normalized to lowercase then capitalized */}
+        <div className="xl:col-span-2">
+          <Section title="Популярні послуги">
+            {services.length === 0 ? noData : services.map((s, i) => (
+              <Bar key={s.name} label={`${s.count}`} value={s.count} max={maxService} sublabel={s.name} colorIdx={i} />
+            ))}
+          </Section>
+        </div>
+      </div>
     </div>
   )
 }

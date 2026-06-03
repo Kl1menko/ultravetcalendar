@@ -44,35 +44,40 @@ export default function AppointmentForm({
   // Reset form when opened
   useEffect(() => {
     if (!open) return
-    setFormError("")
-    if (editing) {
-      const durMins = String(
-        minutesFromTime(editing.end) - minutesFromTime(editing.start)
-      )
-      setDate(editing.date)
-      setStart(editing.start)
-      setDuration(durMins)
-      setClient(editing.client)
-      setPhone(editing.phone)
-      setPet(editing.pet)
-      setAnimal(editing.animal)
-      setService(editing.service)
-      setPrice(editing.price ? String(editing.price) : "")
-      setDoctor(editing.doctor)
-      setComment(editing.comment)
-    } else {
-      setDate(isoDate(selectedDate))
-      setStart(prefillTime || "09:00")
-      setDuration("30")
-      setClient("")
-      setPhone("")
-      setPet("")
-      setAnimal("")
-      setService("")
-      setPrice("")
-      setDoctor(DOCTORS[0])
-      setComment("")
-    }
+
+    const timer = window.setTimeout(() => {
+      setFormError("")
+      if (editing) {
+        const durMins = String(
+          minutesFromTime(editing.end) - minutesFromTime(editing.start)
+        )
+        setDate(editing.date)
+        setStart(editing.start)
+        setDuration(durMins)
+        setClient(editing.client)
+        setPhone(editing.phone)
+        setPet(editing.pet)
+        setAnimal(editing.animal)
+        setService(editing.service)
+        setPrice(editing.price ? String(editing.price) : "")
+        setDoctor(editing.doctor)
+        setComment(editing.comment)
+      } else {
+        setDate(isoDate(selectedDate))
+        setStart(prefillTime || "09:00")
+        setDuration("30")
+        setClient("")
+        setPhone("")
+        setPet("")
+        setAnimal("")
+        setService("")
+        setPrice("")
+        setDoctor(DOCTORS[0])
+        setComment("")
+      }
+    }, 0)
+
+    return () => window.clearTimeout(timer)
   }, [open, editing, selectedDate, prefillTime])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -125,20 +130,20 @@ export default function AppointmentForm({
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent
         side="bottom"
-        className="max-h-[94svh] overflow-y-auto px-4 pb-6 rounded-t-[18px]"
+        className="max-h-[94svh] overflow-y-auto rounded-t-[18px] px-4 pb-6 md:max-h-[86dvh] md:rounded-[28px] md:bg-white md:px-6 md:pt-5 md:pb-0"
       >
         {/* Handle bar */}
-        <div className="w-10 h-1 rounded-full bg-[var(--line)] mx-auto mb-5 mt-1" />
+        <div className="mx-auto mb-5 mt-1 h-1 w-10 rounded-full bg-[var(--line)] md:hidden" />
 
-        <SheetHeader className="mb-5 text-left">
-          <SheetTitle className="text-[20px] font-black text-[var(--ink)]">
+        <SheetHeader className="mb-5 border-b border-[var(--line)] pb-4 text-left md:mb-6">
+          <SheetTitle className="text-[20px] font-black text-[var(--ink)] md:text-[26px]">
             {editing ? "Редагувати запис" : "Новий запис"}
           </SheetTitle>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-5">
           {formError && (
-            <div className="rounded-xl bg-red-50 border border-red-200 text-red-600 text-[13px] font-semibold px-4 py-3">
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-600 md:col-span-2">
               {formError}
             </div>
           )}
@@ -199,30 +204,30 @@ export default function AppointmentForm({
             </select>
           </label>
 
-          <label className={labelClass}>
+          <label className={`${labelClass} md:col-span-2`}>
             Коментар
             <textarea
               rows={3}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Коротка примітка"
-              className="w-full rounded-xl border border-[var(--line)] bg-white px-3 py-3 text-[15px] text-[var(--ink)] font-medium outline-none focus:border-[var(--teal)] focus:ring-2 focus:ring-[var(--teal)]/10 transition resize-y min-h-[80px] h-auto"
+              className="h-auto min-h-[80px] w-full resize-y rounded-xl border border-[var(--line)] bg-white px-3 py-3 text-[15px] font-medium text-[var(--ink)] outline-none transition focus:border-[var(--teal)] focus:ring-2 focus:ring-[var(--teal)]/10 md:min-h-[96px]"
             />
           </label>
 
           {/* Sticky actions */}
-          <div className="sticky bottom-0 bg-white pt-4 pb-2 grid grid-cols-2 gap-3">
+          <div className="sticky bottom-0 grid grid-cols-2 gap-3 bg-white pt-4 pb-2 md:col-span-2 md:-mx-6 md:border-t md:border-[var(--line)] md:px-6 md:py-4">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-[var(--line)] bg-[var(--paper)] h-11 text-[14px] font-semibold text-[var(--ink-2)] active:scale-[0.98] transition-transform"
+              className="h-11 rounded-xl border border-[var(--line)] bg-[var(--paper)] text-[14px] font-semibold text-[var(--ink-2)] transition-transform active:scale-[0.98] md:h-12 md:rounded-2xl"
             >
               Закрити
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="rounded-xl bg-[var(--teal)] text-white h-11 text-[14px] font-semibold hover:bg-[var(--teal-dark)] active:scale-[0.98] transition-all disabled:opacity-60"
+              className="h-11 rounded-xl bg-[var(--teal)] text-[14px] font-semibold text-white transition-all hover:bg-[var(--teal-dark)] active:scale-[0.98] disabled:opacity-60 md:h-12 md:rounded-2xl md:shadow-lg md:shadow-teal-700/20"
             >
               {saving ? "Зберігаю…" : "Зберегти"}
             </button>

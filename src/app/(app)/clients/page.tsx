@@ -12,6 +12,28 @@ type ClientEntry = {
   visits: number
   last: Appointment
   history: Appointment[]
+  duplicateCount: number
+  duplicateReason: string
+}
+
+function normalizePetName(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, " ")
+}
+
+function normalizePhone(value: string) {
+  const digits = value.replace(/\D/g, "")
+
+  if (digits.length >= 9) {
+    return digits.slice(-9)
+  }
+
+  return digits
+}
+
+function clientsCountLabel(count: number) {
+  if (count === 1) return "клієнт"
+  if (count > 1 && count < 5) return "клієнти"
+  return "клієнтів"
 }
 
 function buildClients(appointments: Appointment[]): ClientEntry[] {
@@ -23,7 +45,7 @@ function buildClients(appointments: Appointment[]): ClientEntry[] {
   sorted.forEach((a) => {
     const key = `${a.client}-${a.phone}`
     if (!map.has(key)) {
-      map.set(key, { client: a.client, phone: a.phone, pets: new Map(), visits: 0, last: a, history: [] })
+      map.set(key, { client: a.client, phone: a.phone, pets: new Map(), visits: 0, last: a, history: [], duplicateCount: 0, duplicateReason: "" })
     }
     const entry = map.get(key)!
     entry.pets.set(a.pet, a.animal || a.pet)
@@ -34,8 +56,44 @@ function buildClients(appointments: Appointment[]): ClientEntry[] {
       entry.last = a
     }
   })
+  const clients = [...map.values()]
+  const duplicateGroups = new Map<string, ClientEntry[]>()
+
+  clients.forEach((client) => {
+    const phoneKey = normalizePhone(client.phone)
+    const petKeys = [...new Set([...client.pets.keys()].map(normalizePetName).filter(Boolean))]
+    const keys = [
+      phoneKey.length >= 9 ? `phone:${phoneKey}` : "",
+      ...petKeys.map((petKey) => `pet:${petKey}`),
+    ].filter(Boolean)
+
+    keys.forEach((key) => {
+      const group = duplicateGroups.get(key) ?? []
+      group.push(client)
+      duplicateGroups.set(key, group)
+    })
+  })
+
+  clients.forEach((client) => {
+    const phoneKey = normalizePhone(client.phone)
+    const petKeys = [...new Set([...client.pets.keys()].map(normalizePetName).filter(Boolean))]
+    const groups = [
+      phoneKey.length >= 9 ? { reason: "однаковий телефон", group: duplicateGroups.get(`phone:${phoneKey}`) ?? [] } : null,
+      ...petKeys.map((petKey) => ({
+        reason: "однакова кличка тварини",
+        group: duplicateGroups.get(`pet:${petKey}`) ?? [],
+      })),
+    ].filter((item): item is { reason: string; group: ClientEntry[] } => Boolean(item))
+    const duplicate = groups.find((item) => item.group.length > 1)
+
+    if (duplicate) {
+      client.duplicateCount = duplicate.group.length
+      client.duplicateReason = duplicate.reason
+    }
+  })
+
   // сортуємо клієнтів по кількості візитів
-  return [...map.values()].sort((a, b) => b.visits - a.visits)
+  return clients.sort((a, b) => b.visits - a.visits)
 }
 
 function PhoneIcon() {
@@ -60,6 +118,7 @@ export default function ClientsPage() {
   const [expanded, setExpanded] = useState<string | null>(null)
 
   const allClients = useMemo(() => buildClients(appointments), [appointments])
+  const duplicatesCount = allClients.filter((client) => client.duplicateCount > 1).length
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -72,19 +131,24 @@ export default function ClientsPage() {
   const toggle = (key: string) => setExpanded((prev) => (prev === key ? null : key))
 
   return (
-    <div className="pb-6 md:px-0 md:pt-0">
+    <div className="pb-6 md:flex md:flex-col md:gap-5 md:px-0 md:pt-0">
       {/* Header */}
-      <header className="px-4 pt-4 pb-3">
+      <header className="px-4 pt-4 pb-3 md:desktop-page-header md:px-6 md:py-5">
         <h1 className="text-[22px] font-black text-[var(--ink)] md:text-[28px]">
           Клієнти
           {allClients.length > 0 && (
             <span className="ml-2 text-[16px] font-semibold text-[var(--muted-col)]">{allClients.length}</span>
           )}
         </h1>
+        {duplicatesCount > 0 && (
+          <p className="mt-1 text-[13px] font-semibold text-amber-700">
+            Потенційних дублів: {duplicatesCount}
+          </p>
+        )}
       </header>
 
       {/* Search */}
-      <div className="px-4 mb-4">
+      <div className="px-4 mb-4 md:mb-0 md:px-0">
         <div className="relative">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-col)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -97,7 +161,7 @@ export default function ClientsPage() {
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
-            className="w-full h-11 rounded-xl border border-[var(--line)] bg-white pl-10 pr-10 text-[14px] text-[var(--ink)] outline-none focus:border-[var(--teal)] transition"
+            className="h-11 w-full rounded-xl border border-[var(--line)] bg-white pl-10 pr-10 text-[14px] text-[var(--ink)] outline-none transition focus:border-[var(--teal)] md:h-12 md:rounded-2xl md:shadow-sm"
           />
           {query && (
             <button type="button" onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-[var(--muted-col)] text-white flex items-center justify-center">
@@ -109,11 +173,11 @@ export default function ClientsPage() {
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div className="mx-4 py-8 border border-dashed border-[var(--line)] rounded-2xl text-center text-[14px] text-[var(--muted-col)]">
+        <div className="mx-4 rounded-2xl border border-dashed border-[var(--line)] py-8 text-center text-[14px] text-[var(--muted-col)] md:mx-0 md:bg-white/70">
           {query ? "Нічого не знайдено." : "Клієнтів поки немає."}
         </div>
       ) : (
-        <div className="px-4 flex flex-col gap-3">
+        <div className="flex flex-col gap-3 px-4 md:grid md:grid-cols-2 md:px-0 xl:grid-cols-3">
           {filtered.map((c) => {
             const key = `${c.client}-${c.phone}`
             const isOpen = expanded === key
@@ -121,7 +185,7 @@ export default function ClientsPage() {
             const pets = [...c.pets.entries()]
 
             return (
-              <div key={key} className="bg-white rounded-2xl border border-[var(--line)] shadow-sm overflow-hidden">
+              <div key={key} className="desktop-card-hover overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-sm">
 
                 {/* Main row */}
                 <button
@@ -142,6 +206,11 @@ export default function ClientsPage() {
                       <span className="flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--teal-light)] text-[var(--teal)]">
                         {c.visits} {c.visits === 1 ? "візит" : c.visits < 5 ? "візити" : "візитів"}
                       </span>
+                      {c.duplicateCount > 1 && (
+                        <span className="flex-shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                          дубль
+                        </span>
+                      )}
                     </div>
                     {/* Pets */}
                     <div className="text-[12px] font-semibold text-[var(--teal-dark)] truncate">
@@ -163,7 +232,12 @@ export default function ClientsPage() {
                     <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--line)]">
                       <div>
                         <div className="text-[10px] font-bold text-[var(--muted-col)] uppercase tracking-[0.4px] mb-0.5">Телефон</div>
-                        <a href={`tel:${c.phone}`} className="text-[14px] font-bold text-[var(--teal)]">{c.phone}</a>
+                      <a href={`tel:${c.phone}`} className="text-[14px] font-bold text-[var(--teal)]">{c.phone}</a>
+                        {c.duplicateCount > 1 && (
+                          <div className="mt-1 text-[11px] font-semibold text-amber-700">
+                            Можливий дубль: {c.duplicateReason}, {c.duplicateCount} {clientsCountLabel(c.duplicateCount)}
+                          </div>
+                        )}
                       </div>
                       <a
                         href={`tel:${c.phone}`}

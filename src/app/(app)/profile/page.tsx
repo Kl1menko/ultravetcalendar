@@ -145,15 +145,15 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="px-3.5 pt-3 md:px-0 md:pt-0">
-      <header className="pb-4 md:pb-5">
+    <div className="px-3.5 pt-3 md:flex md:flex-col md:gap-5 md:px-0 md:pt-0">
+      <header className="pb-4 md:desktop-page-header md:px-6 md:py-5">
         <h1 className="text-xl font-black tracking-tight text-[var(--ink)] md:text-[28px]">
           Профіль
         </h1>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
-        <section className="rounded-xl border border-[var(--line)] bg-white p-4 shadow-sm md:p-5">
+      <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
+        <section className="rounded-xl border border-[var(--line)] bg-white p-4 shadow-sm md:rounded-[24px] md:p-6 md:shadow-[var(--desktop-soft)]">
           <div className="flex items-center gap-4">
             <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-[var(--teal)] text-[22px] font-black text-white">
               {initials(displayName)}
@@ -168,15 +168,15 @@ export default function ProfilePage() {
           </div>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-[var(--line)] p-3">
+            <div className="desktop-card-hover rounded-lg border border-[var(--line)] p-3 md:rounded-2xl md:p-4">
               <div className="text-[12px] font-semibold text-[var(--muted-col)]">Всього записів</div>
               <div className="mt-2 text-[26px] font-black text-[var(--ink)]">{stats.total}</div>
             </div>
-            <div className="rounded-lg border border-[var(--line)] p-3">
+            <div className="desktop-card-hover rounded-lg border border-[var(--line)] p-3 md:rounded-2xl md:p-4">
               <div className="text-[12px] font-semibold text-[var(--muted-col)]">Цього місяця</div>
               <div className="mt-2 text-[26px] font-black text-[var(--ink)]">{stats.thisMonth}</div>
             </div>
-            <div className="rounded-lg border border-[var(--line)] p-3">
+            <div className="desktop-card-hover rounded-lg border border-[var(--line)] p-3 md:rounded-2xl md:p-4">
               <div className="text-[12px] font-semibold text-[var(--muted-col)]">Топ послуга</div>
               <div className="mt-2 text-[15px] font-black text-[var(--ink)]">{stats.service}</div>
             </div>
@@ -189,7 +189,7 @@ export default function ProfilePage() {
           )}
         </section>
 
-        <section className="rounded-xl border border-[var(--line)] bg-white p-4 shadow-sm md:p-5">
+        <section className="rounded-xl border border-[var(--line)] bg-white p-4 shadow-sm md:rounded-[24px] md:p-6 md:shadow-[var(--desktop-soft)]">
           <h2 className="text-[17px] font-black text-[var(--ink)]">Акаунт</h2>
 
           <form className="mt-4 space-y-3" onSubmit={handleNameSubmit}>

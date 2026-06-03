@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { User } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase"
 import { HEAD_DOCTOR_EMAIL } from "@/lib/constants"
@@ -54,7 +55,11 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
   const pathname = usePathname()
   const router = useRouter()
   const isHead = user.email === HEAD_DOCTOR_EMAIL
-  const username = (user.email || "").split("@")[0]
+  const metadata = user.user_metadata ?? {}
+  const displayName =
+    (typeof metadata.display_name === "string" && metadata.display_name.trim()) ||
+    (typeof metadata.full_name === "string" && metadata.full_name.trim()) ||
+    (user.email || "").split("@")[0]
 
   const logout = async () => {
     await supabase.auth.signOut()
@@ -72,21 +77,23 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
   const isCalendar = pathname === "/calendar"
 
   return (
-    <div className="min-h-svh md:grid md:grid-cols-[240px_minmax(0,1fr)]">
+    <div className="min-h-svh bg-[var(--paper)] md:grid md:grid-cols-[280px_minmax(0,1fr)] md:bg-[linear-gradient(135deg,#f8fafb_0%,#eef7f7_42%,#f4f6f8_100%)]">
       {/* ─── DESKTOP SIDEBAR ─────────────────────────────── */}
-      <aside className="hidden md:flex md:flex-col sticky top-0 h-dvh w-[240px] px-4 py-5 border-r border-[var(--line)] bg-white">
+      <aside className="hidden md:flex md:flex-col sticky top-0 h-dvh w-[280px] border-r border-white/70 bg-white/78 px-5 py-5 shadow-[12px_0_40px_rgba(13,115,119,0.08)] backdrop-blur-2xl">
         {/* Brand */}
-        <div className="flex items-center gap-3 px-2 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-[var(--teal)] text-white text-xs font-black grid place-items-center flex-shrink-0">
-            UV
+        <div className="mb-8 flex items-center gap-3 rounded-2xl border border-[var(--line)] bg-white p-2 shadow-sm">
+          <div className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-2xl bg-white shadow-lg shadow-teal-700/15 ring-1 ring-[var(--teal-mid)]">
+            <Image src="/logo.svg" alt="UltraVet" width={32} height={32} unoptimized />
           </div>
-          <span className="text-[15px] font-bold tracking-tight text-[var(--ink)]">UltraVet</span>
+          <div className="min-w-0">
+            <span className="block text-[17px] font-black tracking-tight text-[var(--ink)]">UltraVet</span>
+          </div>
         </div>
 
         {/* New appt button */}
         <button
           onClick={onNewAppointment}
-          className="w-full h-11 flex items-center justify-center gap-2 mb-4 rounded-xl bg-[var(--teal)] text-white text-[13px] font-semibold hover:bg-[var(--teal-dark)] transition-colors active:scale-[0.97]"
+          className="mb-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--teal)] text-[14px] font-black text-white shadow-lg shadow-teal-700/20 transition-all hover:-translate-y-0.5 hover:bg-[var(--teal-dark)] active:scale-[0.98]"
         >
           <span className="text-lg font-light leading-none">+</span>
           Новий запис
@@ -95,27 +102,29 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
         {/* Search button */}
         <button
           onClick={onSearch}
-          className="w-full h-10 flex items-center gap-2 px-3 mb-6 rounded-xl border border-[var(--line)] bg-[var(--paper)] text-[13px] text-[var(--muted-col)] font-medium hover:border-[var(--teal-mid)] transition-colors"
+          className="mb-7 flex h-11 w-full items-center gap-2 rounded-2xl border border-[var(--line)] bg-white px-3 text-[13px] font-semibold text-[var(--muted-col)] shadow-sm transition-colors hover:border-[var(--teal-mid)] hover:text-[var(--ink)]"
         >
           <SearchIcon />
           Пошук…
         </button>
 
         {/* Nav */}
-        <nav className="flex flex-col gap-1">
+        <nav className="flex flex-col gap-1.5">
           {navItems.map((item) => {
             const active = pathname === item.href
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 h-10 rounded-xl text-[13px] font-medium transition-colors relative ${
+                className={`group relative flex h-11 items-center gap-3 rounded-2xl px-3 text-[13px] font-bold transition-all ${
                   active
-                    ? "bg-[var(--teal-light)] text-[var(--teal)] font-semibold"
-                    : "text-[var(--muted-col)] hover:bg-[var(--paper)] hover:text-[var(--ink)]"
+                    ? "bg-[var(--teal-light)] text-[var(--teal-dark)] shadow-sm ring-1 ring-[var(--teal-mid)]"
+                    : "text-[var(--muted-col)] hover:bg-white hover:text-[var(--ink)] hover:shadow-sm"
                 }`}
               >
-                {item.icon}
+                <span className={`grid h-8 w-8 place-items-center rounded-xl transition-colors ${active ? "bg-white text-[var(--teal)]" : "bg-[var(--paper)] text-[var(--muted-col)] group-hover:bg-[var(--teal-light)] group-hover:text-[var(--teal)]"}`}>
+                  {item.icon}
+                </span>
                 {item.label}
                 {item.href === "/alerts" && alertsBadge > 0 && (
                   <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">
@@ -128,11 +137,21 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
         </nav>
 
         {/* Bottom user + logout */}
-        <div className="mt-auto pt-3 border-t border-[var(--line)]">
-          <div className="px-2 mb-2 text-[12px] font-medium text-[var(--muted-col)] truncate">{username}</div>
+        <div className="mt-auto rounded-2xl border border-[var(--line)] bg-white p-2 shadow-sm">
+          <div className="mb-2 flex items-center gap-2 px-1">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--teal-light)] text-[12px] font-black text-[var(--teal-dark)]">
+              {displayName.slice(0, 2).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <div className="truncate text-[12px] font-black text-[var(--ink)]">{displayName}</div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--muted-col)]">
+                {isHead ? "Головний лікар" : "Лікар"}
+              </div>
+            </div>
+          </div>
           <button
             onClick={logout}
-            className="flex items-center gap-2 w-full px-2 py-1 rounded-xl text-[13px] text-[var(--muted-col)] hover:text-red-500 transition-colors"
+            className="flex h-9 w-full items-center gap-2 rounded-xl px-2 text-[13px] font-bold text-[var(--muted-col)] transition-colors hover:bg-red-50 hover:text-red-500"
           >
             <LogoutIcon />
             Вийти
@@ -142,21 +161,16 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
 
       {/* ─── MAIN CONTENT ────────────────────────────────── */}
       <main
-        className="w-full max-w-[1200px] mx-auto px-0 md:pb-12 md:px-8 md:pt-6"
-        style={{
-          paddingTop: "env(safe-area-inset-top)",
-          paddingBottom: "calc(48px + max(env(safe-area-inset-bottom), 8px) + 8px)",
-        }}
+        className="w-full px-0 pt-[env(safe-area-inset-top)] pb-[calc(48px+max(env(safe-area-inset-bottom),8px)+8px)] md:mx-auto md:max-w-[1440px] md:px-8 md:pb-10 md:pt-7 xl:px-10"
       >
         {children}
       </main>
 
       {/* ─── MOBILE BOTTOM NAV ───────────────────────────── */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-xl border-t border-[var(--line)]"
+        className="fixed bottom-0 left-0 right-0 z-30 grid border-t border-[var(--line)] bg-white/95 backdrop-blur-xl md:hidden"
         style={{
           paddingBottom: "max(env(safe-area-inset-bottom), 8px)",
-          display: "grid",
           gridTemplateColumns: `repeat(${navItems.length}, 1fr)`,
         }}
       >

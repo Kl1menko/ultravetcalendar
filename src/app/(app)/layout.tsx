@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { User } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase"
 import { useAppointments } from "@/hooks/useAppointments"
@@ -127,8 +128,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (authLoading || !user) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-[var(--teal-light)]">
-        <div className="w-14 h-14 rounded-2xl bg-[var(--teal)] text-white flex items-center justify-center text-lg font-black animate-pulse-logo">
-          UV
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-lg shadow-teal-700/15 ring-1 ring-[var(--teal-mid)] animate-pulse-logo">
+          <Image src="/logo.svg" alt="UltraVet" width={40} height={40} unoptimized />
         </div>
       </div>
     )

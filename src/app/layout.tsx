@@ -17,7 +17,8 @@ export const metadata: Metadata = {
     title: "UltraVet",
   },
   icons: {
-    apple: "/icons/icon-192.png",
+    icon: "/logo.svg",
+    apple: "/logo.svg",
   },
 }
 

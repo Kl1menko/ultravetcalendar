@@ -57,9 +57,9 @@ export default function AlertsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex min-h-full flex-col md:gap-5">
       {/* Header */}
-      <header className="px-4 pt-4 pb-3 flex items-center justify-between">
+      <header className="flex items-center justify-between px-4 pt-4 pb-3 md:desktop-page-header md:px-6 md:py-5">
         <div>
           <h1 className="text-[22px] font-black tracking-tight text-[var(--ink)] md:text-[28px]">
             Сповіщення
@@ -79,7 +79,7 @@ export default function AlertsPage() {
               created_by: user.id,
               created_at: new Date().toISOString(),
             })}
-            className="flex items-center gap-1.5 h-8 px-3 rounded-xl border border-[var(--line)] bg-white text-[12px] font-semibold text-[var(--muted-col)] active:scale-[0.97] transition-transform"
+            className="flex h-8 items-center gap-1.5 rounded-xl border border-[var(--line)] bg-white px-3 text-[12px] font-semibold text-[var(--muted-col)] transition-transform active:scale-[0.97] md:h-10 md:rounded-2xl md:px-4 md:shadow-sm"
           >
             <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <polygon points="5 3 19 12 5 21 5 3"/>
@@ -89,10 +89,10 @@ export default function AlertsPage() {
         )}
       </header>
 
-      <div className="px-4 flex flex-col gap-3 pb-6">
+      <div className="flex flex-col gap-3 px-4 pb-6 md:px-0">
         {/* Форма публікації (тільки head) */}
         {isHead && (
-          <form onSubmit={handlePublish} className="rounded-2xl bg-[var(--teal)] p-4">
+          <form onSubmit={handlePublish} className="rounded-2xl bg-[var(--teal)] p-4 shadow-lg shadow-teal-700/20 md:rounded-[24px] md:p-5">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
                 <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -151,11 +151,11 @@ export default function AlertsPage() {
 
         {/* Список */}
         {!loading && notices.length > 0 && (
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-2.5 md:grid md:grid-cols-2 md:gap-4 xl:grid-cols-3">
             {notices.map((notice, i) => (
               <article
                 key={notice.id}
-                className="rounded-2xl bg-white border border-[var(--line)] overflow-hidden"
+                className="desktop-card-hover overflow-hidden rounded-2xl border border-[var(--line)] bg-white"
                 style={{ opacity: i > 0 ? Math.max(0.6, 1 - i * 0.08) : 1 }}
               >
                 {/* Кольорова смужка зверху */}

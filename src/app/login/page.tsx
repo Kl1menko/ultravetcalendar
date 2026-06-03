@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { supabase } from "@/lib/supabase"
 
 export default function LoginPage() {
@@ -42,10 +43,10 @@ export default function LoginPage() {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-[var(--teal-light)]">
         <div
-          className="w-14 h-14 rounded-[16px] bg-[var(--teal)] text-white grid place-items-center text-lg font-black animate-pulse-logo"
+          className="grid h-14 w-14 place-items-center rounded-[16px] bg-white shadow-lg shadow-teal-700/15 ring-1 ring-[var(--teal-mid)] animate-pulse-logo"
           aria-label="Завантаження"
         >
-          UV
+          <Image src="/logo.svg" alt="UltraVet" width={40} height={40} unoptimized />
         </div>
       </div>
     )
@@ -55,8 +56,8 @@ export default function LoginPage() {
     <div className="min-h-dvh bg-[var(--teal-light)] flex items-center justify-center p-4">
       <div className="w-full max-w-[360px] bg-white rounded-[20px] shadow-2xl shadow-black/10 p-8">
         {/* Logo */}
-        <div className="w-14 h-14 mx-auto rounded-[16px] bg-[var(--teal)] text-white text-lg font-black grid place-items-center mb-4 animate-pulse-logo">
-          UV
+        <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-[16px] bg-white shadow-lg shadow-teal-700/15 ring-1 ring-[var(--teal-mid)] animate-pulse-logo">
+          <Image src="/logo.svg" alt="UltraVet" width={40} height={40} unoptimized />
         </div>
         <h1 className="text-[22px] font-black text-center text-[var(--ink)] mb-1">
           UltraVet

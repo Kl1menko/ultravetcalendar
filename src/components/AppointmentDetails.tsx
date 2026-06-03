@@ -40,14 +40,14 @@ export default function AppointmentDetails({
     <Sheet open={!!appointment} onOpenChange={(v) => !v && onClose()}>
       <SheetContent
         side="bottom"
-        className="max-h-[92svh] overflow-y-auto px-0 pb-0 rounded-t-[20px]"
+        className="max-h-[92svh] overflow-y-auto rounded-t-[20px] px-0 pb-0 md:max-h-[84dvh] md:w-[min(760px,calc(100vw-3rem))] md:rounded-[28px]"
       >
         {/* Handle */}
-        <div className="w-10 h-1 mx-auto mb-3 mt-1.5 rounded-full bg-[var(--line)]" />
+        <div className="mx-auto mb-3 mt-1.5 h-1 w-10 rounded-full bg-[var(--line)] md:hidden" />
 
         {/* Hero block — кольоровий акцент лікаря */}
         <div
-          className="mx-4 mb-4 rounded-2xl px-4 py-3.5"
+          className="mx-4 mb-4 rounded-2xl px-4 py-3.5 md:mx-6 md:mt-6 md:rounded-[24px] md:px-6 md:py-5"
           style={{ background: color.bg }}
         >
           {/* Дата */}
@@ -85,7 +85,7 @@ export default function AppointmentDetails({
         </div>
 
         {/* Інфо-рядки */}
-        <div className="mx-4 rounded-2xl border border-[var(--line)] overflow-hidden mb-4">
+        <div className="mx-4 mb-4 overflow-hidden rounded-2xl border border-[var(--line)] md:mx-6 md:grid md:grid-cols-2 md:rounded-[24px]">
           {[
             { label: "Клієнт", value: appointment.client },
             { label: "Телефон", value: appointment.phone },
@@ -95,7 +95,7 @@ export default function AppointmentDetails({
           ].map((row, i, arr) => (
             <div
               key={i}
-              className={`flex justify-between items-baseline px-4 py-2.5 ${
+              className={`flex items-baseline justify-between px-4 py-2.5 md:min-h-[56px] md:px-5 md:py-3 ${
                 i < arr.length - 1 ? "border-b border-[var(--line)]" : ""
               }`}
             >
@@ -111,12 +111,12 @@ export default function AppointmentDetails({
 
         {/* Дії */}
         <div
-          className="px-4 pt-3 pb-4 border-t border-[var(--line)] grid grid-cols-2 gap-2.5"
+          className="grid grid-cols-2 gap-2.5 border-t border-[var(--line)] px-4 pt-3 pb-4 md:gap-3 md:px-6 md:py-4"
           style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}
         >
           <a
             href={`tel:${appointment.phone}`}
-            className="col-span-2 rounded-xl bg-[var(--teal)] text-white h-11 font-semibold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+            className="col-span-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--teal)] text-[14px] font-semibold text-white transition-transform active:scale-[0.98] md:h-12 md:rounded-2xl md:shadow-lg md:shadow-teal-700/20"
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.08 6.08l.98-.98a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
@@ -126,7 +126,7 @@ export default function AppointmentDetails({
           <button
             type="button"
             onClick={() => { onClose(); onEdit(appointment) }}
-            className="rounded-xl border border-[var(--line)] bg-[var(--paper)] h-11 font-semibold text-[14px] text-[var(--ink-2)] active:scale-[0.98] transition-transform"
+            className="h-11 rounded-xl border border-[var(--line)] bg-[var(--paper)] text-[14px] font-semibold text-[var(--ink-2)] transition-transform active:scale-[0.98] md:h-12 md:rounded-2xl"
           >
             Редагувати
           </button>
@@ -134,7 +134,7 @@ export default function AppointmentDetails({
             type="button"
             disabled={deleting}
             onClick={handleDelete}
-            className="rounded-xl border border-red-200 bg-red-50 text-red-600 h-11 font-semibold text-[14px] active:scale-[0.98] transition-transform disabled:opacity-60"
+            className="h-11 rounded-xl border border-red-200 bg-red-50 text-[14px] font-semibold text-red-600 transition-transform active:scale-[0.98] disabled:opacity-60 md:h-12 md:rounded-2xl"
           >
             {deleting ? "Видаляю…" : "Видалити"}
           </button>

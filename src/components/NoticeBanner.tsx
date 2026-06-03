@@ -1,81 +1,126 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
-import { Notice } from "@/types"
+import { useEffect, useRef, useState } from "react";
+import { Notice } from "@/types";
 
 type Props = {
-  notice: Notice | null
-  onDismiss: () => void
+  notice: Notice | null;
+  onDismiss: () => void;
+};
+
+let unlockedAudioContext: AudioContext | null = null;
+
+function getAudioContext() {
+  unlockedAudioContext ??= new AudioContext();
+  return unlockedAudioContext;
+}
+
+async function unlockAudio() {
+  try {
+    const ctx = getAudioContext();
+
+    if (ctx.state === "suspended") {
+      await ctx.resume();
+    }
+  } catch {
+    // Safari may still block audio until a real user gesture.
+  }
+}
+
+function playNoticeSound() {
+  try {
+    const ctx = getAudioContext();
+
+    if (ctx.state === "suspended") {
+      void ctx.resume();
+    }
+
+    const playTone = (
+      freq: number,
+      startTime: number,
+      duration: number,
+      vol: number,
+    ) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const compressor = ctx.createDynamicsCompressor();
+
+      osc.type = "sine";
+      osc.connect(gain);
+      gain.connect(compressor);
+      compressor.connect(ctx.destination);
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(vol, startTime + 0.015);
+      gain.gain.setValueAtTime(vol, startTime + duration - 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    };
+
+    const t = ctx.currentTime + 0.05;
+    playTone(659.25, t, 0.18, 0.28);
+    playTone(830.61, t + 0.2, 0.18, 0.28);
+    playTone(987.77, t + 0.4, 0.22, 0.28);
+  } catch {
+    // AudioContext недоступний — ігноруємо
+  }
 }
 
 export default function NoticeBanner({ notice, onDismiss }: Props) {
-  const [visible, setVisible] = useState(false)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [visible, setVisible] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    const handler = () => void unlockAudio();
+
+    window.addEventListener("click", handler, { once: true });
+    window.addEventListener("touchstart", handler, { once: true });
+    window.addEventListener("pointerdown", handler, { once: true });
+
+    return () => {
+      window.removeEventListener("click", handler);
+      window.removeEventListener("touchstart", handler);
+      window.removeEventListener("pointerdown", handler);
+    };
+  }, []);
+
+  useEffect(() => {
+    let showTimer: ReturnType<typeof setTimeout> | null = null;
+
     if (!notice) {
-      setVisible(false)
-      return
+      showTimer = setTimeout(() => setVisible(false), 0);
+      return () => {
+        if (showTimer) clearTimeout(showTimer);
+      };
     }
 
-    setVisible(true)
-
-    // iOS "tri-tone" notification sound через Web Audio API
-    try {
-      const ctx = new AudioContext()
-
-      const playTone = (freq: number, startTime: number, duration: number, vol: number) => {
-        const osc = ctx.createOscillator()
-        const gain = ctx.createGain()
-        const compressor = ctx.createDynamicsCompressor()
-
-        osc.type = "sine"
-        osc.connect(gain)
-        gain.connect(compressor)
-        compressor.connect(ctx.destination)
-
-        osc.frequency.setValueAtTime(freq, startTime)
-
-        // Attack
-        gain.gain.setValueAtTime(0, startTime)
-        gain.gain.linearRampToValueAtTime(vol, startTime + 0.015)
-        // Sustain
-        gain.gain.setValueAtTime(vol, startTime + duration - 0.06)
-        // Release
-        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration)
-
-        osc.start(startTime)
-        osc.stop(startTime + duration)
-      }
-
-      const t = ctx.currentTime + 0.05
-
-      // iOS tri-tone: три тони E5 → G#5 → B5 (мі-соль#-сі)
-      playTone(659.25, t,        0.18, 0.28)  // E5
-      playTone(830.61, t + 0.20, 0.18, 0.28)  // G#5
-      playTone(987.77, t + 0.40, 0.22, 0.28)  // B5
-    } catch {
-      // AudioContext недоступний — ігноруємо
-    }
+    showTimer = setTimeout(() => {
+      setVisible(true);
+      playNoticeSound();
+    }, 0);
 
     // Автозакрити через 6 секунд
     timerRef.current = setTimeout(() => {
-      setVisible(false)
-      setTimeout(onDismiss, 350)
-    }, 6000)
+      setVisible(false);
+      setTimeout(onDismiss, 350);
+    }, 6000);
 
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current)
-    }
-  }, [notice, onDismiss])
+      if (showTimer) clearTimeout(showTimer);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [notice, onDismiss]);
 
   const dismiss = () => {
-    if (timerRef.current) clearTimeout(timerRef.current)
-    setVisible(false)
-    setTimeout(onDismiss, 350)
-  }
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setVisible(false);
+    setTimeout(onDismiss, 350);
+  };
 
-  if (!notice) return null
+  if (!notice) return null;
 
   return (
     <div
@@ -91,44 +136,72 @@ export default function NoticeBanner({ notice, onDismiss }: Props) {
         {/* Прогрес-бар */}
         <div className="h-0.5 bg-white/20 overflow-hidden">
           <div
-            className="h-full bg-[var(--teal)] origin-left"
+            className="h-full bg-[var(--teal-mid)] origin-left"
             style={{
-              animation: visible ? "notice-progress 6s linear forwards" : "none",
+              animation: visible
+                ? "notice-progress 6s linear forwards"
+                : "none",
             }}
           />
         </div>
 
-        <div className="flex items-start gap-3 px-4 py-3.5">
-          {/* Іконка */}
-          <div className="w-8 h-8 rounded-xl bg-[var(--teal)] flex items-center justify-center shrink-0 mt-0.5">
-            <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        <div className="flex items-start gap-3 px-4 py-3">
+          {/* Icon */}
+          <div className="w-9 h-9 rounded-xl bg-[var(--teal)] flex items-center justify-center flex-shrink-0">
+            <svg
+              viewBox="0 0 24 24"
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
           </div>
 
           {/* Текст */}
-          <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-bold text-white/60 uppercase tracking-[0.4px] mb-0.5">
-              UltraVet · Сповіщення
-            </p>
-            <p className="text-[14px] font-medium text-white leading-snug line-clamp-3">
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] font-bold text-[var(--teal-mid)] uppercase tracking-[0.5px] mb-0.5">
+              UltraVet
+            </div>
+            <p className="text-[14px] leading-snug font-medium text-white/95">
               {notice.text}
             </p>
           </div>
 
-          {/* Закрити */}
           <button
             type="button"
             onClick={dismiss}
-            className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center shrink-0 mt-0.5 hover:bg-white/20 transition-colors"
+            className="w-7 h-7 rounded-lg hover:bg-white/10 flex items-center justify-center flex-shrink-0 transition-colors"
             aria-label="Закрити"
           >
-            <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
-              <path d="M18 6 6 18M6 6l12 12"/>
+            <svg
+              viewBox="0 0 24 24"
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes notice-progress {
+          from {
+            transform: scaleX(1);
+          }
+          to {
+            transform: scaleX(0);
+          }
+        }
+      `}</style>
     </div>
-  )
+  );
 }
