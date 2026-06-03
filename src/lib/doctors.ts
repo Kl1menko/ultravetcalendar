@@ -3,7 +3,7 @@ export const DOCTORS = [
   "Юрій (лікар)",
   "Устим (асистент)",
   "Іван (асистент)",
-  "Аня (асистент)",
+  "Анна (асистент)",
 ] as const
 
 export type DoctorName = (typeof DOCTORS)[number]
@@ -28,7 +28,7 @@ export function doctorColor(doctorName: string) {
 //
 //   head      — головний лікар (Остап): бачить усе, включно з сумами та аналітикою коштів.
 //   doctor    — звичайний лікар: бачить записи без сум, має доступ до бази клієнтів.
-//   assistant — асистент (Аня, Устим): бачить записи без сум і НЕ має доступу до клієнтів.
+//   assistant — асистент (Анна, Устим): бачить записи без сум і НЕ має доступу до клієнтів.
 
 export type DoctorRole = "head" | "doctor" | "assistant"
 
@@ -45,7 +45,7 @@ export const DOCTOR_ACCESS: Record<string, DoctorAccount> = {
   "yurii@clinic.com": { doctor: "Юрій (лікар)", role: "doctor" },
   "ustym@clinic.com": { doctor: "Устим (асистент)", role: "assistant" },
   "ivan@clinic.com": { doctor: "Іван (асистент)", role: "doctor" },
-  "ania@clinic.com": { doctor: "Аня (асистент)", role: "assistant" },
+  "ania@clinic.com": { doctor: "Анна (асистент)", role: "assistant" },
 }
 
 export function accountForEmail(email: string | null | undefined): DoctorAccount | null {
