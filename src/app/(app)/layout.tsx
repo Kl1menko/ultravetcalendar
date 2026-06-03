@@ -13,8 +13,8 @@ import AppointmentForm from "@/components/AppointmentForm"
 import AppointmentDetails from "@/components/AppointmentDetails"
 import SearchDialog from "@/components/SearchDialog"
 import NoticeBanner from "@/components/NoticeBanner"
-import { Appointment } from "@/types"
-import { Notice } from "@/types"
+import { Appointment, Notice } from "@/types"
+import { CalendarContext } from "@/context/calendar"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -44,7 +44,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [bannerNotice, setBannerNotice] = useState<Notice | null>(null)
 
   const loadBadge = useCallback(async () => {
-    if (!user || user.email !== HEAD_DOCTOR_EMAIL) return
+    if (!user) return
     const notices = await fetchNotices()
     const lastSeen = localStorage.getItem("notices_last_seen") || "1970-01-01T00:00:00Z"
     const unseen = notices.filter((n) => n.created_at > lastSeen).length
@@ -192,26 +192,3 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   )
 }
 
-// ─── Context ────────────────────────────────────────────────────────────────
-
-import { createContext, useContext } from "react"
-
-type CalendarContextType = {
-  appointments: Appointment[]
-  selectedDate: Date
-  setSelectedDate: (d: Date) => void
-  user: User
-  reload: () => void
-  openDetailsAppt: (appt: Appointment) => void
-  openNewAppointmentAtTime: (time: string) => void
-  openEditAppointment: (appt: Appointment) => void
-  triggerBanner: (notice: Notice) => void
-}
-
-export const CalendarContext = createContext<CalendarContextType | null>(null)
-
-export function useCalendarContext() {
-  const ctx = useContext(CalendarContext)
-  if (!ctx) throw new Error("useCalendarContext must be used within AppLayout")
-  return ctx
-}

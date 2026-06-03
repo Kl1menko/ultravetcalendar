@@ -21,6 +21,7 @@ export default function AppointmentDetails({
   onDeleted,
 }: Props) {
   const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   if (!appointment) return null
 
@@ -28,7 +29,6 @@ export default function AppointmentDetails({
   const color = doctorColor(appointment.doctor)
 
   const handleDelete = async () => {
-    if (!confirm(`Видалити запис: ${appointment.pet} — ${appointment.service}?`)) return
     setDeleting(true)
     await deleteAppointment(appointment.id)
     setDeleting(false)
@@ -37,7 +37,7 @@ export default function AppointmentDetails({
   }
 
   return (
-    <Sheet open={!!appointment} onOpenChange={(v) => !v && onClose()}>
+    <Sheet open={!!appointment} onOpenChange={(v) => { if (!v) { setConfirmDelete(false); onClose() } }}>
       <SheetContent
         side="bottom"
         className="max-h-[92svh] overflow-y-auto rounded-t-[20px] px-0 pb-0 md:max-h-[84dvh] md:w-[min(760px,calc(100vw-3rem))] md:rounded-[28px]"
@@ -87,11 +87,11 @@ export default function AppointmentDetails({
         {/* Інфо-рядки */}
         <div className="mx-4 mb-4 overflow-hidden rounded-2xl border border-[var(--line)] md:mx-6 md:grid md:grid-cols-2 md:rounded-[24px]">
           {[
-            { label: "Клієнт", value: appointment.client },
-            { label: "Телефон", value: appointment.phone },
-            { label: "Тварина", value: appointment.animal || appointment.pet },
-            { label: "Лікар", value: appointment.doctor },
-            ...(appointment.comment ? [{ label: "Коментар", value: appointment.comment }] : []),
+            { label: "Клієнт", value: appointment.client, phone: false },
+            { label: "Телефон", value: appointment.phone, phone: true },
+            { label: "Тварина", value: appointment.animal || appointment.pet, phone: false },
+            { label: "Лікар", value: appointment.doctor, phone: false },
+            ...(appointment.comment ? [{ label: "Коментар", value: appointment.comment, phone: false }] : []),
           ].map((row, i, arr) => (
             <div
               key={i}
@@ -102,9 +102,18 @@ export default function AppointmentDetails({
               <span className="text-[12px] text-[var(--muted-col)] font-semibold flex-shrink-0 mr-3">
                 {row.label}
               </span>
-              <span className="text-[13px] font-semibold text-[var(--ink)] text-right">
-                {row.value}
-              </span>
+              {row.phone ? (
+                <a
+                  href={`tel:${row.value}`}
+                  className="text-[13px] font-semibold text-[var(--teal)] text-right underline-offset-2 hover:underline"
+                >
+                  {row.value}
+                </a>
+              ) : (
+                <span className="text-[13px] font-semibold text-[var(--ink)] text-right">
+                  {row.value}
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -123,21 +132,42 @@ export default function AppointmentDetails({
             </svg>
             Подзвонити
           </a>
-          <button
-            type="button"
-            onClick={() => { onClose(); onEdit(appointment) }}
-            className="h-11 rounded-xl border border-[var(--line)] bg-[var(--paper)] text-[14px] font-semibold text-[var(--ink-2)] transition-transform active:scale-[0.98] md:h-12 md:rounded-2xl"
-          >
-            Редагувати
-          </button>
-          <button
-            type="button"
-            disabled={deleting}
-            onClick={handleDelete}
-            className="h-11 rounded-xl border border-red-200 bg-red-50 text-[14px] font-semibold text-red-600 transition-transform active:scale-[0.98] disabled:opacity-60 md:h-12 md:rounded-2xl"
-          >
-            {deleting ? "Видаляю…" : "Видалити"}
-          </button>
+          {confirmDelete ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(false)}
+                className="h-11 rounded-xl border border-[var(--line)] bg-[var(--paper)] text-[13px] font-semibold text-[var(--ink-2)] transition-transform active:scale-[0.98] md:h-12 md:rounded-2xl"
+              >
+                Скасувати
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleDelete}
+                className="h-11 rounded-xl bg-red-500 text-[13px] font-semibold text-white transition-transform active:scale-[0.98] disabled:opacity-60 md:h-12 md:rounded-2xl"
+              >
+                {deleting ? "Видаляю…" : "Так, видалити"}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => { onClose(); onEdit(appointment) }}
+                className="h-11 rounded-xl border border-[var(--line)] bg-[var(--paper)] text-[14px] font-semibold text-[var(--ink-2)] transition-transform active:scale-[0.98] md:h-12 md:rounded-2xl"
+              >
+                Редагувати
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="h-11 rounded-xl border border-red-200 bg-red-50 text-[14px] font-semibold text-red-600 transition-transform active:scale-[0.98] md:h-12 md:rounded-2xl"
+              >
+                Видалити
+              </button>
+            </>
+          )}
         </div>
       </SheetContent>
     </Sheet>

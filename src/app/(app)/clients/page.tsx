@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { useCalendarContext } from "../layout"
+import { useCalendarContext } from "@/context/calendar"
 import { formatShortDate } from "@/lib/utils-app"
 import { Appointment } from "@/types"
 

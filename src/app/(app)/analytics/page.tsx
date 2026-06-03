@@ -1,6 +1,6 @@
 "use client"
 
-import { useCalendarContext } from "../layout"
+import { useCalendarContext } from "@/context/calendar"
 import { minutesFromTime } from "@/lib/utils-app"
 import { Appointment } from "@/types"
 

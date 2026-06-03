@@ -2,7 +2,7 @@
 
 import { useRef, useCallback, useState } from "react"
 import dynamic from "next/dynamic"
-import { useCalendarContext } from "../layout"
+import { useCalendarContext } from "@/context/calendar"
 import WeekStrip from "@/components/WeekStrip"
 import DoctorFilterSheet from "@/components/DoctorFilterSheet"
 import { DOCTORS } from "@/lib/doctors"

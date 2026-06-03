@@ -69,7 +69,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
   const navItems = [
     { href: "/calendar",  label: "Записи",      icon: <CalendarIcon /> },
     { href: "/clients",   label: "Клієнти",     icon: <ClientsIcon /> },
-    ...(isHead ? [{ href: "/alerts", label: "Сповіщення", icon: <AlertsIcon /> }] : []),
+    { href: "/alerts", label: "Сповіщення", icon: <AlertsIcon /> },
     { href: "/analytics", label: "Аналітика",   icon: <AnalyticsIcon /> },
     { href: "/profile",   label: "Профіль",     icon: <ProfileIcon /> },
   ]

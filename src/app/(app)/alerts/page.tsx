@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useCalendarContext } from "../layout"
+import { useEffect, useState, useCallback } from "react"
+import { useCalendarContext } from "@/context/calendar"
 import { fetchNotices, createNotice, deleteNotice } from "@/lib/notices"
 import { HEAD_DOCTOR_EMAIL } from "@/lib/constants"
 import { Notice } from "@/types"
@@ -28,16 +28,16 @@ export default function AlertsPage() {
 
   const isHead = user.email === HEAD_DOCTOR_EMAIL
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true)
     const data = await fetchNotices()
     setNotices(data)
     setLoading(false)
     localStorage.setItem("notices_last_seen", new Date().toISOString())
     document.dispatchEvent(new CustomEvent("notices-seen"))
-  }
+  }, [])
 
-  useEffect(() => { load() }, [])  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load() }, [load])
 
   const handlePublish = async (e: React.FormEvent) => {
     e.preventDefault()

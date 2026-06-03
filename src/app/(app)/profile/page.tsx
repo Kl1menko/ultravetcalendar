@@ -4,7 +4,7 @@ import { FormEvent, useMemo, useState } from "react"
 import { KeyRound, LogOut, Save } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-import { useCalendarContext } from "@/app/(app)/layout"
+import { useCalendarContext } from "@/context/calendar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
