@@ -1,16 +1,21 @@
-function requiredPublicEnv(name: string, value: string | undefined) {
+// Не кидаємо помилку на етапі імпорту: під час білду/prerender на Vercel
+// модуль виконується ще до того, як доступні рантайм-env, і це валило б збірку.
+// Замість цього попереджаємо в консолі й повертаємо порожній рядок —
+// Supabase-клієнт створиться, а реальні запити дадуть зрозумілу помилку,
+// якщо змінні справді не задано в середовищі.
+function publicEnv(name: string, value: string | undefined) {
   if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`)
+    console.warn(`Missing environment variable: ${name}`)
+    return ""
   }
-
   return value
 }
 
-export const SUPABASE_URL = requiredPublicEnv(
+export const SUPABASE_URL = publicEnv(
   "NEXT_PUBLIC_SUPABASE_URL",
   process.env.NEXT_PUBLIC_SUPABASE_URL
 )
-export const SUPABASE_ANON = requiredPublicEnv(
+export const SUPABASE_ANON = publicEnv(
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
