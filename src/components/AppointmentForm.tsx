@@ -124,13 +124,13 @@ export default function AppointmentForm({
   const fieldClass =
     "w-full h-11 rounded-xl border border-[var(--line)] bg-white px-3 text-[15px] text-[var(--ink)] font-medium outline-none focus:border-[var(--teal)] focus:ring-2 focus:ring-[var(--teal)]/10 transition"
   const labelClass =
-    "flex flex-col gap-1.5 text-[11px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]"
+    "flex min-w-0 flex-col gap-1.5 text-[11px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]"
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent
         side="bottom"
-        className="max-h-[94svh] overflow-y-auto rounded-t-[18px] px-4 pb-6 md:max-h-[86dvh] md:rounded-[28px] md:bg-white md:px-6 md:pt-5 md:pb-0"
+        className="max-h-[94svh] overflow-y-auto overflow-x-hidden rounded-t-[18px] px-4 pb-6 md:max-h-[86dvh] md:rounded-[28px] md:bg-white md:px-6 md:pt-5 md:pb-0"
       >
         {/* Handle bar */}
         <div className="mx-auto mb-5 mt-1 h-1 w-10 rounded-full bg-[var(--line)] md:hidden" />
@@ -141,7 +141,7 @@ export default function AppointmentForm({
           </SheetTitle>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-5">
+        <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-4 md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-5">
           {formError && (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-600 md:col-span-2">
               {formError}
@@ -216,7 +216,7 @@ export default function AppointmentForm({
           </label>
 
           {/* Sticky actions */}
-          <div className="sticky bottom-0 grid grid-cols-2 gap-3 bg-white pt-4 pb-2 md:col-span-2 md:-mx-6 md:border-t md:border-[var(--line)] md:px-6 md:py-4">
+          <div className="sticky bottom-0 grid min-w-0 grid-cols-2 gap-3 bg-white pt-4 pb-2 md:col-span-2 md:-mx-6 md:border-t md:border-[var(--line)] md:px-6 md:py-4">
             <button
               type="button"
               onClick={onClose}
