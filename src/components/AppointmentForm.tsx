@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Appointment } from "@/types"
 import { DOCTORS } from "@/lib/doctors"
-import { STATUSES, DURATIONS } from "@/lib/constants"
+import { DURATIONS } from "@/lib/constants"
 import { isoDate, minutesFromTime, timeFromMinutes } from "@/lib/utils-app"
 import { createAppointment, updateAppointment } from "@/lib/appointments"
 
@@ -37,7 +37,6 @@ export default function AppointmentForm({
   const [service, setService] = useState("")
   const [price, setPrice] = useState("")
   const [doctor, setDoctor] = useState<string>(DOCTORS[0])
-  const [status, setStatus] = useState<string>("Заплановано")
   const [comment, setComment] = useState("")
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState("")
@@ -60,7 +59,6 @@ export default function AppointmentForm({
       setService(editing.service)
       setPrice(editing.price ? String(editing.price) : "")
       setDoctor(editing.doctor)
-      setStatus(editing.status)
       setComment(editing.comment)
     } else {
       setDate(isoDate(selectedDate))
@@ -73,7 +71,6 @@ export default function AppointmentForm({
       setService("")
       setPrice("")
       setDoctor(DOCTORS[0])
-      setStatus("Заплановано")
       setComment("")
     }
   }, [open, editing, selectedDate, prefillTime])
@@ -95,7 +92,6 @@ export default function AppointmentForm({
       service: service.trim(),
       price: Number(price) || 0,
       doctor,
-      status,
       comment: comment.trim(),
       created_by: userId,
     }
@@ -200,13 +196,6 @@ export default function AppointmentForm({
             Відповідальний лікар
             <select value={doctor} onChange={(e) => setDoctor(e.target.value)} required className={fieldClass}>
               {DOCTORS.map((d) => <option key={d}>{d}</option>)}
-            </select>
-          </label>
-
-          <label className={labelClass}>
-            Статус
-            <select value={status} onChange={(e) => setStatus(e.target.value)} required className={fieldClass}>
-              {STATUSES.map((s) => <option key={s}>{s}</option>)}
             </select>
           </label>
 

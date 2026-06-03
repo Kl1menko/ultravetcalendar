@@ -54,8 +54,8 @@ export default function WeekStrip({ selectedDate, appointments, onSelectDate }: 
   }, [selectedDate])
 
   return (
-    <div className="px-4 pb-3 overflow-x-auto scrollbar-hide">
-      <div ref={stripRef} className="flex gap-2 min-w-max">
+    <div className="px-4 pb-2 overflow-x-auto scrollbar-hide">
+      <div ref={stripRef} className="flex gap-1.5 min-w-max">
         {days.map((d) => {
           const iso = isoDate(d)
           const isSelected = iso === isoDate(selectedDate)
@@ -74,7 +74,7 @@ export default function WeekStrip({ selectedDate, appointments, onSelectDate }: 
                 onSelectDate(nd)
               }}
               className={[
-                "flex flex-col items-center gap-[2px] min-w-[58px] py-2.5 px-2 rounded-2xl border cursor-pointer transition-all duration-150 active:scale-95 select-none",
+                "flex flex-col items-center gap-[2px] min-w-[52px] py-2 px-2 rounded-2xl border cursor-pointer transition-all duration-150 active:scale-95 select-none",
                 isSelected
                   ? "bg-[var(--teal)] border-[var(--teal)] shadow-md shadow-teal-500/25"
                   : isTodayDay
@@ -96,7 +96,7 @@ export default function WeekStrip({ selectedDate, appointments, onSelectDate }: 
               </span>
               <span
                 className={[
-                  "text-[20px] font-black leading-none",
+                  "text-[18px] font-black leading-none",
                   isSelected
                     ? "text-white"
                     : isTodayDay

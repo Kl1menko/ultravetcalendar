@@ -26,39 +26,59 @@ function peakWeekdays(appointments: Appointment[]) {
     counts[d] = (counts[d] || 0) + 1
   })
   return DAYS.map((name, i) => ({ name, count: counts[i] }))
+    .sort((a, b) => b.count - a.count)
 }
 
 function topServices(appointments: Appointment[]) {
   const counts: Record<string, number> = {}
   appointments.forEach((a) => {
-    const s = a.service.trim()
-    if (s) counts[s] = (counts[s] || 0) + 1
+    const s = a.service.trim().toLowerCase()
+    if (!s) return
+    const key = s.split(/\s+/)[0]
+    counts[key] = (counts[key] || 0) + 1
   })
   return Object.entries(counts)
-    .map(([name, count]) => ({ name, count }))
+    .map(([name, count]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 10)
 }
 
+// Палітра для барів — 8 кольорів що чергуються
+const BAR_COLORS = [
+  { bg: "#0d7377", text: "#ffffff" },
+  { bg: "#2563eb", text: "#ffffff" },
+  { bg: "#7c3aed", text: "#ffffff" },
+  { bg: "#db2777", text: "#ffffff" },
+  { bg: "#d97706", text: "#ffffff" },
+  { bg: "#16a34a", text: "#ffffff" },
+  { bg: "#0891b2", text: "#ffffff" },
+  { bg: "#9333ea", text: "#ffffff" },
+]
+
 // ─── sub-components ───────────────────────────────────────────────────────────
 
-function Bar({ value, max, label, sublabel }: {
+function Bar({ value, max, label, sublabel, colorIdx = 0 }: {
   value: number
   max: number
   label: string
   sublabel?: string
+  colorIdx?: number
 }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
+  const color = BAR_COLORS[colorIdx % BAR_COLORS.length]
   return (
     <div className="flex items-center gap-3">
       <span className="w-8 text-right text-[11px] font-bold text-[var(--muted-col)] shrink-0">{label}</span>
       <div className="flex-1 h-7 bg-[var(--paper)] rounded-lg overflow-hidden">
         <div
-          className="h-full rounded-lg bg-[var(--teal)] flex items-center px-2 transition-all duration-500"
-          style={{ width: `${Math.max(pct, value > 0 ? 4 : 0)}%` }}
+          className="h-full rounded-lg flex items-center px-2 transition-all duration-500"
+          style={{
+            width: `${Math.max(pct, value > 0 ? 4 : 0)}%`,
+            backgroundColor: color.bg,
+          }}
         >
           {value > 0 && (
-            <span className="text-[11px] font-bold text-white leading-none">{value}</span>
+            <span className="text-[11px] font-bold leading-none" style={{ color: color.text }}>{value}</span>
           )}
         </div>
       </div>
@@ -95,7 +115,7 @@ export default function AnalyticsPage() {
   const maxService = services[0]?.count || 1
 
   const peakHour = hours.reduce((a, b) => (b.count > a.count ? b : a), hours[0])
-  const peakDay = weekdays.reduce((a, b) => (b.count > a.count ? b : a), weekdays[0])
+  const peakDay = [...weekdays].sort((a, b) => b.count - a.count)[0]
 
   const noData = <p className="text-[13px] text-[var(--muted-col)] py-2">Немає даних</p>
 
@@ -123,22 +143,22 @@ export default function AnalyticsPage() {
 
       {/* Peak hours */}
       <Section title="Записи по годинах">
-        {total === 0 ? noData : hours.map((h) => (
-          <Bar key={h.hour} label={`${h.hour}`} value={h.count} max={maxHour} />
+        {total === 0 ? noData : hours.map((h, i) => (
+          <Bar key={h.hour} label={`${h.hour}`} value={h.count} max={maxHour} colorIdx={i} />
         ))}
       </Section>
 
-      {/* Peak weekdays */}
+      {/* Peak weekdays — sorted by count desc */}
       <Section title="Записи по днях тижня">
-        {total === 0 ? noData : weekdays.map((d) => (
-          <Bar key={d.name} label={d.name} value={d.count} max={maxDay} />
+        {total === 0 ? noData : weekdays.map((d, i) => (
+          <Bar key={d.name} label={d.name} value={d.count} max={maxDay} colorIdx={i} />
         ))}
       </Section>
 
-      {/* Top services */}
+      {/* Top services — normalized to lowercase then capitalized */}
       <Section title="Популярні послуги">
-        {services.length === 0 ? noData : services.map((s) => (
-          <Bar key={s.name} label={`${s.count}`} value={s.count} max={maxService} sublabel={s.name} />
+        {services.length === 0 ? noData : services.map((s, i) => (
+          <Bar key={s.name} label={`${s.count}`} value={s.count} max={maxService} sublabel={s.name} colorIdx={i} />
         ))}
       </Section>
     </div>

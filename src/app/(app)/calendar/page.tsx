@@ -69,10 +69,10 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col" style={{ height: "calc(100svh - 48px - max(env(safe-area-inset-bottom), 8px) - env(safe-area-inset-top))" }}>
       {/* ─── CALENDAR HEADER ─── */}
-      <header className="px-4 pt-3 pb-2 flex items-center justify-between gap-2 md:px-0 md:pb-5">
-        <h2 className="text-[22px] font-black tracking-tight text-[var(--ink)] md:text-3xl">
+      <header className="px-4 pt-2 pb-1.5 flex items-center justify-between gap-2 md:px-0 md:pb-5">
+        <h2 className="text-[19px] font-black tracking-tight text-[var(--ink)] md:text-3xl">
           {currentMonth}
         </h2>
         <div className="flex items-center gap-2">
@@ -80,7 +80,7 @@ export default function CalendarPage() {
           <button
             onClick={goToToday}
             aria-label="Сьогодні"
-            className="w-9 h-9 rounded-xl border-2 border-[var(--teal)] text-[var(--teal)] text-[15px] font-black grid place-items-center hover:bg-[var(--teal-light)] transition-colors"
+            className="w-8 h-8 rounded-xl border-2 border-[var(--teal)] text-[var(--teal)] text-[14px] font-black grid place-items-center hover:bg-[var(--teal-light)] transition-colors"
           >
             {new Date().getDate()}
           </button>
@@ -101,7 +101,7 @@ export default function CalendarPage() {
           <button
             onClick={() => setDoctorSheetOpen(true)}
             aria-label="Фільтр лікаря"
-            className={`md:hidden w-9 h-9 rounded-xl border grid place-items-center relative transition-colors ${
+            className={`md:hidden w-8 h-8 rounded-xl border grid place-items-center relative transition-colors ${
               doctorActive
                 ? "border-[var(--teal)] bg-[var(--teal-light)] text-[var(--teal-dark)]"
                 : "border-[var(--line)] bg-white text-[var(--ink-2)]"
@@ -118,7 +118,7 @@ export default function CalendarPage() {
           {/* Logout (mobile only) */}
           <button
             aria-label="Вийти"
-            className="md:hidden w-9 h-9 rounded-xl border border-[var(--line)] bg-white grid place-items-center"
+            className="md:hidden w-8 h-8 rounded-xl border border-[var(--line)] bg-white grid place-items-center"
             onClick={async () => {
               const { supabase } = await import("@/lib/supabase")
               await supabase.auth.signOut()
@@ -140,7 +140,7 @@ export default function CalendarPage() {
       />
 
       {/* ─── DAY SUMMARY ─── */}
-      <div className="px-4 py-2 flex items-center gap-2">
+      <div className="px-4 py-1 flex items-center gap-2">
         <span className="text-[13px] text-[var(--muted-col)] font-medium">Записів:</span>
         <strong className="text-[13px] font-bold text-[var(--ink)]">{dayCount}</strong>
         {doctorActive && (
@@ -151,7 +151,7 @@ export default function CalendarPage() {
       </div>
 
       {/* ─── FULLCALENDAR ─── */}
-      <div className="overflow-hidden">
+      <div className="flex-1 min-h-0">
         <CalendarView
           appointments={appointments}
           doctorFilter={doctorFilter}

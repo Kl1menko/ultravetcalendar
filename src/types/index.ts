@@ -1,5 +1,3 @@
-export type AppointmentStatus = "Заплановано" | "Очікує" | "В кабінеті" | "Завершено"
-
 export type Appointment = {
   id: string
   date: string
@@ -11,7 +9,6 @@ export type Appointment = {
   animal: string
   service: string
   doctor: string
-  status: AppointmentStatus
   comment: string
   price: number
 }
@@ -34,7 +31,6 @@ export type AppointmentRow = {
   animal: string | null
   service: string
   doctor: string
-  status: string
   comment: string | null
   price: number | null
   created_by: string | null

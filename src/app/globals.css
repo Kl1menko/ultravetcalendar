@@ -182,29 +182,48 @@
 /* ─── FULLCALENDAR OVERRIDES ──────────────────────────────────────── */
 .fc {
   font-family: var(--font-inter), -apple-system, sans-serif;
+  background: #f0f2f5;
 }
 .fc .fc-timegrid-slot {
-  height: 52px !important;
+  height: 40px !important;
 }
+
+/* Фон колонки з подіями — світло-сірий */
+.fc .fc-timegrid-col.fc-day,
+.fc .fc-timegrid-col,
+.fc-theme-standard .fc-timegrid-col,
+.fc .fc-scrollgrid-sync-inner {
+  background: #f0f2f5 !important;
+}
+
+/* Основні лінії годин — трохи темніші */
+.fc .fc-timegrid-slot-lane {
+  border-bottom: 1px solid #d1d5db !important;
+}
+/* Пунктирні лінії półгодин — тонші й світліші */
+.fc .fc-timegrid-slot-lane.fc-timegrid-slot-minor {
+  border-bottom: 1px dashed #e5e7eb !important;
+}
+
 .fc .fc-scrollgrid {
   border: none !important;
 }
 .fc .fc-scrollgrid td,
 .fc .fc-scrollgrid th {
-  border-color: var(--line);
+  border-color: #dde1e7;
 }
 .fc-theme-standard .fc-scrollgrid {
   border: none !important;
 }
 .fc-theme-standard td,
 .fc-theme-standard th {
-  border-color: var(--line);
+  border-color: #dde1e7;
 }
 .fc .fc-scrollgrid-section > td {
   border: none !important;
 }
 .fc .fc-col-header-cell {
-  background: var(--paper);
+  background: #f0f2f5;
   font-size: 12px;
   font-weight: 700;
   color: var(--muted-col);
@@ -214,14 +233,17 @@
 .fc .fc-timegrid-slot-label {
   font-size: 11px;
   font-weight: 600;
-  color: var(--muted-col);
+  color: #9ca3af;
+  background: #f0f2f5;
 }
 .fc .fc-event {
   border-radius: 8px !important;
-  border: none !important;
+  border-width: 1.5px !important;
+  border-style: solid !important;
   font-size: 12px;
   cursor: pointer;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 .fc .fc-event-main {
   padding: 4px 8px;
@@ -251,6 +273,11 @@
 
 .animate-pulse-logo {
   animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes notice-progress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
 }
 
 /* hide scrollbar but keep scroll */

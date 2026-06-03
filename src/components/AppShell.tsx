@@ -72,7 +72,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
   const isCalendar = pathname === "/calendar"
 
   return (
-    <div className="min-h-dvh md:grid md:grid-cols-[240px_minmax(0,1fr)]">
+    <div className="min-h-svh md:grid md:grid-cols-[240px_minmax(0,1fr)]">
       {/* ─── DESKTOP SIDEBAR ─────────────────────────────── */}
       <aside className="hidden md:flex md:flex-col sticky top-0 h-dvh w-[240px] px-4 py-5 border-r border-[var(--line)] bg-white">
         {/* Brand */}
@@ -141,7 +141,13 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
       </aside>
 
       {/* ─── MAIN CONTENT ────────────────────────────────── */}
-      <main className="w-full max-w-[1200px] mx-auto px-0 pt-0 pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-12 md:px-8 md:pt-6">
+      <main
+        className="w-full max-w-[1200px] mx-auto px-0 md:pb-12 md:px-8 md:pt-6"
+        style={{
+          paddingTop: "env(safe-area-inset-top)",
+          paddingBottom: "calc(48px + max(env(safe-area-inset-bottom), 8px) + 8px)",
+        }}
+      >
         {children}
       </main>
 
@@ -149,7 +155,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
       <nav
         className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-xl border-t border-[var(--line)]"
         style={{
-          paddingBottom: "env(safe-area-inset-bottom)",
+          paddingBottom: "max(env(safe-area-inset-bottom), 8px)",
           display: "grid",
           gridTemplateColumns: `repeat(${navItems.length}, 1fr)`,
         }}
@@ -160,7 +166,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center gap-1 py-2 h-[52px] text-[10px] font-semibold transition-colors relative ${
+              className={`flex flex-col items-center justify-center gap-1 py-2.5 min-h-[48px] text-[10px] font-semibold transition-colors relative ${
                 active ? "text-[var(--teal)]" : "text-[var(--muted-col)]"
               }`}
             >
@@ -184,7 +190,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
           onClick={onNewAppointment}
           aria-label="Новий запис"
           className="md:hidden fixed right-4 z-20 w-14 h-14 rounded-full bg-[var(--teal)] text-white text-2xl font-light leading-none shadow-lg shadow-teal-500/30 flex items-center justify-center active:scale-[0.92] transition-transform"
-          style={{ bottom: "calc(64px + env(safe-area-inset-bottom))" }}
+          style={{ bottom: "calc(48px + max(env(safe-area-inset-bottom), 8px) + 12px)" }}
         >
           +
         </button>

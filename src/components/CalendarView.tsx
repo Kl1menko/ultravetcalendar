@@ -83,7 +83,7 @@ export default function CalendarView({
       slotMaxTime={`${String(HOUR_END).padStart(2, "0")}:00:00`}
       slotDuration="00:15:00"
       locale="uk"
-      height="calc(100dvh - 280px)"
+      height="100%"
       nowIndicator
       events={appointmentsToEvents(appointments, doctorFilter)}
       eventClick={({ event }) => {

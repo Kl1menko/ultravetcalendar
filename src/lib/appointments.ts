@@ -13,7 +13,6 @@ function normalizeRow(row: AppointmentRow): Appointment {
     animal: row.animal || row.pet,
     service: row.service,
     doctor: row.doctor,
-    status: row.status as Appointment["status"],
     comment: row.comment || "",
     price: row.price || 0,
   }
@@ -44,7 +43,6 @@ export type AppointmentPayload = {
   service: string
   price: number
   doctor: string
-  status: string
   comment: string
   created_by?: string
 }
@@ -58,7 +56,7 @@ export async function createAppointment(
 
 export async function updateAppointment(
   id: string,
-  payload: Partial<AppointmentPayload> & { status?: string }
+  payload: Partial<AppointmentPayload>
 ): Promise<{ error: Error | null }> {
   const { error } = await supabase.from("appointments").update(payload).eq("id", id)
   return { error: error ? new Error(error.message) : null }

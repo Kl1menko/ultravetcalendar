@@ -7,7 +7,6 @@ export const HOUR_START = 8
 export const HOUR_END = 20
 export const MAX_APPOINTMENTS_PER_DAY = 8
 
-export const STATUSES = ["Заплановано", "Очікує", "В кабінеті", "Завершено"] as const
 export const DURATIONS = [
   { label: "15 хв", value: "15" },
   { label: "30 хв", value: "30" },

@@ -11,7 +11,9 @@ import AppShell from "@/components/AppShell"
 import AppointmentForm from "@/components/AppointmentForm"
 import AppointmentDetails from "@/components/AppointmentDetails"
 import SearchDialog from "@/components/SearchDialog"
+import NoticeBanner from "@/components/NoticeBanner"
 import { Appointment } from "@/types"
+import { Notice } from "@/types"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -37,6 +39,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Alerts badge
   const [alertsBadge, setAlertsBadge] = useState(0)
 
+  // In-app notice banner
+  const [bannerNotice, setBannerNotice] = useState<Notice | null>(null)
+
   const loadBadge = useCallback(async () => {
     if (!user || user.email !== HEAD_DOCTOR_EMAIL) return
     const notices = await fetchNotices()
@@ -48,6 +53,36 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     loadBadge()
   }, [loadBadge])
+
+  useEffect(() => {
+    const handler = () => setAlertsBadge(0)
+    document.addEventListener("notices-seen", handler)
+    return () => document.removeEventListener("notices-seen", handler)
+  }, [])
+
+  // Realtime: показуємо банер коли head публікує нове сповіщення
+  useEffect(() => {
+    if (!user) return
+    const isHead = user.email === HEAD_DOCTOR_EMAIL
+
+    const channel = supabase
+      .channel("notices-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notices" },
+        (payload) => {
+          const notice = payload.new as Notice
+          // Head сам створює — не показуємо йому банер
+          if (!isHead) {
+            setBannerNotice(notice)
+            setAlertsBadge((n) => n + 1)
+          }
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [user])
 
   // Auth
   useEffect(() => {
@@ -100,6 +135,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
+    <>
+    <NoticeBanner notice={bannerNotice} onDismiss={() => setBannerNotice(null)} />
     <AppShell
       user={user}
       alertsBadge={alertsBadge}
@@ -119,6 +156,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           openDetailsAppt: setDetailsAppt,
           openNewAppointmentAtTime,
           openEditAppointment,
+          triggerBanner: setBannerNotice,
         }}
       >
         {children}
@@ -140,7 +178,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         onClose={() => setDetailsAppt(null)}
         onEdit={(appt) => { setDetailsAppt(null); openEditAppointment(appt) }}
         onDeleted={reload}
-        onStatusChanged={reload}
       />
 
       <SearchDialog
@@ -150,6 +187,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         onSelectAppointment={(appt) => { setSearchOpen(false); setDetailsAppt(appt) }}
       />
     </AppShell>
+    </>
   )
 }
 
@@ -166,6 +204,7 @@ type CalendarContextType = {
   openDetailsAppt: (appt: Appointment) => void
   openNewAppointmentAtTime: (time: string) => void
   openEditAppointment: (appt: Appointment) => void
+  triggerBanner: (notice: Notice) => void
 }
 
 export const CalendarContext = createContext<CalendarContextType | null>(null)
