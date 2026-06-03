@@ -1,11 +1,6 @@
-const CACHE = "ultravet-v2";
+const CACHE = "ultravet-v3";
 const STATIC = [
-  "/",
-  "/index.html",
-  "/styles.css",
-  "/app.js",
-  "/manifest.json",
-  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"
+  "/manifest.json"
 ];
 
 self.addEventListener("install", (e) => {
@@ -25,26 +20,37 @@ self.addEventListener("activate", (e) => {
 });
 
 self.addEventListener("fetch", (e) => {
+  if (e.request.method !== "GET") {
+    return;
+  }
+
   // Supabase API — тільки мережа, не кешуємо
   if (e.request.url.includes("supabase.co")) {
     return;
   }
 
-  // CDN — кеш назавжди (версія зафіксована в URL)
-  if (e.request.url.includes("cdn.jsdelivr.net")) {
-    e.respondWith(
-      caches.match(e.request).then((cached) => cached || fetch(e.request).then((res) => {
-        const clone = res.clone();
-        caches.open(CACHE).then((cache) => cache.put(e.request, clone));
-        return res;
-      }))
-    );
+  // HTML/app shell can contain auth-sensitive UI state; always ask the network.
+  if (e.request.mode === "navigate") {
     return;
   }
 
-  // Локальні файли — спочатку мережа, кеш як fallback для offline
+  const url = new URL(e.request.url);
+  const isSameOrigin = url.origin === self.location.origin;
+  const isStaticAsset =
+    isSameOrigin &&
+    (url.pathname.startsWith("/_next/static/") ||
+      url.pathname.startsWith("/icons/") ||
+      url.pathname === "/manifest.json");
+
+  if (!isStaticAsset) {
+    return;
+  }
+
+  // Static assets — network first, cache as offline fallback.
   e.respondWith(
     fetch(e.request).then((res) => {
+      if (!res || res.status !== 200) return res;
+
       const clone = res.clone();
       caches.open(CACHE).then((cache) => cache.put(e.request, clone));
       return res;

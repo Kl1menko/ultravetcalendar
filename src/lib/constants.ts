@@ -1,8 +1,23 @@
-export const SUPABASE_URL = "https://ptukvvbnbqbahwobitls.supabase.co"
-export const SUPABASE_ANON =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0dWt2dmJuYnFiYWh3b2JpdGxzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1ODgzMzAsImV4cCI6MjA5MzE2NDMzMH0.P3Gwipqpc2poADf01mzcgl3p9V63LhdfCIi-JYIvfWQ"
+function requiredPublicEnv(name: string, value: string | undefined) {
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`)
+  }
 
-export const HEAD_DOCTOR_EMAIL = "head@clinic.com"
+  return value
+}
+
+export const SUPABASE_URL = requiredPublicEnv(
+  "NEXT_PUBLIC_SUPABASE_URL",
+  process.env.NEXT_PUBLIC_SUPABASE_URL
+)
+export const SUPABASE_ANON = requiredPublicEnv(
+  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+)
+export const HEAD_DOCTOR_EMAIL = requiredPublicEnv(
+  "NEXT_PUBLIC_HEAD_DOCTOR_EMAIL",
+  process.env.NEXT_PUBLIC_HEAD_DOCTOR_EMAIL
+)
 export const HOUR_START = 8
 export const HOUR_END = 20
 export const MAX_APPOINTMENTS_PER_DAY = 8
