@@ -285,6 +285,66 @@ theme: {
 
 ---
 
+## Сторінка Профіль (`/profile`) — план реалізації
+
+Поточний стан: заглушка `"Скоро буде"` в `src/app/(app)/profile/page.tsx`.
+
+### Що показувати
+
+**1. Блок користувача (зверху)**
+- Аватар-коло з ініціалами (як у AppShell мобільному), але більший — 64px
+- Ім'я лікаря: брати з `DOCTORS` масиву по `user.email` або з `user.user_metadata.full_name` якщо є
+- Email користувача
+- Роль: "Головний лікар" якщо `user.email === HEAD_DOCTOR_EMAIL`, інакше "Лікар"
+
+**2. Статистика лікаря**
+Фільтрувати `appointments` з CalendarContext по `a.doctor === currentDoctorName`:
+- Всього записів
+- Записів за поточний місяць
+- Найпопулярніша послуга
+
+**3. Зміна імені відображення** (опційно)
+- Поле `user.user_metadata.display_name` через `supabase.auth.updateUser({ data: { display_name } })`
+
+**4. Зміна пароля**
+```ts
+supabase.auth.updateUser({ password: newPassword })
+```
+- Форма: поточний пароль (тільки для валідації на клієнті або пропустити), новий пароль, підтвердження
+- При успіху — toast/повідомлення
+
+**5. Вихід з акаунту**
+- Кнопка "Вийти" (вже є в AppShell desktop, але на мобільному профіль — правильне місце)
+- `supabase.auth.signOut()` → `router.replace("/login")`
+
+### Як отримати ім'я лікаря по email
+
+Зараз в БД немає прямого зв'язку email → ім'я лікаря з `DOCTORS`. Варіанти:
+- **Простий**: зберігати `display_name` в `user.user_metadata` при першому логіні або через форму в профілі
+- **Складніший**: додати таблицю `doctor_profiles(user_id, doctor_name)` і joinити
+
+Рекомендується простий варіант через `user_metadata`.
+
+### Структура компонента
+
+```tsx
+"use client"
+// profile/page.tsx — "use client" бо використовує CalendarContext і useState
+import { useCalendarContext } from "../layout"
+import { supabase } from "@/lib/supabase"
+
+// Дані: user з CalendarContext, appointments для статистики
+// Форма зміни пароля: локальний useState, виклик supabase.auth.updateUser
+```
+
+### UI-патерн (відповідно до стилю проекту)
+- Аватар + ім'я/email — такий самий `rounded-2xl border border-[var(--line)]` блок як в AppointmentDetails
+- Статистика — `grid grid-cols-3` як на сторінці Analytics (summary картки)
+- Форма пароля — такий самий стиль як AppointmentForm (fieldClass, labelClass)
+- Кнопка виходу — червона, в самому низу
+
+---
+
 ## Правила для агентів
 
 1. **Не міняти DOCTORS масив** — порядок елементів визначає кольори. Якщо додати нового лікаря — додавати тільки в кінець і додавати відповідний колір у DOCTOR_COLORS.
