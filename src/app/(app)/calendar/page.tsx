@@ -50,10 +50,6 @@ export default function CalendarPage() {
   ).length
 
   const doctorActive = doctorFilter !== "Всі лікарі"
-  const todayLabel = new Intl.DateTimeFormat("uk-UA", {
-    day: "numeric",
-    month: "long",
-  }).format(new Date())
 
   const handleEventClick = (appt: Appointment) => {
     openDetailsAppt(appt)
@@ -86,7 +82,7 @@ export default function CalendarPage() {
             aria-label="Сьогодні"
             className="grid h-8 place-items-center rounded-xl border-2 border-[var(--teal)] px-3 text-[13px] font-black text-[var(--teal)] transition-colors hover:bg-[var(--teal-light)] md:h-10 md:rounded-2xl md:px-4 md:text-[14px]"
           >
-            {todayLabel}
+            Сьогодні
           </button>
 
           {/* Doctor filter (desktop dropdown) */}

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react"
 import { useCalendarContext } from "@/context/calendar"
 import { formatShortDate } from "@/lib/utils-app"
+import { deleteAppointment } from "@/lib/appointments"
 import { Appointment } from "@/types"
 
 type ClientEntry = {
@@ -113,9 +114,20 @@ function ChevronIcon({ open }: { open: boolean }) {
 }
 
 export default function ClientsPage() {
-  const { appointments } = useCalendarContext()
+  const { appointments, reload } = useCalendarContext()
   const [query, setQuery] = useState("")
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [confirmDeleteKey, setConfirmDeleteKey] = useState<string | null>(null)
+  const [deletingKey, setDeletingKey] = useState<string | null>(null)
+
+  const handleDeleteClient = async (key: string, history: Appointment[]) => {
+    setDeletingKey(key)
+    await Promise.all(history.map((a) => deleteAppointment(a.id)))
+    setDeletingKey(null)
+    setConfirmDeleteKey(null)
+    setExpanded(null)
+    reload()
+  }
 
   const allClients = useMemo(() => buildClients(appointments), [appointments])
   const duplicatesCount = allClients.filter((client) => client.duplicateCount > 1).length
@@ -267,7 +279,7 @@ export default function ClientsPage() {
                     )}
 
                     {/* Visit history */}
-                    <div className="px-4 py-3">
+                    <div className="px-4 py-3 border-b border-[var(--line)]">
                       <div className="text-[10px] font-bold text-[var(--muted-col)] uppercase tracking-[0.4px] mb-2">
                         Історія візитів ({c.visits})
                       </div>
@@ -289,6 +301,37 @@ export default function ClientsPage() {
                             </div>
                           ))}
                       </div>
+                    </div>
+
+                    {/* Delete client */}
+                    <div className="px-4 py-3">
+                      {confirmDeleteKey === key ? (
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteKey(null)}
+                            className="h-9 flex-1 rounded-xl border border-[var(--line)] bg-[var(--paper)] text-[13px] font-semibold text-[var(--ink-2)] transition-transform active:scale-[0.98]"
+                          >
+                            Скасувати
+                          </button>
+                          <button
+                            type="button"
+                            disabled={deletingKey === key}
+                            onClick={() => handleDeleteClient(key, c.history)}
+                            className="h-9 flex-1 rounded-xl bg-red-500 text-[13px] font-semibold text-white transition-transform active:scale-[0.98] disabled:opacity-60"
+                          >
+                            {deletingKey === key ? "Видаляю…" : `Так, видалити (${c.visits})`}
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteKey(key)}
+                          className="w-full h-9 rounded-xl border border-red-200 bg-red-50 text-[13px] font-semibold text-red-600 transition-transform active:scale-[0.98]"
+                        >
+                          Видалити клієнта
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
