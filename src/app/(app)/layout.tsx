@@ -10,6 +10,7 @@ import { fetchNotices } from "@/lib/notices"
 import {
   canSeeClients as canSeeClientsFn,
   canSeePrices as canSeePricesFn,
+  canSeeAppointmentPrices as canSeeAppointmentPricesFn,
   doctorForEmail,
   roleForEmail,
 } from "@/lib/doctors"
@@ -41,7 +42,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   })
 
   const userCanSeePrices = canSeePricesFn(user?.email)
-  const { appointments, reload } = useAppointments(userCanSeePrices)
+  const userCanSeeApptPrices = canSeeAppointmentPricesFn()
+  // Суми у записах бачать усі → завантажуємо price для будь-якого користувача.
+  const { appointments, reload } = useAppointments(userCanSeeApptPrices)
 
   // Alerts badge
   const [alertsBadge, setAlertsBadge] = useState(0)
@@ -165,6 +168,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           role: roleForEmail(user.email),
           currentDoctor: doctorForEmail(user.email),
           canSeePrices: userCanSeePrices,
+          canSeeAppointmentPrices: userCanSeeApptPrices,
           canSeeClients: canSeeClientsFn(user.email),
           reload,
           openDetailsAppt: setDetailsAppt,
@@ -185,7 +189,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         prefillTime={prefillTime}
         editing={editingAppt}
         userId={user.id}
-        canSeePrices={userCanSeePrices}
+        canSeePrices={userCanSeeApptPrices}
       />
 
       <AppointmentDetails
@@ -193,7 +197,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         onClose={() => setDetailsAppt(null)}
         onEdit={(appt) => { setDetailsAppt(null); openEditAppointment(appt) }}
         onDeleted={reload}
-        canSeePrices={userCanSeePrices}
+        canSeePrices={userCanSeeApptPrices}
       />
 
       <SearchDialog

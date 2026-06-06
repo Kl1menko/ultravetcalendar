@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Appointment } from "@/types"
 import { DOCTORS } from "@/lib/doctors"
-import { SERVICES } from "@/lib/services"
+import { SERVICES, parseServices, joinServices } from "@/lib/services"
 import { DURATIONS } from "@/lib/constants"
 import { isoDate, minutesFromTime, timeFromMinutes } from "@/lib/utils-app"
 import { createAppointment, updateAppointment } from "@/lib/appointments"
@@ -37,7 +37,7 @@ export default function AppointmentForm({
   const [phone, setPhone] = useState("")
   const [pet, setPet] = useState("")
   const [animal, setAnimal] = useState("")
-  const [service, setService] = useState("")
+  const [services, setServices] = useState<string[]>([])
   const [price, setPrice] = useState("")
   const [doctor, setDoctor] = useState<string>(DOCTORS[0])
   const [comment, setComment] = useState("")
@@ -61,7 +61,7 @@ export default function AppointmentForm({
         setPhone(editing.phone)
         setPet(editing.pet)
         setAnimal(editing.animal)
-        setService(editing.service)
+        setServices(parseServices(editing.service))
         setPrice(editing.price ? String(editing.price) : "")
         setDoctor(editing.doctor)
         setComment(editing.comment)
@@ -73,7 +73,7 @@ export default function AppointmentForm({
         setPhone("")
         setPet("")
         setAnimal("")
-        setService("")
+        setServices([])
         setPrice("")
         setDoctor(DOCTORS[0])
         setComment("")
@@ -86,6 +86,12 @@ export default function AppointmentForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError("")
+
+    if (services.length === 0) {
+      setFormError("Оберіть хоча б одну послугу")
+      return
+    }
+
     setSaving(true)
 
     const endTime = timeFromMinutes(minutesFromTime(start) + Number(duration || 30))
@@ -97,7 +103,7 @@ export default function AppointmentForm({
       phone: phone.trim(),
       pet: pet.trim(),
       animal: (animal || pet).trim(),
-      service: service.trim(),
+      service: joinServices(services),
       doctor,
       comment: comment.trim(),
       created_by: userId,
@@ -194,17 +200,35 @@ export default function AppointmentForm({
             <input type="text" value={animal} onChange={(e) => setAnimal(e.target.value)} placeholder="собака, лабрадор" className={fieldClass} />
           </label>
 
-          <label className={labelClass}>
-            Послуга
-            <select required value={service} onChange={(e) => setService(e.target.value)} className={fieldClass}>
-              <option value="" disabled>Оберіть послугу</option>
-              {SERVICES.map((s) => <option key={s} value={s}>{s}</option>)}
-              {/* Підтримка записів зі старою/нестандартною послугою */}
-              {service && !SERVICES.includes(service as never) && (
-                <option value={service}>{service}</option>
-              )}
-            </select>
-          </label>
+          <div className={`${labelClass} md:col-span-2`}>
+            Послуги <span className="normal-case text-[10px] font-normal text-[var(--muted-col)]">— можна обрати кілька</span>
+            <div className="flex flex-wrap gap-2">
+              {/* Стандартні послуги + нестандартні зі старих записів, що вже обрані. */}
+              {[...SERVICES, ...services.filter((s) => !SERVICES.includes(s as never))].map((s) => {
+                const active = services.includes(s)
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() =>
+                      setServices((prev) =>
+                        prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+                      )
+                    }
+                    className={[
+                      "rounded-full border px-3 py-1.5 text-[13px] font-semibold transition active:scale-[0.97]",
+                      active
+                        ? "border-[var(--teal)] bg-[var(--teal)] text-white"
+                        : "border-[var(--line)] bg-white text-[var(--ink-2)] hover:border-[var(--teal)]",
+                    ].join(" ")}
+                  >
+                    {s}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
 
           {canSeePrices && (
             <label className={labelClass}>

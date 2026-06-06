@@ -61,9 +61,18 @@ export function doctorForEmail(email: string | null | undefined): DoctorName | n
   return accountForEmail(email)?.doctor ?? null
 }
 
-/** Бачить суми (price) у записах та аналітику коштів — лише головний лікар. */
+/** Доступ до аналітики коштів (сторінка «Аналітика») — лише головний лікар. */
 export function canSeePrices(email: string | null | undefined): boolean {
   return roleForEmail(email) === "head"
+}
+
+/**
+ * Бачить суми (price) на тікетах записів, у деталях та у формі — усі користувачі.
+ * Свідомо ширше за canSeePrices: суми в записах відкриті всім, а доступ до
+ * сторінки аналітики лишається лише в head (canSeePrices).
+ */
+export function canSeeAppointmentPrices(): boolean {
+  return true
 }
 
 /** Має доступ до бази клієнтів — усі, крім асистентів. */

@@ -62,7 +62,7 @@ export default function CalendarView({
   onDateClick,
   calendarRef,
 }: Props) {
-  const { canSeePrices } = useCalendarContext()
+  const { canSeeAppointmentPrices } = useCalendarContext()
 
   // Sync FullCalendar when selectedDate changes externally
   useEffect(() => {
@@ -116,7 +116,7 @@ export default function CalendarView({
       eventContent={(arg: EventContentArg) => {
         const appt = arg.event.extendedProps.appointment as Appointment
         const color = doctorColor(appt.doctor)
-        const price = canSeePrices && appt.price ? Number(appt.price) : 0
+        const price = canSeeAppointmentPrices && appt.price ? Number(appt.price) : 0
         const durMins = minutesFromTime(appt.end) - minutesFromTime(appt.start)
         const isShort = durMins < 45
 
@@ -132,19 +132,17 @@ export default function CalendarView({
 
         return (
           <div className="flex flex-col h-full px-2 py-1.5 overflow-hidden">
-            <div className="flex items-start justify-between gap-1">
-              <span className="text-[12px] font-bold leading-tight truncate" style={{ color: color.text }}>
-                {appt.client}
-              </span>
-              {price > 0 && (
-                <span className="text-[10px] font-bold shrink-0" style={{ color: color.border }}>
-                  {price.toLocaleString("uk-UA")} ₴
-                </span>
-              )}
-            </div>
+            <span className="text-[12px] font-bold leading-tight truncate" style={{ color: color.text }}>
+              {appt.client}
+            </span>
             <span className="text-[11px] leading-tight truncate opacity-75 mt-0.5" style={{ color: color.text }}>
               {appt.service}
             </span>
+            {price > 0 && (
+              <span className="text-[11px] font-bold leading-tight truncate mt-0.5" style={{ color: color.border }}>
+                {price.toLocaleString("uk-UA")} ₴
+              </span>
+            )}
             <span className="text-[10px] font-semibold mt-auto" style={{ color: color.border }}>
               {appt.start}–{appt.end}
             </span>

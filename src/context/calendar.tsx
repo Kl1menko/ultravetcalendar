@@ -15,8 +15,10 @@ export type CalendarContextType = {
   role: DoctorRole
   /** Ім'я лікаря, прив'язане до користувача (для персональної аналітики). */
   currentDoctor: DoctorName | null
-  /** Бачить суми у записах та аналітику коштів. */
+  /** Доступ до аналітики коштів (сторінка «Аналітика») — лише head. */
   canSeePrices: boolean
+  /** Бачить суми на тікетах/у деталях записів — усі користувачі. */
+  canSeeAppointmentPrices: boolean
   /** Має доступ до бази клієнтів. */
   canSeeClients: boolean
   reload: () => void

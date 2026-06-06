@@ -23,20 +23,17 @@ function normalizeRow(row: AppointmentRow): Appointment {
 function isMissingObject(code?: string) {
   return code === "PGRST205" || code === "42P01"
 }
-// Функції немає: PostgREST PGRST202, Postgres 42883.
-function isMissingFunction(code?: string) {
-  return code === "PGRST202" || code === "42883"
-}
 
-// price на рівні БД недоступна напряму (column GRANT відкликано) і прихована у
-// view appointments_public. Усі читають записи з цього view, а головний лікар
-// додатково доливає суми через security-definer RPC appointment_prices().
+// Усі читають записи з view appointments_public. Суми (price) тепер відкриті
+// для всіх authenticated прямо у view (див. supabase/appointment-prices-for-all.sql),
+// тож окремий RPC більше не потрібен — normalizeRow забирає price з рядка.
 //
-// ⚠️ Жодних fallback'ів на пряму таблицю appointments тут немає НАВМИСНО:
-// якщо читати таблицю напряму, колонка price витекла б усім (асистентам теж),
-// бо захист price тримається на column-GRANT у БД. Поки supabase/rls-policies.sql
-// не застосовано (немає view/RPC) — записи просто не завантажаться, і це правильно:
-// краще «нічого не показати», ніж показати ціни тому, кому не можна. Накатай SQL.
+// Параметр зберігаємо для зворотної сумісності виклику: коли false, price
+// обнуляємо в нормалізованому результаті (на випадок, якщо колись знадобиться
+// приховати суми для якоїсь ролі без зміни SQL).
+//
+// ⚠️ Поки supabase/rls-policies.sql + appointment-prices-for-all.sql не
+// застосовано (немає view) — записи просто не завантажаться. Накатай SQL.
 export async function fetchAppointments(canSeePrices = false): Promise<Appointment[]> {
   const { data, error } = await supabase
     .from("appointments_public")
@@ -57,25 +54,9 @@ export async function fetchAppointments(canSeePrices = false): Promise<Appointme
 
   const rows = (data as unknown as AppointmentRow[]).map(normalizeRow)
 
-  if (!canSeePrices) return rows
+  if (!canSeePrices) return rows.map((r) => ({ ...r, price: 0 }))
 
-  // Суми лише для head — виключно через security-definer RPC. Без fallback на таблицю.
-  const { data: prices, error: priceError } = await supabase.rpc("appointment_prices")
-  if (priceError) {
-    if (isMissingFunction(priceError.code)) {
-      console.error(
-        "appointment_prices RPC відсутній — застосуй supabase/rls-policies.sql"
-      )
-    } else {
-      console.error("appointment_prices error:", priceError)
-    }
-    return rows
-  }
-
-  const priceById = new Map<string, number>(
-    (prices as { id: string; price: number | null }[]).map((p) => [p.id, p.price || 0])
-  )
-  return rows.map((r) => ({ ...r, price: priceById.get(r.id) ?? 0 }))
+  return rows
 }
 
 export type AppointmentPayload = {

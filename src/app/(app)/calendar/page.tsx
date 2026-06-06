@@ -137,7 +137,7 @@ export default function CalendarPage() {
       </div>
 
       {/* ─── FULLCALENDAR ─── */}
-      <div className="min-h-0 flex-1 md:overflow-hidden md:rounded-3xl md:border md:border-[var(--line)] md:bg-white">
+      <div className="min-h-0 flex-1 px-3 pb-2 md:px-0 md:pb-0 md:overflow-hidden md:rounded-3xl md:border md:border-[var(--line)] md:bg-white">
         <CalendarView
           appointments={appointments}
           doctorFilter={doctorFilter}

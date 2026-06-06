@@ -5,6 +5,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Appointment } from "@/types"
 import { minutesFromTime, durationLabel, formatShortDate } from "@/lib/utils-app"
 import { doctorColor } from "@/lib/doctors"
+import { parseServices } from "@/lib/services"
 import { deleteAppointment } from "@/lib/appointments"
 
 type Props = {
@@ -63,9 +64,17 @@ export default function AppointmentDetails({
           <h2 className="text-[22px] font-black leading-tight text-[var(--ink)] mb-0.5">
             {appointment.pet}
           </h2>
-          <p className="text-[15px] font-semibold" style={{ color: color.text }}>
-            {appointment.service}
-          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {parseServices(appointment.service).map((s) => (
+              <span
+                key={s}
+                className="rounded-md bg-white/60 px-2 py-0.5 text-[13px] font-semibold"
+                style={{ color: color.text }}
+              >
+                {s}
+              </span>
+            ))}
+          </div>
 
           {/* Час */}
           <div className="flex items-center gap-2 mt-2.5">
