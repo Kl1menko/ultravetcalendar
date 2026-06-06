@@ -310,6 +310,38 @@ function Bar({ value, max, label, sublabel, valueText, colorIdx = 0 }: {
   )
 }
 
+// Рядок доходу по послузі: назва + сума на одному рядку (сума — акцент справа),
+// під ними бар на повну ширину, ще нижче — частка % і середній чек.
+// На відміну від Bar, назва не обрізається (вона над баром, не в вузькій колонці).
+function RevenueRow({ name, revenue, share, avg, max, colorIdx }: {
+  name: string
+  revenue: number
+  share: number
+  avg: number
+  max: number
+  colorIdx: number
+}) {
+  const pct = max > 0 ? Math.round((revenue / max) * 100) : 0
+  const color = BAR_COLORS[colorIdx % BAR_COLORS.length]
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="min-w-0 truncate text-[13px] font-semibold text-[var(--ink)]">{name}</span>
+        <span className="shrink-0 text-[13px] font-black text-[var(--ink)]">{formatMoney(revenue)}</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-[var(--paper)]">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${Math.max(pct, revenue > 0 ? 4 : 0)}%`, backgroundColor: color.bg }}
+        />
+      </div>
+      <span className="text-[11px] text-[var(--muted-col)]">
+        {share}% доходу · сер. чек {formatMoney(avg)}
+      </span>
+    </div>
+  )
+}
+
 // Бейдж зміни ±% до попереднього періоду. Ріст — зелений, спад — червоний,
 // 0% — нейтральний. null — нічого не рендеримо (немає порівняння).
 function Delta({ value }: { value: number | null }) {
@@ -580,27 +612,34 @@ export default function AnalyticsPage() {
           <Section title="Дохід по послугах">
             {services.length === 0 || maxServiceRevenue <= 1 ? noData : (
               <>
-                {[...services]
-                  .filter((s) => s.revenue > 0)
-                  .sort((a, b) => b.revenue - a.revenue)
-                  .map((s, i) => {
-                    const avg = s.count > 0 ? s.revenue / s.count : 0
-                    const share = totalRevenue > 0 ? Math.round((s.revenue / totalRevenue) * 100) : 0
-                    return (
-                      <Bar
-                        key={s.name}
-                        label=""
-                        value={Math.round(s.revenue)}
-                        valueText={formatMoney(s.revenue)}
-                        max={maxServiceRevenue}
-                        sublabel={`${s.name} · ${share}% · сер. ${formatMoney(avg)}`}
-                        colorIdx={i}
-                      />
-                    )
-                  })}
-                <div className="mt-1 flex items-center justify-between border-t border-[var(--line)] pt-2 text-[12px]">
-                  <span className="font-semibold text-[var(--muted-col)]">Разом</span>
-                  <span className="font-black text-[var(--ink)]">{formatMoney(totalRevenue)}</span>
+                <div className="flex flex-col gap-3">
+                  {[...services]
+                    .filter((s) => s.revenue > 0)
+                    .sort((a, b) => b.revenue - a.revenue)
+                    .map((s, i) => {
+                      const avg = s.count > 0 ? s.revenue / s.count : 0
+                      const share = totalRevenue > 0 ? Math.round((s.revenue / totalRevenue) * 100) : 0
+                      return (
+                        <RevenueRow
+                          key={s.name}
+                          name={s.name}
+                          revenue={s.revenue}
+                          share={share}
+                          avg={avg}
+                          max={maxServiceRevenue}
+                          colorIdx={i}
+                        />
+                      )
+                    })}
+                </div>
+                {/* Підсумок — головний акцент блоку */}
+                <div className="mt-3 flex items-center justify-between rounded-xl bg-[var(--teal-light)] px-3.5 py-2.5">
+                  <span className="text-[12px] font-bold uppercase tracking-[0.4px] text-[var(--teal-dark)]">
+                    Разом
+                  </span>
+                  <span className="text-[18px] font-black text-[var(--teal-dark)]">
+                    {formatMoney(totalRevenue)}
+                  </span>
                 </div>
               </>
             )}
