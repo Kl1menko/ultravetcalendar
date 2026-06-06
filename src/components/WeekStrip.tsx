@@ -45,8 +45,10 @@ export default function WeekStrip({ selectedDate, appointments, onSelectDate }: 
     return Math.min(100, Math.round((bookedMins / WORK_MINS) * 100))
   }
 
-  // Scroll selected card into view
+  // Scroll selected card into view (лише на мобільному — на десктопі смужка
+  // не скролиться, картки розтягнуті на всю ширину, тож центрувати нічого).
   useEffect(() => {
+    if (window.matchMedia("(min-width: 768px)").matches) return
     const el = stripRef.current?.querySelector<HTMLButtonElement>("[data-selected=true]")
     if (el) {
       el.scrollIntoView({ inline: "center", behavior: "smooth", block: "nearest" })
@@ -54,8 +56,8 @@ export default function WeekStrip({ selectedDate, appointments, onSelectDate }: 
   }, [selectedDate])
 
   return (
-    <div className="px-4 pb-2 overflow-x-auto scrollbar-hide">
-      <div ref={stripRef} className="flex gap-1.5 min-w-max">
+    <div className="px-4 pb-2 overflow-x-auto scrollbar-hide md:overflow-x-visible md:px-0">
+      <div ref={stripRef} className="flex gap-1.5 min-w-max md:min-w-0 md:gap-2">
         {days.map((d) => {
           const iso = isoDate(d)
           const isSelected = iso === isoDate(selectedDate)
@@ -74,7 +76,7 @@ export default function WeekStrip({ selectedDate, appointments, onSelectDate }: 
                 onSelectDate(nd)
               }}
               className={[
-                "flex flex-col items-center gap-[2px] min-w-[52px] py-2 px-2 rounded-2xl border cursor-pointer transition-all duration-150 active:scale-95 select-none",
+                "flex flex-col items-center gap-[2px] min-w-[52px] py-2 px-2 rounded-2xl border cursor-pointer transition-all duration-150 active:scale-95 select-none md:min-w-0 md:flex-1 md:py-2.5",
                 isSelected
                   ? "bg-[var(--teal)] border-[var(--teal)] shadow-md shadow-teal-500/25"
                   : isTodayDay

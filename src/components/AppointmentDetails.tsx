@@ -76,48 +76,69 @@ export default function AppointmentDetails({
               {durationLabel(durMins)}
             </span>
             {canSeePrices && appointment.price > 0 && (
-              <>
-                <span className="text-[var(--line)]">·</span>
-                <span className="text-[13px] font-bold" style={{ color: color.border }}>
-                  {Number(appointment.price).toLocaleString("uk-UA")} ₴
-                </span>
-              </>
+              <span className="ml-auto rounded-lg bg-white/70 px-2 py-0.5 text-[14px] font-black text-[var(--teal)] md:text-[15px]">
+                {Number(appointment.price).toLocaleString("uk-UA")} ₴
+              </span>
             )}
           </div>
         </div>
 
-        {/* Інфо-рядки */}
-        <div className="mx-4 mb-4 overflow-hidden rounded-2xl border border-[var(--line)] md:mx-6 md:grid md:grid-cols-2 md:rounded-[24px]">
-          {[
-            { label: "Клієнт", value: appointment.client, phone: false },
-            { label: "Телефон", value: appointment.phone, phone: true },
-            { label: "Тварина", value: appointment.animal || appointment.pet, phone: false },
-            { label: "Лікар", value: appointment.doctor, phone: false },
-            ...(appointment.comment ? [{ label: "Коментар", value: appointment.comment, phone: false }] : []),
-          ].map((row, i, arr) => (
-            <div
-              key={i}
-              className={`flex items-baseline justify-between px-4 py-2.5 md:min-h-[56px] md:px-5 md:py-3 ${
-                i < arr.length - 1 ? "border-b border-[var(--line)]" : ""
-              }`}
-            >
-              <span className="text-[12px] text-[var(--muted-col)] font-semibold flex-shrink-0 mr-3">
-                {row.label}
-              </span>
-              {row.phone ? (
-                <a
-                  href={`tel:${row.value}`}
-                  className="text-[13px] font-semibold text-[var(--teal)] text-right underline-offset-2 hover:underline"
-                >
-                  {row.value}
-                </a>
-              ) : (
-                <span className="text-[13px] font-semibold text-[var(--ink)] text-right">
-                  {row.value}
-                </span>
-              )}
-            </div>
-          ))}
+        {/* Інфо-рядки — мітка зверху дрібним капсом, значення під нею (стек,
+            лівий край). Пари читаються єдиним блоком, без порожнечі посередині. */}
+        <div className="mx-4 mb-4 overflow-hidden rounded-2xl border border-[var(--line)] md:mx-6 md:rounded-[24px]">
+          {(() => {
+            const rows = [
+              { label: "Клієнт", value: appointment.client, phone: false, full: false },
+              { label: "Телефон", value: appointment.phone, phone: true, full: false },
+              { label: "Тварина", value: appointment.animal || appointment.pet, phone: false, full: false },
+              { label: "Лікар", value: appointment.doctor, phone: false, full: false },
+              ...(appointment.comment
+                ? [{ label: "Коментар", value: appointment.comment, phone: false, full: true }]
+                : []),
+            ]
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2">
+                {rows.map((row, i) => {
+                  const isLast = i === rows.length - 1
+                  // На ≥sm клітинки лягають у 2 колонки: ліва (парний індекс) має
+                  // праву межу; всі, крім останнього рядка, мають нижню.
+                  const leftCol = i % 2 === 0
+                  const onLastSmRow = i >= rows.length - (rows.length % 2 === 0 ? 2 : 1)
+                  return (
+                    <div
+                      key={i}
+                      className={[
+                        "flex flex-col gap-0.5 px-4 py-3 md:px-5 md:py-3.5 [border-color:var(--line)]",
+                        isLast ? "" : "border-b",
+                        row.full
+                          ? "sm:col-span-2"
+                          : [
+                              leftCol ? "sm:border-r" : "",
+                              onLastSmRow ? "sm:border-b-0" : "",
+                            ].join(" "),
+                      ].join(" ")}
+                    >
+                      <span className="text-[11px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]">
+                        {row.label}
+                      </span>
+                      {row.phone ? (
+                        <a
+                          href={`tel:${row.value}`}
+                          className="w-fit text-[15px] font-bold text-[var(--teal)] underline-offset-2 hover:underline md:text-[16px]"
+                        >
+                          {row.value}
+                        </a>
+                      ) : (
+                        <span className="text-[15px] font-bold text-[var(--ink)] md:text-[16px]">
+                          {row.value}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })()}
         </div>
 
         {/* Дії */}

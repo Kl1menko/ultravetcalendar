@@ -95,6 +95,9 @@ function periodComparisonLabel(period: Period): string {
 
 // ─── агрегації ───────────────────────────────────────────────────────────────
 
+// Скорочені назви днів тижня, індекс = Date.getDay() (0 = Нд).
+const WEEKDAY_SHORT = ["Нд", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"]
+
 function peakHours(appointments: Appointment[]) {
   const counts: Record<number, number> = {}
   for (let h = 8; h < 20; h++) counts[h] = 0
@@ -108,13 +111,12 @@ function peakHours(appointments: Appointment[]) {
 }
 
 function peakWeekdays(appointments: Appointment[]) {
-  const DAYS = ["Нд", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"]
   const counts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }
   appointments.forEach((a) => {
     const d = new Date(a.date + "T12:00:00").getDay()
     counts[d] = (counts[d] || 0) + 1
   })
-  return DAYS.map((name, i) => ({ name, count: counts[i] }))
+  return WEEKDAY_SHORT.map((name, i) => ({ name, count: counts[i] }))
 }
 
 // Тренд виручки в межах періоду. Гранулярність залежить від періоду:
@@ -144,7 +146,9 @@ function revenueTrend(
       label = key.slice(5) // MM
     } else {
       key = a.date // YYYY-MM-DD
-      label = a.date.slice(8) // DD
+      // Скорочений день тижня + число, напр. "Пн 02" — щоб було видно який це день.
+      const wd = WEEKDAY_SHORT[new Date(a.date + "T12:00:00").getDay()]
+      label = `${wd} ${a.date.slice(8)}`
     }
     const prev = buckets.get(key)
     if (prev) prev.revenue += revenue
@@ -192,7 +196,6 @@ function clinicUtilization(appointments: Appointment[]) {
     : 0
 
   // Середня зайнятість по днях тижня (лише дні, де були записи — щоб не «розмивати» нулями).
-  const DAYS = ["Нд", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"]
   const weekdayAgg: Record<number, { sum: number; n: number }> = {}
   dayPcts.forEach(({ date, pct }) => {
     const wd = new Date(date + "T12:00:00").getDay()
@@ -200,7 +203,7 @@ function clinicUtilization(appointments: Appointment[]) {
     weekdayAgg[wd].sum += pct
     weekdayAgg[wd].n += 1
   })
-  const byWeekday = DAYS.map((name, i) => ({
+  const byWeekday = WEEKDAY_SHORT.map((name, i) => ({
     name,
     pct: weekdayAgg[i]?.n ? Math.round(weekdayAgg[i].sum / weekdayAgg[i].n) : 0,
     hasData: Boolean(weekdayAgg[i]?.n),
@@ -278,34 +281,34 @@ function Bar({ value, max, label, sublabel, valueText, colorIdx = 0 }: {
   // поза баром (праворуч), інакше воно обріжеться на overflow-hidden.
   const labelFitsInside = pct >= 22 && text.length <= 12
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 md:gap-3.5">
       {label !== "" && (
-        <span className="w-8 text-right text-[11px] font-bold text-[var(--muted-col)] shrink-0">{label}</span>
+        <span className="w-8 text-right text-[11px] font-bold text-[var(--muted-col)] shrink-0 md:w-10 md:text-[13px]">{label}</span>
       )}
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <div className="h-7 flex-1 overflow-hidden rounded-lg bg-[var(--paper)]">
+        <div className="h-7 flex-1 overflow-hidden rounded-lg bg-[var(--paper)] md:h-8">
           <div
-            className="flex h-full items-center rounded-lg px-2 transition-all duration-500"
+            className="flex h-full items-center rounded-lg px-2 transition-all duration-500 md:px-2.5"
             style={{
               width: `${Math.max(pct, value > 0 ? 4 : 0)}%`,
               backgroundColor: color.bg,
             }}
           >
             {value > 0 && labelFitsInside && (
-              <span className="text-[11px] font-bold leading-none whitespace-nowrap" style={{ color: color.text }}>
+              <span className="text-[11px] font-bold leading-none whitespace-nowrap md:text-[13px]" style={{ color: color.text }}>
                 {text}
               </span>
             )}
           </div>
         </div>
         {value > 0 && !labelFitsInside && (
-          <span className="shrink-0 whitespace-nowrap text-[11px] font-bold leading-none text-[var(--ink)]">
+          <span className="shrink-0 whitespace-nowrap text-[11px] font-bold leading-none text-[var(--ink)] md:text-[13px]">
             {text}
           </span>
         )}
       </div>
       {sublabel && (
-        <span className="w-28 text-[11px] text-[var(--muted-col)] shrink-0 truncate">{sublabel}</span>
+        <span className="w-28 text-[11px] text-[var(--muted-col)] shrink-0 truncate md:w-40 md:text-[13px]">{sublabel}</span>
       )}
     </div>
   )
@@ -325,18 +328,18 @@ function RevenueRow({ name, revenue, share, avg, max, colorIdx }: {
   const pct = max > 0 ? Math.round((revenue / max) * 100) : 0
   const color = BAR_COLORS[colorIdx % BAR_COLORS.length]
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 md:gap-1.5">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="min-w-0 truncate text-[13px] font-semibold text-[var(--ink)]">{name}</span>
-        <span className="shrink-0 text-[13px] font-black text-[var(--ink)]">{formatMoney(revenue)}</span>
+        <span className="min-w-0 truncate text-[13px] font-semibold text-[var(--ink)] md:text-[14px]">{name}</span>
+        <span className="shrink-0 text-[13px] font-black text-[var(--ink)] md:text-[15px]">{formatMoney(revenue)}</span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-[var(--paper)]">
+      <div className="h-2 overflow-hidden rounded-full bg-[var(--paper)] md:h-2.5">
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{ width: `${Math.max(pct, revenue > 0 ? 4 : 0)}%`, backgroundColor: color.bg }}
         />
       </div>
-      <span className="text-[11px] text-[var(--muted-col)]">
+      <span className="text-[11px] text-[var(--muted-col)] md:text-[12px]">
         {share}% доходу · сер. чек {formatMoney(avg)}
       </span>
     </div>
@@ -365,10 +368,10 @@ function Delta({ value }: { value: number | null }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="desktop-card-hover overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-sm">
-      <div className="px-4 py-3 border-b border-[var(--line)]">
-        <h2 className="text-[13px] font-bold text-[var(--ink)]">{title}</h2>
+      <div className="px-4 py-3 border-b border-[var(--line)] md:px-5 md:py-4">
+        <h2 className="text-[13px] font-bold text-[var(--ink)] md:text-[15px]">{title}</h2>
       </div>
-      <div className="px-4 py-3 flex flex-col gap-2">{children}</div>
+      <div className="px-4 py-3 flex flex-col gap-2 md:px-5 md:py-4 md:gap-2.5">{children}</div>
     </div>
   )
 }
@@ -499,14 +502,14 @@ export default function AnalyticsPage() {
       </header>
 
       {/* Перемикач періоду */}
-      <div className="flex gap-1.5 overflow-x-auto md:gap-2">
+      <div className="flex gap-1.5 overflow-x-auto md:gap-2 md:overflow-x-visible">
         {PERIODS.map((p) => (
           <button
             key={p.value}
             type="button"
             onClick={() => setPeriod(p.value)}
             className={[
-              "h-9 shrink-0 rounded-xl border-[1.5px] px-3.5 text-[13px] font-semibold transition-colors",
+              "h-9 shrink-0 rounded-xl border-[1.5px] px-3.5 text-[13px] font-semibold transition-colors md:h-10 md:px-5 md:text-[14px]",
               p.value === period
                 ? "bg-[var(--teal-light)] border-[var(--teal-mid)] text-[var(--teal-dark)]"
                 : "bg-white border-[var(--line)] text-[var(--ink-2)] hover:bg-[var(--paper)]",
@@ -520,12 +523,12 @@ export default function AnalyticsPage() {
       {/* Summary */}
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
         {summary.map((item) => (
-          <div key={item.label} className="desktop-card-hover flex flex-col gap-1 rounded-2xl border border-[var(--line)] bg-white p-3 shadow-sm md:p-5">
+          <div key={item.label} className="desktop-card-hover flex flex-col gap-1 rounded-2xl border border-[var(--line)] bg-white p-3 shadow-sm md:gap-1.5 md:p-5">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[18px] md:text-[22px] font-black text-[var(--teal)] leading-none">{item.value}</span>
+              <span className="text-[18px] md:text-[26px] font-black text-[var(--teal)] leading-none">{item.value}</span>
               <Delta value={item.delta} />
             </div>
-            <span className="text-[10px] font-semibold text-[var(--muted-col)] leading-tight">{item.label}</span>
+            <span className="text-[10px] font-semibold text-[var(--muted-col)] leading-tight md:text-[12px]">{item.label}</span>
           </div>
         ))}
       </div>
@@ -553,19 +556,19 @@ export default function AnalyticsPage() {
         )}
       </Section>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-4 md:gap-5 lg:grid-cols-2 2xl:grid-cols-3">
         {/* Завантаженість клініки */}
         <Section title="Завантаженість клініки">
           {total === 0 ? noData : (
             <>
               <div className="mb-1 flex items-baseline justify-between">
-                <span className="text-[28px] font-black leading-none text-[var(--teal)]">{utilization.avgPct}%</span>
-                <span className="text-[11px] text-[var(--muted-col)]">
+                <span className="text-[28px] font-black leading-none text-[var(--teal)] md:text-[34px]">{utilization.avgPct}%</span>
+                <span className="text-[11px] text-[var(--muted-col)] md:text-[12px]">
                   середня зайнятість · {utilization.daysTracked} {utilization.daysTracked === 1 ? "день" : "дн."}
                 </span>
               </div>
               {utilization.busiest && utilization.quietest && (
-                <p className="mb-2 text-[11px] text-[var(--muted-col)]">
+                <p className="mb-2 text-[11px] text-[var(--muted-col)] md:text-[12px]">
                   Найзавантаженіший: <strong className="text-[var(--ink)]">{utilization.busiest.name} ({utilization.busiest.pct}%)</strong>
                   {" · "}найвільніший: <strong className="text-[var(--ink)]">{utilization.quietest.name} ({utilization.quietest.pct}%)</strong>
                 </p>
@@ -659,11 +662,11 @@ export default function AnalyticsPage() {
                     })}
                 </div>
                 {/* Підсумок — головний акцент блоку */}
-                <div className="mt-3 flex items-center justify-between rounded-xl bg-[var(--teal-light)] px-3.5 py-2.5">
-                  <span className="text-[12px] font-bold uppercase tracking-[0.4px] text-[var(--teal-dark)]">
+                <div className="mt-3 flex items-center justify-between rounded-xl bg-[var(--teal-light)] px-3.5 py-2.5 md:px-4 md:py-3">
+                  <span className="text-[12px] font-bold uppercase tracking-[0.4px] text-[var(--teal-dark)] md:text-[13px]">
                     Разом
                   </span>
-                  <span className="text-[18px] font-black text-[var(--teal-dark)]">
+                  <span className="text-[18px] font-black text-[var(--teal-dark)] md:text-[20px]">
                     {formatMoney(totalRevenue)}
                   </span>
                 </div>
