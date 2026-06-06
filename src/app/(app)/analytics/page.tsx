@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { useCalendarContext } from "@/context/calendar"
 import { isoDate, minutesFromTime } from "@/lib/utils-app"
+import { appointmentsToCsv, downloadCsv } from "@/lib/export-csv"
 import { Appointment } from "@/types"
 
 // ─── періоди ───────────────────────────────────────────────────────────────────
@@ -46,6 +47,51 @@ function filterByPeriod(appointments: Appointment[], period: Period): Appointmen
   return appointments.filter((a) => a.date >= startIso && a.date <= todayIso)
 }
 
+// Попередній період такої самої довжини, що й поточний (для порівняння ±%).
+// Поточний період = [periodStart .. сьогодні]; попередній = такий самий відрізок,
+// зсунутий назад так, щоб закінчуватися за день до початку поточного.
+// Для "all" порівняння немає (повертаємо null).
+function filterByPreviousPeriod(appointments: Appointment[], period: Period): Appointment[] | null {
+  const start = periodStart(period)
+  if (!start) return null
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  // Довжина поточного відрізка у днях (включно).
+  const spanDays = Math.round((today.getTime() - start.getTime()) / 86_400_000) + 1
+  const prevEnd = new Date(start)
+  prevEnd.setDate(prevEnd.getDate() - 1)
+  const prevStart = new Date(prevEnd)
+  prevStart.setDate(prevStart.getDate() - (spanDays - 1))
+  const prevStartIso = isoDate(prevStart)
+  const prevEndIso = isoDate(prevEnd)
+  return appointments.filter((a) => a.date >= prevStartIso && a.date <= prevEndIso)
+}
+
+// Зміна у відсотках поточного значення відносно попереднього.
+// null — якщо порівняти ні з чим (немає попереднього періоду або база = 0).
+function pctChange(current: number, previous: number): number | null {
+  if (previous === 0) return current === 0 ? 0 : null
+  return Math.round(((current - previous) / previous) * 100)
+}
+
+// Суфікс гранулярності для заголовка тренду — узгоджений із revenueTrend().
+function trendUnitLabel(period: Period): string {
+  if (period === "day") return " по годинах"
+  if (period === "year" || period === "all") return " по місяцях"
+  return " по днях"
+}
+
+// Підпис для рядка порівняння під KPI-картками.
+function periodComparisonLabel(period: Period): string {
+  switch (period) {
+    case "day": return "день"
+    case "week": return "тиждень"
+    case "month": return "місяць"
+    case "year": return "рік"
+    default: return "період"
+  }
+}
+
 // ─── агрегації ───────────────────────────────────────────────────────────────
 
 function peakHours(appointments: Appointment[]) {
@@ -68,6 +114,102 @@ function peakWeekdays(appointments: Appointment[]) {
     counts[d] = (counts[d] || 0) + 1
   })
   return DAYS.map((name, i) => ({ name, count: counts[i] }))
+}
+
+// Тренд виручки в межах періоду. Гранулярність залежить від періоду:
+//   day            → по годинах доби
+//   week / month   → по днях (ISO-дата)
+//   year / all     → по місяцях (YYYY-MM)
+// Повертає впорядкований масив бакетів із короткою міткою для осі.
+function revenueTrend(
+  appointments: Appointment[],
+  period: Period
+): { key: string; label: string; revenue: number }[] {
+  const granularity: "hour" | "day" | "month" =
+    period === "day" ? "hour" : period === "year" || period === "all" ? "month" : "day"
+
+  const buckets = new Map<string, { label: string; revenue: number }>()
+
+  appointments.forEach((a) => {
+    const revenue = a.price || 0
+    let key: string
+    let label: string
+    if (granularity === "hour") {
+      const h = Math.floor(minutesFromTime(a.start) / 60)
+      key = String(h).padStart(2, "0")
+      label = `${h}`
+    } else if (granularity === "month") {
+      key = a.date.slice(0, 7) // YYYY-MM
+      label = key.slice(5) // MM
+    } else {
+      key = a.date // YYYY-MM-DD
+      label = a.date.slice(8) // DD
+    }
+    const prev = buckets.get(key)
+    if (prev) prev.revenue += revenue
+    else buckets.set(key, { label, revenue })
+  })
+
+  return [...buckets.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([key, v]) => ({ key, ...v }))
+}
+
+// Робоче вікно для розрахунку завантаженості (узгоджено з WeekStrip).
+const WORK_START_MIN = 10 * 60 // 10:00
+const WORK_END_MIN = 18 * 60 // 18:00
+const WORK_DAY_MIN = WORK_END_MIN - WORK_START_MIN // 480 хв
+
+// Зайняті хвилини в робочому вікні для конкретного дня (обрізаємо за межами 10–18).
+function bookedMinutesForDay(dayAppts: Appointment[]): number {
+  return dayAppts.reduce((sum, a) => {
+    const start = Math.max(minutesFromTime(a.start), WORK_START_MIN)
+    const end = Math.min(minutesFromTime(a.end), WORK_END_MIN)
+    return sum + Math.max(0, end - start)
+  }, 0)
+}
+
+// Завантаженість клініки за період: середній % зайнятості робочих слотів по днях,
+// де реально були записи, + середня зайнятість у розрізі днів тижня.
+function clinicUtilization(appointments: Appointment[]) {
+  // Групуємо за датою.
+  const byDate = new Map<string, Appointment[]>()
+  appointments.forEach((a) => {
+    const arr = byDate.get(a.date)
+    if (arr) arr.push(a)
+    else byDate.set(a.date, [a])
+  })
+
+  const dayPcts: { date: string; pct: number }[] = []
+  byDate.forEach((appts, date) => {
+    const pct = Math.min(100, Math.round((bookedMinutesForDay(appts) / WORK_DAY_MIN) * 100))
+    dayPcts.push({ date, pct })
+  })
+
+  const avgPct = dayPcts.length
+    ? Math.round(dayPcts.reduce((s, d) => s + d.pct, 0) / dayPcts.length)
+    : 0
+
+  // Середня зайнятість по днях тижня (лише дні, де були записи — щоб не «розмивати» нулями).
+  const DAYS = ["Нд", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"]
+  const weekdayAgg: Record<number, { sum: number; n: number }> = {}
+  dayPcts.forEach(({ date, pct }) => {
+    const wd = new Date(date + "T12:00:00").getDay()
+    if (!weekdayAgg[wd]) weekdayAgg[wd] = { sum: 0, n: 0 }
+    weekdayAgg[wd].sum += pct
+    weekdayAgg[wd].n += 1
+  })
+  const byWeekday = DAYS.map((name, i) => ({
+    name,
+    pct: weekdayAgg[i]?.n ? Math.round(weekdayAgg[i].sum / weekdayAgg[i].n) : 0,
+    hasData: Boolean(weekdayAgg[i]?.n),
+  }))
+
+  const withData = byWeekday.filter((d) => d.hasData)
+  const busiest = withData.length ? [...withData].sort((a, b) => b.pct - a.pct)[0] : null
+  const quietest = withData.length ? [...withData].sort((a, b) => a.pct - b.pct)[0] : null
+
+  return { avgPct, byWeekday, busiest, quietest, daysTracked: dayPcts.length }
 }
 
 function byService(appointments: Appointment[]) {
@@ -168,6 +310,25 @@ function Bar({ value, max, label, sublabel, valueText, colorIdx = 0 }: {
   )
 }
 
+// Бейдж зміни ±% до попереднього періоду. Ріст — зелений, спад — червоний,
+// 0% — нейтральний. null — нічого не рендеримо (немає порівняння).
+function Delta({ value }: { value: number | null }) {
+  if (value === null) return null
+  const isUp = value > 0
+  const isFlat = value === 0
+  const color = isFlat
+    ? "text-[var(--muted-col)] bg-[var(--paper)]"
+    : isUp
+      ? "text-green-700 bg-green-50"
+      : "text-red-600 bg-red-50"
+  const arrow = isFlat ? "→" : isUp ? "↑" : "↓"
+  return (
+    <span className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-bold leading-none ${color}`}>
+      {arrow} {Math.abs(value)}%
+    </span>
+  )
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="desktop-card-hover overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-sm">
@@ -186,12 +347,19 @@ export default function AnalyticsPage() {
   const [period, setPeriod] = useState<Period>("month")
 
   const scoped = useMemo(() => filterByPeriod(appointments, period), [appointments, period])
+  const prevScoped = useMemo(
+    () => filterByPreviousPeriod(appointments, period),
+    [appointments, period]
+  )
 
   const total = scoped.length
   const hours = useMemo(() => peakHours(scoped), [scoped])
   const weekdays = useMemo(() => peakWeekdays(scoped), [scoped])
   const services = useMemo(() => byService(scoped), [scoped])
   const doctors = useMemo(() => byDoctor(scoped), [scoped])
+  const trend = useMemo(() => revenueTrend(scoped, period), [scoped, period])
+  const maxTrend = Math.max(...trend.map((t) => t.revenue), 1)
+  const utilization = useMemo(() => clinicUtilization(scoped), [scoped])
 
   const maxHour = Math.max(...hours.map((h) => h.count), 1)
   const maxDay = Math.max(...weekdays.map((d) => d.count), 1)
@@ -199,13 +367,29 @@ export default function AnalyticsPage() {
   const maxDoctor = doctors[0]?.count || 1
 
   const peakHour = hours.reduce((a, b) => (b.count > a.count ? b : a), hours[0])
-  const peakDay = [...weekdays].sort((a, b) => b.count - a.count)[0]
   const totalRevenue = scoped.reduce((sum, a) => sum + (a.price || 0), 0)
   // Середній чек рахуємо лише по записах із ненульовою ціною.
   const paidCount = scoped.filter((a) => (a.price || 0) > 0).length
   const avgCheck = paidCount > 0 ? totalRevenue / paidCount : 0
   const maxServiceRevenue = Math.max(...services.map((s) => s.revenue), 1)
   const maxDoctorRevenue = Math.max(...doctors.map((d) => d.revenue), 1)
+
+  // ─── Дельти до попереднього періоду (±%) ──────────────────────────────────
+  // prevScoped === null для "Весь час" — порівнювати немає з чим.
+  const prevTotal = prevScoped?.length ?? 0
+  const prevRevenue = prevScoped?.reduce((sum, a) => sum + (a.price || 0), 0) ?? 0
+  const prevPaidCount = prevScoped?.filter((a) => (a.price || 0) > 0).length ?? 0
+  const prevAvgCheck = prevPaidCount > 0 ? prevRevenue / prevPaidCount : 0
+  const hasComparison = prevScoped !== null
+  const deltaTotal = hasComparison ? pctChange(total, prevTotal) : null
+  const deltaRevenue = hasComparison ? pctChange(totalRevenue, prevRevenue) : null
+  const deltaAvgCheck = hasComparison ? pctChange(avgCheck, prevAvgCheck) : null
+
+  const handleExport = () => {
+    const today = isoDate(new Date())
+    const periodKey = period === "all" ? "all" : period
+    downloadCsv(`appointments_${periodKey}_${today}.csv`, appointmentsToCsv(scoped))
+  }
 
   const noData = <p className="text-[13px] text-[var(--muted-col)] py-2">Немає даних</p>
 
@@ -227,26 +411,33 @@ export default function AnalyticsPage() {
     )
   }
 
-  // Summary-картки: головний лікар бачить фінансові метрики, інші — операційні.
-  const summary = canSeePrices
-    ? [
-        { value: String(total), label: "всього записів" },
-        { value: total > 0 ? formatMoney(totalRevenue) : "—", label: "виручка" },
-        { value: avgCheck > 0 ? formatMoney(avgCheck) : "—", label: "середній чек" },
-        { value: peakHour?.count > 0 ? `${peakHour.hour}:00` : "—", label: "пікова година" },
-      ]
-    : [
-        { value: String(total), label: "всього записів" },
-        { value: peakHour?.count > 0 ? `${peakHour.hour}:00` : "—", label: "пікова година" },
-        { value: peakDay?.count > 0 ? peakDay.name : "—", label: "піковий день" },
-      ]
+  // Summary-картки головного лікаря. delta — зміна ±% до попереднього періоду
+  // такої самої довжини (null = немає з чим порівнювати, напр. "Весь час").
+  // higherIsBetter керує кольором стрілки (для всіх цих метрик ріст = добре).
+  const summary: { value: string; label: string; delta: number | null }[] = [
+    { value: String(total), label: "всього записів", delta: deltaTotal },
+    { value: total > 0 ? formatMoney(totalRevenue) : "—", label: "виручка", delta: deltaRevenue },
+    { value: avgCheck > 0 ? formatMoney(avgCheck) : "—", label: "середній чек", delta: deltaAvgCheck },
+    { value: peakHour?.count > 0 ? `${peakHour.hour}:00` : "—", label: "пікова година", delta: null },
+  ]
 
   return (
     <div className="flex flex-col gap-4 px-3.5 pt-3 pb-6 md:gap-5 md:px-0 md:pt-0">
-      <header className="pb-1 md:desktop-page-header md:px-6 md:py-5">
+      <header className="flex items-center justify-between gap-3 pb-1 md:desktop-page-header md:px-6 md:py-5">
         <h1 className="text-[22px] md:text-[28px] font-black tracking-tight text-[var(--ink)]">
           Аналітика
         </h1>
+        <button
+          type="button"
+          onClick={handleExport}
+          disabled={total === 0}
+          className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-[var(--line)] bg-white px-3 text-[12px] font-semibold text-[var(--ink-2)] shadow-sm transition-colors hover:border-[var(--teal-mid)] hover:text-[var(--ink)] disabled:opacity-50 md:h-10 md:rounded-2xl md:px-4 md:text-[13px]"
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+          </svg>
+          Експорт CSV
+        </button>
       </header>
 
       {/* Перемикач періоду */}
@@ -269,16 +460,66 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Summary */}
-      <div className={`grid gap-2 md:gap-4 ${canSeePrices ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3"}`}>
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
         {summary.map((item) => (
           <div key={item.label} className="desktop-card-hover flex flex-col gap-1 rounded-2xl border border-[var(--line)] bg-white p-3 shadow-sm md:p-5">
-            <span className="text-[18px] md:text-[22px] font-black text-[var(--teal)] leading-none">{item.value}</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[18px] md:text-[22px] font-black text-[var(--teal)] leading-none">{item.value}</span>
+              <Delta value={item.delta} />
+            </div>
             <span className="text-[10px] font-semibold text-[var(--muted-col)] leading-tight">{item.label}</span>
           </div>
         ))}
       </div>
+      {hasComparison && (
+        <p className="-mt-2 text-[11px] text-[var(--muted-col)]">
+          ↑↓ — зміна проти попереднього {periodComparisonLabel(period)} такої ж тривалості
+        </p>
+      )}
+
+      {/* Тренд виручки — на всю ширину */}
+      <Section title={`Тренд виручки${trendUnitLabel(period)}`}>
+        {total === 0 || totalRevenue === 0 ? noData : (
+          <div className="flex flex-col gap-1.5">
+            {trend.map((t) => (
+              <Bar
+                key={t.key}
+                label={t.label}
+                value={Math.round(t.revenue)}
+                valueText={formatMoney(t.revenue)}
+                max={maxTrend}
+                colorIdx={0}
+              />
+            ))}
+          </div>
+        )}
+      </Section>
 
       <div className="grid gap-4 xl:grid-cols-2">
+        {/* Завантаженість клініки */}
+        <Section title="Завантаженість клініки">
+          {total === 0 ? noData : (
+            <>
+              <div className="mb-1 flex items-baseline justify-between">
+                <span className="text-[28px] font-black leading-none text-[var(--teal)]">{utilization.avgPct}%</span>
+                <span className="text-[11px] text-[var(--muted-col)]">
+                  середня зайнятість · {utilization.daysTracked} {utilization.daysTracked === 1 ? "день" : "дн."}
+                </span>
+              </div>
+              {utilization.busiest && utilization.quietest && (
+                <p className="mb-2 text-[11px] text-[var(--muted-col)]">
+                  Найзавантаженіший: <strong className="text-[var(--ink)]">{utilization.busiest.name} ({utilization.busiest.pct}%)</strong>
+                  {" · "}найвільніший: <strong className="text-[var(--ink)]">{utilization.quietest.name} ({utilization.quietest.pct}%)</strong>
+                </p>
+              )}
+              {utilization.byWeekday.map((d, i) => (
+                <Bar key={d.name} label={d.name} value={d.pct} max={100} valueText={`${d.pct}%`} colorIdx={i} />
+              ))}
+              <p className="mt-1 text-[10px] text-[var(--muted-col)]">Робоче вікно 10:00–18:00</p>
+            </>
+          )}
+        </Section>
+
         {/* По лікарях */}
         <Section title="Записи по лікарях">
           {total === 0 ? noData : doctors.map((d, i) => (
