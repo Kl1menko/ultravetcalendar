@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { useCalendarContext } from "@/context/calendar"
 import { isoDate, minutesFromTime } from "@/lib/utils-app"
 import { appointmentsToCsv, downloadCsv } from "@/lib/export-csv"
+import { buildAppointmentsBackup, downloadJson } from "@/lib/backup"
 import { Appointment } from "@/types"
 
 // ─── періоди ───────────────────────────────────────────────────────────────────
@@ -423,6 +424,14 @@ export default function AnalyticsPage() {
     downloadCsv(`appointments_${periodKey}_${today}.csv`, appointmentsToCsv(scoped))
   }
 
+  // Повний бекап усіх записів (не лише за період) у JSON — повний зліпок для
+  // відновлення. Суми включаємо лише якщо їх видно поточному користувачу.
+  const handleBackup = () => {
+    const today = isoDate(new Date())
+    const backup = buildAppointmentsBackup(appointments, canSeePrices)
+    downloadJson(`backup_appointments_${today}.json`, backup)
+  }
+
   const noData = <p className="text-[13px] text-[var(--muted-col)] py-2">Немає даних</p>
 
   // Аналітика — лише для головного лікаря. Захищаємо і прямий перехід за URL,
@@ -459,17 +468,34 @@ export default function AnalyticsPage() {
         <h1 className="text-[22px] md:text-[28px] font-black tracking-tight text-[var(--ink)]">
           Аналітика
         </h1>
-        <button
-          type="button"
-          onClick={handleExport}
-          disabled={total === 0}
-          className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-[var(--line)] bg-white px-3 text-[12px] font-semibold text-[var(--ink-2)] shadow-sm transition-colors hover:border-[var(--teal-mid)] hover:text-[var(--ink)] disabled:opacity-50 md:h-10 md:rounded-2xl md:px-4 md:text-[13px]"
-        >
-          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
-          </svg>
-          Експорт CSV
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={handleBackup}
+            disabled={appointments.length === 0}
+            title="Повний бекап усіх записів у JSON"
+            className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-[var(--line)] bg-white px-3 text-[12px] font-semibold text-[var(--ink-2)] shadow-sm transition-colors hover:border-[var(--teal-mid)] hover:text-[var(--ink)] disabled:opacity-50 md:h-10 md:rounded-2xl md:px-4 md:text-[13px]"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3" />
+              <path d="M3 5v14a9 3 0 0 0 18 0V5" />
+              <path d="M3 12a9 3 0 0 0 18 0" />
+            </svg>
+            <span className="hidden sm:inline">Бекап</span>
+            <span className="sm:hidden">JSON</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={total === 0}
+            className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-[var(--line)] bg-white px-3 text-[12px] font-semibold text-[var(--ink-2)] shadow-sm transition-colors hover:border-[var(--teal-mid)] hover:text-[var(--ink)] disabled:opacity-50 md:h-10 md:rounded-2xl md:px-4 md:text-[13px]"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+            </svg>
+            CSV
+          </button>
+        </div>
       </header>
 
       {/* Перемикач періоду */}
