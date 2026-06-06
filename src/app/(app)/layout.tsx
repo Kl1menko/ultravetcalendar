@@ -58,6 +58,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [user])
 
   useEffect(() => {
+    // loadBadge() — async: setAlertsBadge лише після await fetchNotices,
+    // тож синхронних каскадних ре-рендерів немає (правило хибно-позитивне тут).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadBadge()
   }, [loadBadge])
 

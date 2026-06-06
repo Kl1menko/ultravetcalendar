@@ -209,6 +209,24 @@ export default function AnalyticsPage() {
 
   const noData = <p className="text-[13px] text-[var(--muted-col)] py-2">Немає даних</p>
 
+  // Аналітика — лише для головного лікаря. Захищаємо і прямий перехід за URL,
+  // не лише ховання вкладки в навігації. Guard після всіх хуків (правила React).
+  if (!canSeePrices) {
+    return (
+      <div className="px-4 pt-4 md:px-0 md:pt-0">
+        <header className="pb-4 md:desktop-page-header md:px-6 md:py-5">
+          <h1 className="text-[22px] font-black text-[var(--ink)] md:text-[28px]">Аналітика</h1>
+        </header>
+        <div className="mx-auto mt-6 max-w-md rounded-2xl border border-dashed border-[var(--line)] bg-white/70 px-5 py-8 text-center">
+          <p className="text-[15px] font-bold text-[var(--ink)]">Доступ обмежено</p>
+          <p className="mt-1.5 text-[13px] text-[var(--muted-col)]">
+            Аналітика доступна лише головному лікарю.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   // Summary-картки: головний лікар бачить фінансові метрики, інші — операційні.
   const summary = canSeePrices
     ? [

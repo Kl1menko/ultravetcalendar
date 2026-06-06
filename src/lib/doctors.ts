@@ -44,7 +44,7 @@ export const DOCTOR_ACCESS: Record<string, DoctorAccount> = {
   "head@clinic.com": { doctor: "Остап (головний лікар)", role: "head" },
   "yurii@clinic.com": { doctor: "Юрій (лікар)", role: "doctor" },
   "ustym@clinic.com": { doctor: "Устим (асистент)", role: "assistant" },
-  "ivan@clinic.com": { doctor: "Іван (асистент)", role: "doctor" },
+  "ivan@clinic.com": { doctor: "Іван (асистент)", role: "assistant" },
   "ania@clinic.com": { doctor: "Анна (асистент)", role: "assistant" },
 }
 

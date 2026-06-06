@@ -36,6 +36,9 @@ export default function AlertsPage() {
     document.dispatchEvent(new CustomEvent("notices-seen"))
   }, [])
 
+  // load() стартує завантаження сповіщень на маунті; setLoading(true) — навмисний
+  // одноразовий setState, каскадних ре-рендерів немає.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load() }, [load])
 
   const handlePublish = async (e: React.FormEvent) => {

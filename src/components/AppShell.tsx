@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { User } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase"
-import { canSeeClients, roleForEmail, roleLabel } from "@/lib/doctors"
+import { canSeeClients, canSeePrices, roleForEmail, roleLabel } from "@/lib/doctors"
 
 type Props = {
   user: User
@@ -56,6 +56,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
   const router = useRouter()
   const role = roleForEmail(user.email)
   const showClients = canSeeClients(user.email)
+  const showAnalytics = canSeePrices(user.email)
   const metadata = user.user_metadata ?? {}
   const displayName =
     (typeof metadata.display_name === "string" && metadata.display_name.trim()) ||
@@ -71,7 +72,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
     { href: "/calendar",  label: "Записи",      icon: <CalendarIcon /> },
     ...(showClients ? [{ href: "/clients", label: "Клієнти", icon: <ClientsIcon /> }] : []),
     { href: "/alerts", label: "Сповіщення", icon: <AlertsIcon /> },
-    { href: "/analytics", label: "Аналітика",   icon: <AnalyticsIcon /> },
+    ...(showAnalytics ? [{ href: "/analytics", label: "Аналітика", icon: <AnalyticsIcon /> }] : []),
     { href: "/profile",   label: "Профіль",     icon: <ProfileIcon /> },
   ]
 

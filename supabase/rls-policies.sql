@@ -22,7 +22,7 @@ as $$
   select case lower(coalesce(auth.jwt() ->> 'email', ''))
     when 'head@clinic.com'  then 'head'
     when 'yurii@clinic.com' then 'doctor'
-    when 'ivan@clinic.com'  then 'doctor'
+    when 'ivan@clinic.com'  then 'assistant'
     when 'ustym@clinic.com' then 'assistant'
     when 'ania@clinic.com'  then 'assistant'
     else 'assistant'
@@ -73,16 +73,24 @@ using (true);
 
 -- ─── price: недоступна напряму, лише через RPC ───────────────────────────────
 --
--- Відкликаємо table-wide select/update і видаємо поколонково БЕЗ price.
--- insert лишаємо table-wide (head створює запис з ціною; з RLS-політикою це ОК,
--- бо insert не «читає» price). Якщо хочеш заборонити запис price асистентам —
--- це вже робиться в UI (поле ховається) + клієнт не надсилає price.
+-- Відкликаємо ВСІ привілеї на таблицю в anon та authenticated (Supabase за
+-- замовчуванням видає обом ролям повний доступ, включно з колонкою price),
+-- а потім видаємо поколонково БЕЗ price.
+--
+-- ⚠️ anon (неавтентифікований ключ) не повинен мати доступу до записів узагалі —
+-- тож йому нічого не повертаємо; усі дані доступні лише authenticated.
 
-revoke select, update on public.appointments from authenticated;
+revoke all on public.appointments from anon;
+revoke all on public.appointments from authenticated;
 
 grant select (
   id, date, start_time, end_time, client, phone, pet, animal,
   service, doctor, comment, created_by, created_at, updated_at
+) on public.appointments to authenticated;
+
+grant insert (
+  date, start_time, end_time, client, phone, pet, animal,
+  service, doctor, comment, created_by, price
 ) on public.appointments to authenticated;
 
 grant update (
@@ -90,9 +98,12 @@ grant update (
   service, doctor, comment, created_by, updated_at, price
 ) on public.appointments to authenticated;
 
--- price читати напряму не можна нікому (немає grant select(price)).
--- Запис price дозволено (grant update(price) вище) — контроль того, ХТО пише,
--- лишається на боці UI/коду; за потреби обмеж тригером на is_head_doctor().
+grant delete on public.appointments to authenticated;
+
+-- price читати напряму не можна нікому (немає grant select(price)) — ні anon,
+-- ні authenticated. Запис price дозволено authenticated (grant insert/update(price));
+-- контроль того, ХТО пише, лишається на боці UI/коду; за потреби обмеж тригером
+-- на is_head_doctor().
 
 -- ─── appointments_public: view без price (джерело для всіх у коді) ───────────
 
@@ -104,6 +115,7 @@ select
   service, doctor, comment, created_by, created_at, updated_at
 from public.appointments;
 
+revoke all on public.appointments_public from anon;
 grant select on public.appointments_public to authenticated;
 
 -- ─── appointment_prices(): суми лише для головного лікаря ────────────────────

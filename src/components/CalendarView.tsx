@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useEffect } from "react"
+import { useEffect } from "react"
 import FullCalendar from "@fullcalendar/react"
 import timeGridPlugin from "@fullcalendar/timegrid"
 import interactionPlugin from "@fullcalendar/interaction"
@@ -8,6 +8,7 @@ import type { EventContentArg } from "@fullcalendar/core"
 import type { DateClickArg } from "@fullcalendar/interaction"
 import { Appointment } from "@/types"
 import { doctorColor } from "@/lib/doctors"
+import { useCalendarContext } from "@/context/calendar"
 import { HOUR_START, HOUR_END } from "@/lib/constants"
 import { isoDate, minutesFromTime, timeFromMinutes } from "@/lib/utils-app"
 
@@ -61,6 +62,8 @@ export default function CalendarView({
   onDateClick,
   calendarRef,
 }: Props) {
+  const { canSeePrices } = useCalendarContext()
+
   // Sync FullCalendar when selectedDate changes externally
   useEffect(() => {
     if (!calendarRef.current) return
@@ -113,7 +116,7 @@ export default function CalendarView({
       eventContent={(arg: EventContentArg) => {
         const appt = arg.event.extendedProps.appointment as Appointment
         const color = doctorColor(appt.doctor)
-        const price = appt.price ? Number(appt.price) : 0
+        const price = canSeePrices && appt.price ? Number(appt.price) : 0
         const durMins = minutesFromTime(appt.end) - minutesFromTime(appt.start)
         const isShort = durMins < 45
 

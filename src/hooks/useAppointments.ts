@@ -16,6 +16,9 @@ export function useAppointments(canSeePrices = false) {
   }, [canSeePrices])
 
   useEffect(() => {
+    // load() — async: усі setState відбуваються лише після await fetchAppointments,
+    // тож синхронних каскадних ре-рендерів немає (правило хибно-позитивне тут).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load()
 
     // Realtime subscription

@@ -32,26 +32,26 @@ function isMissingFunction(code?: string) {
 // view appointments_public. Усі читають записи з цього view, а головний лікар
 // додатково доливає суми через security-definer RPC appointment_prices().
 //
-// Поки supabase/rls-policies.sql не застосовано (немає view/RPC) — м'яко падаємо
-// назад на звичайну таблицю appointments, щоб застосунок працював одразу.
+// ⚠️ Жодних fallback'ів на пряму таблицю appointments тут немає НАВМИСНО:
+// якщо читати таблицю напряму, колонка price витекла б усім (асистентам теж),
+// бо захист price тримається на column-GRANT у БД. Поки supabase/rls-policies.sql
+// не застосовано (немає view/RPC) — записи просто не завантажаться, і це правильно:
+// краще «нічого не показати», ніж показати ціни тому, кому не можна. Накатай SQL.
 export async function fetchAppointments(canSeePrices = false): Promise<Appointment[]> {
-  let { data, error } = await supabase
+  const { data, error } = await supabase
     .from("appointments_public")
     .select("*")
     .order("date", { ascending: true })
     .order("start_time", { ascending: true })
 
-  // Fallback: view ще не створено → читаємо базову таблицю.
-  if (error && isMissingObject(error.code)) {
-    ;({ data, error } = await supabase
-      .from("appointments")
-      .select("*")
-      .order("date", { ascending: true })
-      .order("start_time", { ascending: true }))
-  }
-
   if (error) {
-    console.error("fetchAppointments error:", error)
+    if (isMissingObject(error.code)) {
+      console.error(
+        "fetchAppointments: view appointments_public відсутній — застосуй supabase/rls-policies.sql"
+      )
+    } else {
+      console.error("fetchAppointments error:", error)
+    }
     return []
   }
 
@@ -59,22 +59,16 @@ export async function fetchAppointments(canSeePrices = false): Promise<Appointme
 
   if (!canSeePrices) return rows
 
-  // Якщо рядки вже містять price (fallback читав appointments напряму) — нічого доливати.
-  if (rows.length > 0 && rows.some((r) => r.price > 0)) return rows
-
+  // Суми лише для head — виключно через security-definer RPC. Без fallback на таблицю.
   const { data: prices, error: priceError } = await supabase.rpc("appointment_prices")
   if (priceError) {
-    // RPC ще немає (SQL не застосовано) → пробуємо прочитати price напряму з таблиці.
     if (isMissingFunction(priceError.code)) {
-      const { data: full } = await supabase.from("appointments").select("id, price")
-      if (full) {
-        const map = new Map<string, number>(
-          (full as { id: string; price: number | null }[]).map((p) => [p.id, p.price || 0])
-        )
-        return rows.map((r) => ({ ...r, price: map.get(r.id) ?? 0 }))
-      }
+      console.error(
+        "appointment_prices RPC відсутній — застосуй supabase/rls-policies.sql"
+      )
+    } else {
+      console.error("appointment_prices error:", priceError)
     }
-    console.error("appointment_prices error:", priceError)
     return rows
   }
 
