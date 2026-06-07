@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Appointment } from "@/types"
-import { DOCTORS } from "@/lib/doctors"
+import { DOCTORS, doctorShortName } from "@/lib/doctors"
 import { SERVICES, parseServices, joinServices } from "@/lib/services"
 import { DURATIONS } from "@/lib/constants"
 import { isoDate, minutesFromTime, timeFromMinutes } from "@/lib/utils-app"
@@ -17,7 +17,8 @@ type Props = {
   prefillTime?: string
   editing?: Appointment | null
   userId?: string
-  canSeePrices?: boolean
+  /** Чи показувати/дозволяти вводити поле ціни. Усі ролі вписують ціну при записі. */
+  canEditPrice?: boolean
 }
 
 export default function AppointmentForm({
@@ -28,7 +29,7 @@ export default function AppointmentForm({
   prefillTime,
   editing,
   userId,
-  canSeePrices = false,
+  canEditPrice = true,
 }: Props) {
   const [date, setDate] = useState("")
   const [start, setStart] = useState("09:00")
@@ -107,9 +108,10 @@ export default function AppointmentForm({
       doctor,
       comment: comment.trim(),
       created_by: userId,
-      // Ціну редагує лише головний лікар. Інші ролі поля не бачать —
-      // при редагуванні зберігаємо наявне значення, при створенні залишаємо 0.
-      ...(canSeePrices ? { price: Number(price) || 0 } : {}),
+      // Ціну вписують усі ролі (асистенти записують клієнтів). Доступ до
+      // загальної картини коштів (аналітика) лишається лише в head — це
+      // контролюється окремо й цього payload не стосується.
+      ...(canEditPrice ? { price: Number(price) || 0 } : {}),
     }
 
     let err: Error | null
@@ -230,7 +232,7 @@ export default function AppointmentForm({
             </div>
           </div>
 
-          {canSeePrices && (
+          {canEditPrice && (
             <label className={labelClass}>
               Ціна (₴) <span className="normal-case text-[10px] font-normal text-[var(--muted-col)]">— необов&apos;язково</span>
               <input type="number" min={0} step={1} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" className={fieldClass} />
@@ -240,7 +242,7 @@ export default function AppointmentForm({
           <label className={labelClass}>
             Відповідальний лікар
             <select value={doctor} onChange={(e) => setDoctor(e.target.value)} required className={fieldClass}>
-              {DOCTORS.map((d) => <option key={d}>{d}</option>)}
+              {DOCTORS.map((d) => <option key={d} value={d}>{doctorShortName(d)}</option>)}
             </select>
           </label>
 

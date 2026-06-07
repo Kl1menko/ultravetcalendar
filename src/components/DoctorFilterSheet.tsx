@@ -1,7 +1,7 @@
 "use client"
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { DOCTORS } from "@/lib/doctors"
+import { DOCTORS, doctorShortName } from "@/lib/doctors"
 
 type Props = {
   open: boolean
@@ -32,7 +32,7 @@ export default function DoctorFilterSheet({ open, onClose, selected, onSelect }:
                   : "bg-white border-[var(--line)] text-[var(--ink)] hover:bg-[var(--paper)]",
               ].join(" ")}
             >
-              {doc}
+              {doctorShortName(doc)}
             </button>
           ))}
         </div>

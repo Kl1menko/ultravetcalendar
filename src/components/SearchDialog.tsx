@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Appointment } from "@/types"
-import { doctorColor } from "@/lib/doctors"
+import { doctorColor, doctorShortName } from "@/lib/doctors"
 import { formatShortDate } from "@/lib/utils-app"
 
 type Props = {
@@ -106,7 +106,7 @@ export default function SearchDialog({ open, onClose, appointments, onSelectAppo
                         {item.pet} — {item.service}
                       </strong>
                       <span className="block text-[11px] text-[var(--muted-col)]">
-                        {item.doctor} · {item.client}
+                        {doctorShortName(item.doctor)} · {item.client}
                       </span>
                       <span className="block text-[10px] text-[var(--muted-col)]">
                         {formatShortDate(new Date(item.date + "T12:00:00"))}

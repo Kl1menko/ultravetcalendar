@@ -30,6 +30,11 @@ const AlertsIcon = () => (
     <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
   </svg>
 )
+const PriceIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"/><circle cx="7" cy="7" r="1.2"/>
+  </svg>
+)
 const AnalyticsIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
     <path d="M18 20V10M12 20V4M6 20v-6"/>
@@ -70,6 +75,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
 
   const navItems = [
     { href: "/calendar",  label: "Записи",      icon: <CalendarIcon /> },
+    { href: "/price", label: "Прайс", icon: <PriceIcon /> },
     ...(showClients ? [{ href: "/clients", label: "Клієнти", icon: <ClientsIcon /> }] : []),
     { href: "/alerts", label: "Сповіщення", icon: <AlertsIcon /> },
     ...(showAnalytics ? [{ href: "/analytics", label: "Аналітика", icon: <AnalyticsIcon /> }] : []),

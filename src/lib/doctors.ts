@@ -1,6 +1,7 @@
 export const DOCTORS = [
   "Остап (головний лікар)",
   "Юрій (лікар)",
+  "Ірина (лікар)",
   "Устим (асистент)",
   "Іван (асистент)",
   "Анна (асистент)",
@@ -11,6 +12,7 @@ export type DoctorName = (typeof DOCTORS)[number]
 export const DOCTOR_COLORS = [
   { bg: "#dbeafe", border: "#2563eb", text: "#1d4ed8" },
   { bg: "#dcfce7", border: "#16a34a", text: "#15803d" },
+  { bg: "#cffafe", border: "#0891b2", text: "#0e7490" },
   { bg: "#fef3c7", border: "#d97706", text: "#b45309" },
   { bg: "#fce7f3", border: "#db2777", text: "#be185d" },
   { bg: "#ede9fe", border: "#7c3aed", text: "#6d28d9" },
@@ -19,6 +21,15 @@ export const DOCTOR_COLORS = [
 export function doctorColor(doctorName: string) {
   const idx = DOCTORS.indexOf(doctorName as DoctorName)
   return DOCTOR_COLORS[idx >= 0 ? idx : 0]
+}
+
+/**
+ * Ім'я лікаря для показу без ролі в дужках: "Остап (головний лікар)" → "Остап".
+ * Значення DOCTORS/appointment.doctor НЕ змінюємо (вони — ключ прив'язки записів
+ * і збігаються з даними в БД та DOCTOR_ACCESS) — скорочуємо лише для відображення.
+ */
+export function doctorShortName(doctorName: string): string {
+  return doctorName.replace(/\s*\(.*\)\s*/, "").trim()
 }
 
 // ─── Ролі та доступ ────────────────────────────────────────────────────────────
@@ -43,6 +54,7 @@ type DoctorAccount = {
 export const DOCTOR_ACCESS: Record<string, DoctorAccount> = {
   "head@clinic.com": { doctor: "Остап (головний лікар)", role: "head" },
   "yurii@clinic.com": { doctor: "Юрій (лікар)", role: "doctor" },
+  "iryna@clinic.com": { doctor: "Ірина (лікар)", role: "doctor" },
   "ustym@clinic.com": { doctor: "Устим (асистент)", role: "assistant" },
   "ivan@clinic.com": { doctor: "Іван (асистент)", role: "assistant" },
   "ania@clinic.com": { doctor: "Анна (асистент)", role: "assistant" },
@@ -67,12 +79,13 @@ export function canSeePrices(email: string | null | undefined): boolean {
 }
 
 /**
- * Бачить суми (price) на тікетах записів, у деталях та у формі — усі користувачі.
- * Свідомо ширше за canSeePrices: суми в записах відкриті всім, а доступ до
- * сторінки аналітики лишається лише в head (canSeePrices).
+ * Бачить суми (price) на тікетах та в деталях записів — усі, КРІМ асистентів.
+ * Асистенти (Іван, Устим, Аня) вписують ціну при створенні запису
+ * (див. canEditPrice у формі), але переглядати суми згодом не можуть.
+ * Доступ до сторінки аналітики при цьому ще вужчий — лише head (canSeePrices).
  */
-export function canSeeAppointmentPrices(): boolean {
-  return true
+export function canSeeAppointmentPrices(email: string | null | undefined): boolean {
+  return roleForEmail(email) !== "assistant"
 }
 
 /** Має доступ до бази клієнтів — усі, крім асистентів. */

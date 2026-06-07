@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Appointment } from "@/types"
 import { minutesFromTime, durationLabel, formatShortDate } from "@/lib/utils-app"
-import { doctorColor } from "@/lib/doctors"
+import { doctorColor, doctorShortName } from "@/lib/doctors"
 import { parseServices } from "@/lib/services"
 import { deleteAppointment } from "@/lib/appointments"
 
@@ -100,7 +100,7 @@ export default function AppointmentDetails({
               { label: "Клієнт", value: appointment.client, phone: false, full: false },
               { label: "Телефон", value: appointment.phone, phone: true, full: false },
               { label: "Тварина", value: appointment.animal || appointment.pet, phone: false, full: false },
-              { label: "Лікар", value: appointment.doctor, phone: false, full: false },
+              { label: "Лікар", value: doctorShortName(appointment.doctor), phone: false, full: false },
               ...(appointment.comment
                 ? [{ label: "Коментар", value: appointment.comment, phone: false, full: true }]
                 : []),

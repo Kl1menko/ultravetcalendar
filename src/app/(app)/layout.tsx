@@ -42,7 +42,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   })
 
   const userCanSeePrices = canSeePricesFn(user?.email)
-  const userCanSeeApptPrices = canSeeAppointmentPricesFn()
+  const userCanSeeApptPrices = canSeeAppointmentPricesFn(user?.email)
   // Суми у записах бачать усі → завантажуємо price для будь-якого користувача.
   const { appointments, reload } = useAppointments(userCanSeeApptPrices)
 
@@ -189,7 +189,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         prefillTime={prefillTime}
         editing={editingAppt}
         userId={user.id}
-        canSeePrices={userCanSeeApptPrices}
+        canEditPrice
       />
 
       <AppointmentDetails

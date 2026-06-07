@@ -5,7 +5,7 @@ import dynamic from "next/dynamic"
 import { useCalendarContext } from "@/context/calendar"
 import WeekStrip from "@/components/WeekStrip"
 import DoctorFilterSheet from "@/components/DoctorFilterSheet"
-import { DOCTORS } from "@/lib/doctors"
+import { DOCTORS, doctorShortName } from "@/lib/doctors"
 import { isoDate, formatMonthYear } from "@/lib/utils-app"
 import { Appointment } from "@/types"
 import type FullCalendar from "@fullcalendar/react"
@@ -93,7 +93,7 @@ export default function CalendarPage() {
               className="text-[13px] font-semibold text-[var(--ink)] outline-none bg-transparent cursor-pointer"
             >
               <option>Всі лікарі</option>
-              {DOCTORS.map((d) => <option key={d}>{d}</option>)}
+              {DOCTORS.map((d) => <option key={d} value={d}>{doctorShortName(d)}</option>)}
             </select>
           </div>
 

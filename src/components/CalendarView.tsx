@@ -122,10 +122,20 @@ export default function CalendarView({
 
         if (isShort) {
           return (
-            <div className="px-2 py-1 flex items-center gap-1 h-full overflow-hidden">
-              <span className="text-[11px] font-bold truncate" style={{ color: color.text }}>
+            <div className="px-2 py-1 flex items-center gap-1.5 h-full overflow-hidden">
+              <span className="text-[11px] font-bold shrink-0" style={{ color: color.text }}>
                 {appt.start} {appt.client}
               </span>
+              {appt.service && (
+                <span className="text-[11px] truncate opacity-75" style={{ color: color.text }}>
+                  {appt.service}
+                </span>
+              )}
+              {price > 0 && (
+                <span className="ml-auto text-[10px] font-bold shrink-0" style={{ color: color.border }}>
+                  {price.toLocaleString("uk-UA")} ₴
+                </span>
+              )}
             </div>
           )
         }
