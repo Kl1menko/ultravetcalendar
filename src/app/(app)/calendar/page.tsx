@@ -10,7 +10,6 @@ import { isoDate, formatMonthYear } from "@/lib/utils-app"
 import { Appointment } from "@/types"
 import type FullCalendar from "@fullcalendar/react"
 
-// No SSR for FullCalendar
 const CalendarView = dynamic(() => import("@/components/CalendarView"), {
   ssr: false,
   loading: () => (
@@ -30,18 +29,38 @@ export default function CalendarPage() {
   } = useCalendarContext()
 
   const calendarRef = useRef<FullCalendar | null>(null)
+  const dateInputRef = useRef<HTMLInputElement>(null)
   const [doctorFilter, setDoctorFilter] = useState("Всі лікарі")
   const [doctorSheetOpen, setDoctorSheetOpen] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(() => formatMonthYear(new Date()))
 
-  const goToToday = useCallback(() => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    setSelectedDate(today)
+  const goToDate = useCallback((date: Date) => {
+    const d = new Date(date)
+    d.setHours(0, 0, 0, 0)
+    setSelectedDate(d)
     if (calendarRef.current) {
-      calendarRef.current.getApi().gotoDate(today)
+      calendarRef.current.getApi().gotoDate(d)
     }
   }, [setSelectedDate])
+
+  const goToToday = useCallback(() => {
+    goToDate(new Date())
+  }, [goToDate])
+
+  // Іконка календаря → системний date picker. Значення input у форматі
+  // "YYYY-MM-DD" парсимо як ЛОКАЛЬНУ дату (через isoDate уникаємо UTC-зсуву).
+  const openDatePicker = useCallback(() => {
+    const input = dateInputRef.current
+    if (!input) return
+    input.value = isoDate(selectedDate)
+    input.showPicker?.()
+  }, [selectedDate])
+
+  const handleDatePicked = useCallback((value: string) => {
+    if (!value) return
+    const [y, m, d] = value.split("-").map(Number)
+    goToDate(new Date(y, m - 1, d))
+  }, [goToDate])
 
   const dayCount = appointments.filter(
     (a) =>
@@ -69,7 +88,7 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="flex h-[calc(100svh-48px-max(env(safe-area-inset-bottom),8px)-env(safe-area-inset-top))] flex-col md:h-[calc(100dvh-96px)] md:rounded-[28px] md:border md:border-white/80 md:bg-white/88 md:p-5 md:shadow-[var(--desktop-shadow)] md:backdrop-blur-xl">
+    <div className="flex h-[calc(100svh-env(safe-area-inset-top)-var(--bottom-nav-total))] flex-col md:h-[calc(100dvh-96px)] md:rounded-[28px] md:border md:border-white/80 md:bg-white/88 md:p-5 md:shadow-[var(--desktop-shadow)] md:backdrop-blur-xl">
       {/* ─── CALENDAR HEADER ─── */}
       <header className="flex items-center justify-between gap-2 px-4 pt-2 pb-1.5 md:px-0 md:pb-5">
         <h2 className="text-[19px] font-black tracking-tight text-[var(--ink)] md:text-3xl">
@@ -83,6 +102,26 @@ export default function CalendarPage() {
             className="grid h-8 place-items-center rounded-xl border-2 border-[var(--teal)] px-3 text-[13px] font-black text-[var(--teal)] transition-colors hover:bg-[var(--teal-light)] md:h-10 md:rounded-2xl md:px-4 md:text-[14px]"
           >
             Сьогодні
+          </button>
+
+          {/* Date picker (native, відкривається іконкою) */}
+          <button
+            onClick={openDatePicker}
+            aria-label="Вибрати дату"
+            className="relative grid h-8 w-8 place-items-center rounded-xl border border-[var(--line)] bg-white text-[var(--ink-2)] transition-colors hover:border-[var(--teal)] hover:text-[var(--teal)] md:h-10 md:w-10 md:rounded-2xl"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4 md:h-5 md:w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <path d="M16 2v4M8 2v4M3 10h18" />
+            </svg>
+            <input
+              ref={dateInputRef}
+              type="date"
+              aria-hidden="true"
+              tabIndex={-1}
+              onChange={(e) => handleDatePicked(e.target.value)}
+              className="pointer-events-none absolute inset-0 h-px w-px opacity-0"
+            />
           </button>
 
           {/* Doctor filter (desktop dropdown) */}

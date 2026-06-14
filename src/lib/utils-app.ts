@@ -42,14 +42,3 @@ export function durationLabel(minutes: number): string {
     : `${h} ${h === 1 ? "година" : h < 5 ? "години" : "годин"}`
 }
 
-export function isToday(date: Date): boolean {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return isoDate(date) === isoDate(today)
-}
-
-export function countLabel(n: number): string {
-  if (n === 1) return "запис"
-  if (n >= 2 && n <= 4) return "записи"
-  return "записів"
-}

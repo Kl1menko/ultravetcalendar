@@ -60,7 +60,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
   const pathname = usePathname()
   const router = useRouter()
   const role = roleForEmail(user.email)
-  const showClients = canSeeClients(user.email)
+  const showClients = canSeeClients()
   const showAnalytics = canSeePrices(user.email)
   const metadata = user.user_metadata ?? {}
   const displayName =
@@ -169,7 +169,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
 
       {/* ─── MAIN CONTENT ────────────────────────────────── */}
       <main
-        className="w-full px-0 pt-[env(safe-area-inset-top)] pb-[calc(48px+max(env(safe-area-inset-bottom),8px)+8px)] md:mx-auto md:max-w-[1440px] md:px-8 md:pb-10 md:pt-7 xl:px-10"
+        className="w-full px-0 pt-[env(safe-area-inset-top)] pb-[var(--bottom-nav-total)] md:mx-auto md:max-w-[1440px] md:px-8 md:pb-10 md:pt-7 xl:px-10"
       >
         {children}
       </main>
@@ -178,7 +178,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
       <nav
         className="fixed bottom-0 left-0 right-0 z-30 grid border-t border-[var(--line)] bg-white/95 backdrop-blur-xl md:hidden"
         style={{
-          paddingBottom: "max(env(safe-area-inset-bottom), 8px)",
+          paddingBottom: "var(--bottom-nav-safe)",
           gridTemplateColumns: `repeat(${navItems.length}, 1fr)`,
         }}
       >
@@ -188,7 +188,8 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center gap-1 py-2.5 min-h-[48px] text-[10px] font-semibold transition-colors relative ${
+              style={{ height: "var(--bottom-nav-h)" }}
+              className={`flex flex-col items-center justify-center gap-1 text-[10px] font-semibold transition-colors relative ${
                 active ? "text-[var(--teal)]" : "text-[var(--muted-col)]"
               }`}
             >
@@ -212,7 +213,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
           onClick={onNewAppointment}
           aria-label="Новий запис"
           className="md:hidden fixed right-4 z-20 w-14 h-14 rounded-full bg-[var(--teal)] text-white text-2xl font-light leading-none shadow-lg shadow-teal-500/30 flex items-center justify-center active:scale-[0.92] transition-transform"
-          style={{ bottom: "calc(48px + max(env(safe-area-inset-bottom), 8px) + 12px)" }}
+          style={{ bottom: "calc(var(--bottom-nav-total) + 12px)" }}
         >
           +
         </button>

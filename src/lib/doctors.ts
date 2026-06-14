@@ -88,9 +88,10 @@ export function canSeeAppointmentPrices(email: string | null | undefined): boole
   return roleForEmail(email) !== "assistant"
 }
 
-/** Має доступ до бази клієнтів — усі, крім асистентів. */
-export function canSeeClients(email: string | null | undefined): boolean {
-  return roleForEmail(email) !== "assistant"
+/** Має доступ до бази клієнтів — усі лікарі та асистенти.
+ *  (Дані клієнтів будуються з записів, які за RLS читають усі автентифіковані.) */
+export function canSeeClients(): boolean {
+  return true
 }
 
 export function roleLabel(role: DoctorRole): string {

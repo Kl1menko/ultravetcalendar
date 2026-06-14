@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef, useState } from "react"
 import FullCalendar from "@fullcalendar/react"
 import timeGridPlugin from "@fullcalendar/timegrid"
 import interactionPlugin from "@fullcalendar/interaction"
@@ -64,6 +64,17 @@ export default function CalendarView({
 }: Props) {
   const { canSeeAppointmentPrices } = useCalendarContext()
 
+  // Висота 15-хвилинного слота в px. Масштабується pinch-жестом (як у Google
+  // Calendar) і застосовується через CSS-змінну --fc-slot-height.
+  const SLOT_MIN = 24
+  const SLOT_MAX = 96
+  const SLOT_DEFAULT = 40
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [slotHeight, setSlotHeight] = useState(SLOT_DEFAULT)
+
+  // Стан активного pinch-жесту: початкова відстань між пальцями і висота на старті.
+  const pinchRef = useRef<{ startDist: number; startHeight: number } | null>(null)
+
   // Sync FullCalendar when selectedDate changes externally
   useEffect(() => {
     if (!calendarRef.current) return
@@ -74,7 +85,51 @@ export default function CalendarView({
     }
   }, [selectedDate, calendarRef])
 
+  // Pinch-to-zoom: на двопальцевий жест змінюємо висоту слотів.
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    const dist = (t: TouchList) =>
+      Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY)
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 2) return
+      pinchRef.current = { startDist: dist(e.touches), startHeight: slotHeight }
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      const pinch = pinchRef.current
+      if (!pinch || e.touches.length !== 2) return
+      e.preventDefault() // не скролимо сторінку під час масштабу
+      const scale = dist(e.touches) / pinch.startDist
+      const next = Math.round(pinch.startHeight * scale)
+      setSlotHeight(Math.min(SLOT_MAX, Math.max(SLOT_MIN, next)))
+    }
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) pinchRef.current = null
+    }
+
+    // passive:false — щоб preventDefault працював і блокував скрол при pinch.
+    el.addEventListener("touchstart", onTouchStart, { passive: false })
+    el.addEventListener("touchmove", onTouchMove, { passive: false })
+    el.addEventListener("touchend", onTouchEnd)
+    el.addEventListener("touchcancel", onTouchEnd)
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart)
+      el.removeEventListener("touchmove", onTouchMove)
+      el.removeEventListener("touchend", onTouchEnd)
+      el.removeEventListener("touchcancel", onTouchEnd)
+    }
+  }, [slotHeight])
+
   return (
+    <div
+      ref={containerRef}
+      className="h-full"
+      style={{ "--fc-slot-height": `${slotHeight}px` } as React.CSSProperties}
+    >
     <FullCalendar
       ref={calendarRef}
       plugins={[timeGridPlugin, interactionPlugin]}
@@ -160,5 +215,6 @@ export default function CalendarView({
         )
       }}
     />
+    </div>
   )
 }

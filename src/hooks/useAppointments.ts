@@ -21,7 +21,6 @@ export function useAppointments(canSeePrices = false) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load()
 
-    // Realtime subscription
     const channel = supabase
       .channel("appointments-changes")
       .on(

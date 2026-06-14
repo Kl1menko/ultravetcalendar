@@ -21,7 +21,6 @@ export const SUPABASE_ANON = publicEnv(
 )
 export const HOUR_START = 8
 export const HOUR_END = 20
-export const MAX_APPOINTMENTS_PER_DAY = 8
 
 export const DURATIONS = [
   { label: "15 хв", value: "15" },

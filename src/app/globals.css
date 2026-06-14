@@ -158,6 +158,14 @@
   --green-bg:   #dcfce7;
   --blue:       #2563eb;
   --blue-bg:    #dbeafe;
+
+  /* Мобільне нижнє меню — єдине джерело правди для розрахунків висоти.
+     --bottom-nav-h     — висота самих кнопок (без safe-area).
+     --bottom-nav-safe  — нижній safe-area inset (мін. 8px).
+     --bottom-nav-total — повна зайнята висота: меню + safe-area. */
+  --bottom-nav-h:    56px;
+  --bottom-nav-safe: max(env(safe-area-inset-bottom), 8px);
+  --bottom-nav-total: calc(var(--bottom-nav-h) + var(--bottom-nav-safe));
 }
 
 @media (min-width: 768px) {
@@ -225,7 +233,7 @@
   background: #f0f2f5;
 }
 .fc .fc-timegrid-slot {
-  height: 40px !important;
+  height: var(--fc-slot-height, 40px) !important;
 }
 
 /* Фон колонки з подіями — світло-сірий */
@@ -284,6 +292,19 @@
   cursor: pointer;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  /* Прибираємо сірий «залиплий» оверлей після тапу на мобільному. */
+  -webkit-tap-highlight-color: transparent;
+}
+/* Подію не підсвічуємо при тапі: на тач-пристроях :hover «залипає» після
+   відкриття sheet. Лишаємо hover-ефект лише там, де є справжній курсор. */
+.fc .fc-event:focus,
+.fc .fc-event:focus-visible {
+  outline: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .fc .fc-event:hover {
+    filter: brightness(0.97);
+  }
 }
 .fc .fc-event-main {
   padding: 4px 8px;

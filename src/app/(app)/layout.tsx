@@ -27,14 +27,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
 
-  // Modals
   const [formOpen, setFormOpen] = useState(false)
   const [prefillTime, setPrefillTime] = useState<string | undefined>()
   const [editingAppt, setEditingAppt] = useState<Appointment | null>(null)
   const [detailsAppt, setDetailsAppt] = useState<Appointment | null>(null)
   const [searchOpen, setSearchOpen] = useState(false)
 
-  // Shared date state for the calendar
   const [selectedDate, setSelectedDate] = useState(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
@@ -46,10 +44,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Суми у записах бачать усі → завантажуємо price для будь-якого користувача.
   const { appointments, reload } = useAppointments(userCanSeeApptPrices)
 
-  // Alerts badge
   const [alertsBadge, setAlertsBadge] = useState(0)
-
-  // In-app notice banner
   const [bannerNotice, setBannerNotice] = useState<Notice | null>(null)
 
   const loadBadge = useCallback(async () => {
@@ -97,7 +92,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => { supabase.removeChannel(channel) }
   }, [user])
 
-  // Auth
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
@@ -169,7 +163,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           currentDoctor: doctorForEmail(user.email),
           canSeePrices: userCanSeePrices,
           canSeeAppointmentPrices: userCanSeeApptPrices,
-          canSeeClients: canSeeClientsFn(user.email),
+          canSeeClients: canSeeClientsFn(),
           reload,
           openDetailsAppt: setDetailsAppt,
           openNewAppointmentAtTime,

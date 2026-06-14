@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react"
 import { Appointment } from "@/types"
 import { isoDate, formatTitle, minutesFromTime } from "@/lib/utils-app"
+import { HOUR_START, HOUR_END } from "@/lib/constants"
 
 type Props = {
   selectedDate: Date
@@ -29,20 +30,23 @@ export default function WeekStrip({ selectedDate, appointments, onSelectDate }: 
     return d
   })
 
+  // % завантаженості = зайняті хвилини ÷ повний робочий день (HOUR_START–HOUR_END,
+  // ті самі години, що й сітка календаря). Час за межами дня обрізаємо.
   function pctForDate(dateStr: string) {
-    const WORK_START = 10 * 60  // 10:00 в хвилинах
-    const WORK_END   = 18 * 60  // 18:00 в хвилинах
-    const WORK_MINS  = WORK_END - WORK_START // 480 хв
+    const dayStart = HOUR_START * 60
+    const dayEnd = HOUR_END * 60
+    const dayMins = dayEnd - dayStart
+    if (dayMins <= 0) return 0
 
     const bookedMins = appointments
       .filter((a) => a.date === dateStr)
       .reduce((sum, a) => {
-        const start = Math.max(minutesFromTime(a.start), WORK_START)
-        const end   = Math.min(minutesFromTime(a.end),   WORK_END)
+        const start = Math.max(minutesFromTime(a.start), dayStart)
+        const end = Math.min(minutesFromTime(a.end), dayEnd)
         return sum + Math.max(0, end - start)
       }, 0)
 
-    return Math.min(100, Math.round((bookedMins / WORK_MINS) * 100))
+    return Math.min(100, Math.round((bookedMins / dayMins) * 100))
   }
 
   // Scroll selected card into view (лише на мобільному — на десктопі смужка
