@@ -91,7 +91,7 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col md:h-[calc(100dvh-96px)] md:flex-none md:rounded-[28px] md:border md:border-white/80 md:bg-white/88 md:p-5 md:shadow-[var(--desktop-shadow)] md:backdrop-blur-xl">
+    <div className="flex h-[calc(100svh-env(safe-area-inset-top)-var(--bottom-nav-total))] flex-none flex-col md:h-[calc(100dvh-96px)] md:rounded-[28px] md:border md:border-white/80 md:bg-white/88 md:p-5 md:shadow-[var(--desktop-shadow)] md:backdrop-blur-xl">
       {/* ─── CALENDAR HEADER ─── */}
       <header className="flex items-center justify-between gap-2 px-4 pt-2 pb-1.5 md:px-0 md:pb-5">
         <h2 className="text-[19px] font-black tracking-tight text-[var(--ink)] md:text-3xl">
