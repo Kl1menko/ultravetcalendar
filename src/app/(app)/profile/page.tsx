@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { roleForEmail, roleLabel } from "@/lib/doctors"
+import { parseServices } from "@/lib/services"
 import { supabase } from "@/lib/supabase"
 import { useAuth } from "@/hooks/useAuth"
 
@@ -68,7 +69,7 @@ export default function ProfilePage() {
     return {
       total: ownAppointments.length,
       thisMonth: ownAppointments.filter((appointment) => appointment.date.startsWith(currentMonth)).length,
-      service: mostPopular(ownAppointments.map((appointment) => appointment.service).filter(Boolean)),
+      service: mostPopular(ownAppointments.flatMap((appointment) => parseServices(appointment.service))),
     }
   }, [appointments, currentDoctorName])
 

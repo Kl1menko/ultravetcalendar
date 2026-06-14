@@ -5,6 +5,8 @@ import { useCalendarContext } from "@/context/calendar"
 import { isoDate, minutesFromTime } from "@/lib/utils-app"
 import { appointmentsToCsv, downloadCsv } from "@/lib/export-csv"
 import { buildAppointmentsBackup, downloadJson } from "@/lib/backup"
+import { HOUR_START, HOUR_END } from "@/lib/constants"
+import { parseServices } from "@/lib/services"
 import { Appointment } from "@/types"
 
 // ─── періоди ───────────────────────────────────────────────────────────────────
@@ -19,47 +21,54 @@ const PERIODS: { value: Period; label: string }[] = [
   { value: "all", label: "Весь час" },
 ]
 
-// Початок діапазону (включно) для заданого періоду відносно сьогодні.
-function periodStart(period: Period): Date | null {
+// Повний календарний діапазон [start..end] (включно) для періоду відносно
+// сьогодні. Включає майбутні записи в межах періоду (це планувальник).
+// "all" → null (без обмежень).
+function periodRange(period: Period): { start: Date; end: Date } | null {
   if (period === "all") return null
-  const d = new Date()
-  d.setHours(0, 0, 0, 0)
-  if (period === "day") return d
+  const start = new Date()
+  start.setHours(0, 0, 0, 0)
+  const end = new Date(start)
+
+  if (period === "day") {
+    return { start, end }
+  }
   if (period === "week") {
-    // Понеділок поточного тижня
-    const day = (d.getDay() + 6) % 7
-    d.setDate(d.getDate() - day)
-    return d
+    const day = (start.getDay() + 6) % 7 // 0 = понеділок
+    start.setDate(start.getDate() - day)
+    end.setTime(start.getTime())
+    end.setDate(start.getDate() + 6)
+    return { start, end }
   }
   if (period === "month") {
-    d.setDate(1)
-    return d
+    start.setDate(1)
+    end.setMonth(start.getMonth() + 1, 0) // останній день місяця
+    return { start, end }
   }
   // year
-  d.setMonth(0, 1)
-  return d
+  start.setMonth(0, 1)
+  end.setMonth(11, 31)
+  end.setFullYear(start.getFullYear())
+  return { start, end }
 }
 
 function filterByPeriod(appointments: Appointment[], period: Period): Appointment[] {
-  const start = periodStart(period)
-  if (!start) return appointments
-  const startIso = isoDate(start)
-  const todayIso = isoDate(new Date())
-  return appointments.filter((a) => a.date >= startIso && a.date <= todayIso)
+  const range = periodRange(period)
+  if (!range) return appointments
+  const startIso = isoDate(range.start)
+  const endIso = isoDate(range.end)
+  return appointments.filter((a) => a.date >= startIso && a.date <= endIso)
 }
 
 // Попередній період такої самої довжини, що й поточний (для порівняння ±%).
-// Поточний період = [periodStart .. сьогодні]; попередній = такий самий відрізок,
-// зсунутий назад так, щоб закінчуватися за день до початку поточного.
+// Зсунутий назад так, щоб закінчуватися за день до початку поточного.
 // Для "all" порівняння немає (повертаємо null).
 function filterByPreviousPeriod(appointments: Appointment[], period: Period): Appointment[] | null {
-  const start = periodStart(period)
-  if (!start) return null
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  // Довжина поточного відрізка у днях (включно).
-  const spanDays = Math.round((today.getTime() - start.getTime()) / 86_400_000) + 1
-  const prevEnd = new Date(start)
+  const range = periodRange(period)
+  if (!range) return null
+  // Довжина поточного діапазону у днях (включно).
+  const spanDays = Math.round((range.end.getTime() - range.start.getTime()) / 86_400_000) + 1
+  const prevEnd = new Date(range.start)
   prevEnd.setDate(prevEnd.getDate() - 1)
   const prevStart = new Date(prevEnd)
   prevStart.setDate(prevStart.getDate() - (spanDays - 1))
@@ -160,10 +169,11 @@ function revenueTrend(
     .map(([key, v]) => ({ key, ...v }))
 }
 
-// Робоче вікно для розрахунку завантаженості (узгоджено з WeekStrip).
-const WORK_START_MIN = 10 * 60 // 10:00
-const WORK_END_MIN = 18 * 60 // 18:00
-const WORK_DAY_MIN = WORK_END_MIN - WORK_START_MIN // 480 хв
+// Робоче вікно для розрахунку завантаженості — ті самі години, що й сітка
+// календаря та WeekStrip (HOUR_START–HOUR_END), щоб % був консистентним усюди.
+const WORK_START_MIN = HOUR_START * 60
+const WORK_END_MIN = HOUR_END * 60
+const WORK_DAY_MIN = WORK_END_MIN - WORK_START_MIN
 
 // Зайняті хвилини в робочому вікні для конкретного дня (обрізаємо за межами 10–18).
 function bookedMinutesForDay(dayAppts: Appointment[]): number {
@@ -174,10 +184,8 @@ function bookedMinutesForDay(dayAppts: Appointment[]): number {
   }, 0)
 }
 
-// Завантаженість клініки за період: середній % зайнятості робочих слотів по днях,
-// де реально були записи, + середня зайнятість у розрізі днів тижня.
-function clinicUtilization(appointments: Appointment[]) {
-  // Групуємо за датою.
+// % зайнятості по кожному дню, де реально були записи (для усереднення).
+function dayUtilizationPcts(appointments: Appointment[]): { date: string; pct: number }[] {
   const byDate = new Map<string, Appointment[]>()
   appointments.forEach((a) => {
     const arr = byDate.get(a.date)
@@ -190,7 +198,21 @@ function clinicUtilization(appointments: Appointment[]) {
     const pct = Math.min(100, Math.round((bookedMinutesForDay(appts) / WORK_DAY_MIN) * 100))
     dayPcts.push({ date, pct })
   })
+  return dayPcts
+}
 
+// Середня завантаженість по днях, де були записи (0 — якщо записів немає).
+function averageUtilization(appointments: Appointment[]): number {
+  const dayPcts = dayUtilizationPcts(appointments)
+  return dayPcts.length
+    ? Math.round(dayPcts.reduce((s, d) => s + d.pct, 0) / dayPcts.length)
+    : 0
+}
+
+// Завантаженість клініки за період: середній % зайнятості робочих слотів по днях,
+// де реально були записи, + середня зайнятість у розрізі днів тижня.
+function clinicUtilization(appointments: Appointment[]) {
+  const dayPcts = dayUtilizationPcts(appointments)
   const avgPct = dayPcts.length
     ? Math.round(dayPcts.reduce((s, d) => s + d.pct, 0) / dayPcts.length)
     : 0
@@ -216,14 +238,20 @@ function clinicUtilization(appointments: Appointment[]) {
   return { avgPct, byWeekday, busiest, quietest, daysTracked: dayPcts.length }
 }
 
+// Один запис може містити кілька послуг (поле service через роздільник).
+// Рахуємо кожну послугу окремо. Ціна запису — одна на всі послуги, тож
+// розподіляємо її порівну між ними, щоб сума по послугах = загальній виручці.
 function byService(appointments: Appointment[]) {
   const counts: Record<string, { count: number; revenue: number }> = {}
   appointments.forEach((a) => {
-    const s = a.service.trim()
-    if (!s) return
-    if (!counts[s]) counts[s] = { count: 0, revenue: 0 }
-    counts[s].count += 1
-    counts[s].revenue += a.price || 0
+    const services = parseServices(a.service)
+    if (services.length === 0) return
+    const revenuePerService = (a.price || 0) / services.length
+    services.forEach((s) => {
+      if (!counts[s]) counts[s] = { count: 0, revenue: 0 }
+      counts[s].count += 1
+      counts[s].revenue += revenuePerService
+    })
   })
   return Object.entries(counts)
     .map(([name, v]) => ({ name, ...v }))
@@ -245,6 +273,42 @@ function byDoctor(appointments: Appointment[]) {
 
 function shortDoctor(name: string) {
   return name.split(/[\s(]+/)[0] || name
+}
+
+// Порівняльна статистика по лікарях: записи, виручка, сер. чек, завантаженість.
+// Сортуємо за виручкою (спадання) — найрезультативніший зверху.
+type DoctorStat = {
+  name: string
+  count: number
+  revenue: number
+  avgCheck: number
+  utilization: number
+}
+
+function buildDoctorStats(appointments: Appointment[]): DoctorStat[] {
+  const byDoc = new Map<string, Appointment[]>()
+  appointments.forEach((a) => {
+    const d = a.doctor.trim() || "—"
+    const arr = byDoc.get(d)
+    if (arr) arr.push(a)
+    else byDoc.set(d, [a])
+  })
+
+  const stats: DoctorStat[] = []
+  byDoc.forEach((appts, name) => {
+    const count = appts.length
+    const revenue = appts.reduce((s, a) => s + (a.price || 0), 0)
+    const paid = appts.filter((a) => (a.price || 0) > 0).length
+    stats.push({
+      name,
+      count,
+      revenue,
+      avgCheck: paid > 0 ? revenue / paid : 0,
+      utilization: averageUtilization(appts),
+    })
+  })
+
+  return stats.sort((a, b) => b.revenue - a.revenue || b.count - a.count)
 }
 
 function formatMoney(value: number) {
@@ -393,6 +457,7 @@ export default function AnalyticsPage() {
   const weekdays = useMemo(() => peakWeekdays(scoped), [scoped])
   const services = useMemo(() => byService(scoped), [scoped])
   const doctors = useMemo(() => byDoctor(scoped), [scoped])
+  const doctorStats = useMemo(() => buildDoctorStats(scoped), [scoped])
   const trend = useMemo(() => revenueTrend(scoped, period), [scoped, period])
   const maxTrend = Math.max(...trend.map((t) => t.revenue), 1)
   const utilization = useMemo(() => clinicUtilization(scoped), [scoped])
@@ -556,6 +621,51 @@ export default function AnalyticsPage() {
         )}
       </Section>
 
+      {/* Порівняння лікарів — зведена таблиця по всій лікарні (тільки head) */}
+      {canSeePrices && (
+        <Section title="Лікарі — порівняння">
+          {doctorStats.length === 0 ? noData : (
+            <div className="-mx-1 overflow-x-auto">
+              <table className="w-full min-w-[460px] border-collapse text-[13px]">
+                <thead>
+                  <tr className="border-b border-[var(--line)] text-[11px] uppercase tracking-[0.4px] text-[var(--muted-col)]">
+                    <th className="px-2 py-2 text-left font-bold">Лікар</th>
+                    <th className="px-2 py-2 text-right font-bold">Записи</th>
+                    <th className="px-2 py-2 text-right font-bold">Виручка</th>
+                    <th className="px-2 py-2 text-right font-bold">Сер. чек</th>
+                    <th className="px-2 py-2 text-right font-bold">Завантаж.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {doctorStats.map((d) => (
+                    <tr key={d.name} className="border-b border-[var(--line)] last:border-0">
+                      <td className="px-2 py-2.5 font-semibold text-[var(--ink)]">{shortDoctor(d.name)}</td>
+                      <td className="px-2 py-2.5 text-right tabular-nums text-[var(--ink-2)]">{d.count}</td>
+                      <td className="px-2 py-2.5 text-right tabular-nums font-bold text-[var(--ink)]">
+                        {d.revenue > 0 ? formatMoney(d.revenue) : "—"}
+                      </td>
+                      <td className="px-2 py-2.5 text-right tabular-nums text-[var(--ink-2)]">
+                        {d.avgCheck > 0 ? formatMoney(d.avgCheck) : "—"}
+                      </td>
+                      <td className="px-2 py-2.5 text-right tabular-nums text-[var(--ink-2)]">{d.utilization}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t-2 border-[var(--teal-mid)] text-[var(--teal-dark)]">
+                    <td className="px-2 py-2.5 font-black">Разом</td>
+                    <td className="px-2 py-2.5 text-right tabular-nums font-black">{total}</td>
+                    <td className="px-2 py-2.5 text-right tabular-nums font-black">{formatMoney(totalRevenue)}</td>
+                    <td className="px-2 py-2.5 text-right tabular-nums font-black">{avgCheck > 0 ? formatMoney(avgCheck) : "—"}</td>
+                    <td className="px-2 py-2.5 text-right tabular-nums font-black">{utilization.avgPct}%</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
+        </Section>
+      )}
+
       <div className="grid gap-4 md:gap-5 lg:grid-cols-2 2xl:grid-cols-3">
         {/* Завантаженість клініки */}
         <Section title="Завантаженість клініки">
@@ -576,7 +686,9 @@ export default function AnalyticsPage() {
               {utilization.byWeekday.map((d, i) => (
                 <Bar key={d.name} label={d.name} value={d.pct} max={100} valueText={`${d.pct}%`} colorIdx={i} />
               ))}
-              <p className="mt-1 text-[10px] text-[var(--muted-col)]">Робоче вікно 10:00–18:00</p>
+              <p className="mt-1 text-[10px] text-[var(--muted-col)]">
+                Робоче вікно {String(HOUR_START).padStart(2, "0")}:00–{String(HOUR_END).padStart(2, "0")}:00
+              </p>
             </>
           )}
         </Section>
