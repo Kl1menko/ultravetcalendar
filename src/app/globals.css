@@ -231,6 +231,20 @@
 .fc {
   font-family: var(--font-inter), -apple-system, sans-serif;
   background: #f0f2f5;
+  width: 100%;
+  max-width: 100%;
+}
+/* Один день не має горизонтального скролу: тіло сітки скролимо лише по вертикалі,
+   а заголовок/колонки тримаємо в межах контейнера. Інакше gutter скролбара або
+   синхронізована таблиця FC дають зайвий горизонтальний скрол і «плаваючий» вміст. */
+.fc .fc-scroller {
+  overflow-x: hidden !important;
+}
+.fc .fc-scroller-liquid-absolute,
+.fc .fc-timegrid-body,
+.fc .fc-scrollgrid-sync-table,
+.fc .fc-col-header {
+  width: 100% !important;
 }
 .fc .fc-timegrid-slot {
   height: var(--fc-slot-height, 40px) !important;

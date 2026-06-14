@@ -91,9 +91,9 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="flex h-[calc(100svh-env(safe-area-inset-top)-var(--bottom-nav-total))] flex-none flex-col md:h-[calc(100dvh-96px)] md:rounded-[28px] md:border md:border-white/80 md:bg-white/88 md:p-5 md:shadow-[var(--desktop-shadow)] md:backdrop-blur-xl">
+    <div className="flex h-[calc(100svh-env(safe-area-inset-top)-var(--bottom-nav-total))] w-full max-w-full flex-none flex-col overflow-hidden md:h-[calc(100dvh-96px)] md:rounded-[28px] md:border md:border-white/80 md:bg-white/88 md:p-5 md:shadow-[var(--desktop-shadow)] md:backdrop-blur-xl">
       {/* ─── CALENDAR HEADER ─── */}
-      <header className="flex items-center justify-between gap-2 px-4 pt-2 pb-1.5 md:px-0 md:pb-5">
+      <header className="flex shrink-0 items-center justify-between gap-2 px-4 pt-2 pb-1.5 md:px-0 md:pb-5">
         <h2 className="text-[19px] font-black tracking-tight text-[var(--ink)] md:text-3xl">
           {currentMonth}
         </h2>
@@ -170,7 +170,7 @@ export default function CalendarPage() {
       />
 
       {/* ─── DAY SUMMARY ─── */}
-      <div className="flex items-center gap-2 px-4 py-1 md:px-0 md:py-2">
+      <div className="flex shrink-0 items-center gap-2 px-4 py-1 md:px-0 md:py-2">
         <span className="text-[13px] text-[var(--muted-col)] font-medium">Записів:</span>
         <strong className="text-[13px] font-bold text-[var(--ink)]">{dayCount}</strong>
         {doctorActive && (

@@ -60,7 +60,7 @@ export default function WeekStrip({ selectedDate, appointments, onSelectDate }: 
   }, [selectedDate])
 
   return (
-    <div className="px-4 pb-2 overflow-x-auto scrollbar-hide md:overflow-x-visible md:px-0">
+    <div className="shrink-0 px-4 pb-2 overflow-x-auto scrollbar-hide md:overflow-x-visible md:px-0">
       <div ref={stripRef} className="flex gap-1.5 min-w-max md:min-w-0 md:gap-2">
         {days.map((d) => {
           const iso = isoDate(d)
