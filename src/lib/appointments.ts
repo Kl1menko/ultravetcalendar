@@ -11,6 +11,9 @@ function normalizeRow(row: AppointmentRow): Appointment {
     phone: row.phone,
     pet: row.pet,
     animal: row.animal || row.pet,
+    age: row.age || "",
+    weight: row.weight || "",
+    address: row.address || "",
     service: row.service,
     doctor: row.doctor,
     comment: row.comment || "",
@@ -67,6 +70,9 @@ export type AppointmentPayload = {
   phone: string
   pet: string
   animal: string
+  age: string
+  weight: string
+  address: string
   service: string
   price?: number
   doctor: string

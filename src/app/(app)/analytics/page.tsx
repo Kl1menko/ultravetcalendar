@@ -8,6 +8,18 @@ import { buildAppointmentsBackup, downloadJson } from "@/lib/backup"
 import { HOUR_START, HOUR_END } from "@/lib/constants"
 import { parseServices } from "@/lib/services"
 import { Appointment } from "@/types"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 // ─── періоди ───────────────────────────────────────────────────────────────────
 
@@ -423,20 +435,20 @@ function Delta({ value }: { value: number | null }) {
       : "text-red-600 bg-red-50"
   const arrow = isFlat ? "→" : isUp ? "↑" : "↓"
   return (
-    <span className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-bold leading-none ${color}`}>
+    <Badge className={`gap-0.5 rounded-md px-1.5 text-[10px] font-bold ${color}`}>
       {arrow} {Math.abs(value)}%
-    </span>
+    </Badge>
   )
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="desktop-card-hover overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-sm">
-      <div className="px-4 py-3 border-b border-[var(--line)] md:px-5 md:py-4">
-        <h2 className="text-[13px] font-bold text-[var(--ink)] md:text-[15px]">{title}</h2>
-      </div>
-      <div className="px-4 py-3 flex flex-col gap-2 md:px-5 md:py-4 md:gap-2.5">{children}</div>
-    </div>
+    <Card className="desktop-card-hover gap-0 rounded-2xl border border-[var(--line)] bg-white py-0 shadow-sm ring-0">
+      <CardHeader className="border-b border-[var(--line)] px-4 py-3 md:px-5 md:py-4">
+        <CardTitle className="text-[13px] font-bold text-[var(--ink)] md:text-[15px]">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2 px-4 py-3 md:gap-2.5 md:px-5 md:py-4">{children}</CardContent>
+    </Card>
   )
 }
 
@@ -537,12 +549,12 @@ export default function AnalyticsPage() {
           Аналітика
         </h1>
         <div className="flex shrink-0 items-center gap-2">
-          <button
-            type="button"
+          <Button
+            variant="outline"
             onClick={handleBackup}
             disabled={appointments.length === 0}
             title="Повний бекап усіх записів у JSON"
-            className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-[var(--line)] bg-white px-3 text-[12px] font-semibold text-[var(--ink-2)] shadow-sm transition-colors hover:border-[var(--teal-mid)] hover:text-[var(--ink)] disabled:opacity-50 md:h-10 md:rounded-2xl md:px-4 md:text-[13px]"
+            className="h-9 shrink-0 gap-1.5 rounded-xl border-[var(--line)] bg-white px-3 text-[12px] font-semibold text-[var(--ink-2)] shadow-sm hover:border-[var(--teal-mid)] hover:bg-white hover:text-[var(--ink)] md:h-10 md:rounded-2xl md:px-4 md:text-[13px]"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <ellipse cx="12" cy="5" rx="9" ry="3" />
@@ -551,50 +563,50 @@ export default function AnalyticsPage() {
             </svg>
             <span className="hidden sm:inline">Бекап</span>
             <span className="sm:hidden">JSON</span>
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="outline"
             onClick={handleExport}
             disabled={total === 0}
-            className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-[var(--line)] bg-white px-3 text-[12px] font-semibold text-[var(--ink-2)] shadow-sm transition-colors hover:border-[var(--teal-mid)] hover:text-[var(--ink)] disabled:opacity-50 md:h-10 md:rounded-2xl md:px-4 md:text-[13px]"
+            className="h-9 shrink-0 gap-1.5 rounded-xl border-[var(--line)] bg-white px-3 text-[12px] font-semibold text-[var(--ink-2)] shadow-sm hover:border-[var(--teal-mid)] hover:bg-white hover:text-[var(--ink)] md:h-10 md:rounded-2xl md:px-4 md:text-[13px]"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
             </svg>
             CSV
-          </button>
+          </Button>
         </div>
       </header>
 
       {/* Перемикач періоду */}
       <div className="flex gap-1.5 overflow-x-auto md:gap-2 md:overflow-x-visible">
         {PERIODS.map((p) => (
-          <button
+          <Button
             key={p.value}
-            type="button"
+            variant="outline"
             onClick={() => setPeriod(p.value)}
             className={[
-              "h-9 shrink-0 rounded-xl border-[1.5px] px-3.5 text-[13px] font-semibold transition-colors md:h-10 md:px-5 md:text-[14px]",
+              "h-9 shrink-0 rounded-xl border-[1.5px] px-3.5 text-[13px] font-semibold md:h-10 md:px-5 md:text-[14px]",
               p.value === period
-                ? "bg-[var(--teal-light)] border-[var(--teal-mid)] text-[var(--teal-dark)]"
-                : "bg-white border-[var(--line)] text-[var(--ink-2)] hover:bg-[var(--paper)]",
+                ? "border-[var(--teal-mid)] bg-[var(--teal-light)] text-[var(--teal-dark)] hover:bg-[var(--teal-light)] hover:text-[var(--teal-dark)]"
+                : "border-[var(--line)] bg-white text-[var(--ink-2)] hover:bg-[var(--paper)]",
             ].join(" ")}
           >
             {p.label}
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* Summary */}
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
         {summary.map((item) => (
-          <div key={item.label} className="desktop-card-hover flex flex-col gap-1 rounded-2xl border border-[var(--line)] bg-white p-3 shadow-sm md:gap-1.5 md:p-5">
+          <Card key={item.label} className="desktop-card-hover gap-1 rounded-2xl border border-[var(--line)] bg-white p-3 shadow-sm ring-0 md:gap-1.5 md:p-5">
             <div className="flex items-baseline gap-1.5">
               <span className="text-[18px] md:text-[26px] font-black text-[var(--teal)] leading-none">{item.value}</span>
               <Delta value={item.delta} />
             </div>
             <span className="text-[10px] font-semibold text-[var(--muted-col)] leading-tight md:text-[12px]">{item.label}</span>
-          </div>
+          </Card>
         ))}
       </div>
       {hasComparison && (
@@ -625,43 +637,41 @@ export default function AnalyticsPage() {
       {canSeePrices && (
         <Section title="Лікарі — порівняння">
           {doctorStats.length === 0 ? noData : (
-            <div className="-mx-1 overflow-x-auto">
-              <table className="w-full min-w-[460px] border-collapse text-[13px]">
-                <thead>
-                  <tr className="border-b border-[var(--line)] text-[11px] uppercase tracking-[0.4px] text-[var(--muted-col)]">
-                    <th className="px-2 py-2 text-left font-bold">Лікар</th>
-                    <th className="px-2 py-2 text-right font-bold">Записи</th>
-                    <th className="px-2 py-2 text-right font-bold">Виручка</th>
-                    <th className="px-2 py-2 text-right font-bold">Сер. чек</th>
-                    <th className="px-2 py-2 text-right font-bold">Завантаж.</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {doctorStats.map((d) => (
-                    <tr key={d.name} className="border-b border-[var(--line)] last:border-0">
-                      <td className="px-2 py-2.5 font-semibold text-[var(--ink)]">{shortDoctor(d.name)}</td>
-                      <td className="px-2 py-2.5 text-right tabular-nums text-[var(--ink-2)]">{d.count}</td>
-                      <td className="px-2 py-2.5 text-right tabular-nums font-bold text-[var(--ink)]">
-                        {d.revenue > 0 ? formatMoney(d.revenue) : "—"}
-                      </td>
-                      <td className="px-2 py-2.5 text-right tabular-nums text-[var(--ink-2)]">
-                        {d.avgCheck > 0 ? formatMoney(d.avgCheck) : "—"}
-                      </td>
-                      <td className="px-2 py-2.5 text-right tabular-nums text-[var(--ink-2)]">{d.utilization}%</td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="border-t-2 border-[var(--teal-mid)] text-[var(--teal-dark)]">
-                    <td className="px-2 py-2.5 font-black">Разом</td>
-                    <td className="px-2 py-2.5 text-right tabular-nums font-black">{total}</td>
-                    <td className="px-2 py-2.5 text-right tabular-nums font-black">{formatMoney(totalRevenue)}</td>
-                    <td className="px-2 py-2.5 text-right tabular-nums font-black">{avgCheck > 0 ? formatMoney(avgCheck) : "—"}</td>
-                    <td className="px-2 py-2.5 text-right tabular-nums font-black">{utilization.avgPct}%</td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
+            <Table className="min-w-[460px] text-[13px]">
+              <TableHeader>
+                <TableRow className="border-b border-[var(--line)] text-[11px] uppercase tracking-[0.4px] text-[var(--muted-col)] hover:bg-transparent">
+                  <TableHead className="h-auto px-2 py-2 font-bold text-[var(--muted-col)]">Лікар</TableHead>
+                  <TableHead className="h-auto px-2 py-2 text-right font-bold text-[var(--muted-col)]">Записи</TableHead>
+                  <TableHead className="h-auto px-2 py-2 text-right font-bold text-[var(--muted-col)]">Виручка</TableHead>
+                  <TableHead className="h-auto px-2 py-2 text-right font-bold text-[var(--muted-col)]">Сер. чек</TableHead>
+                  <TableHead className="h-auto px-2 py-2 text-right font-bold text-[var(--muted-col)]">Завантаж.</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {doctorStats.map((d) => (
+                  <TableRow key={d.name} className="border-b border-[var(--line)] hover:bg-transparent">
+                    <TableCell className="px-2 py-2.5 font-semibold text-[var(--ink)]">{shortDoctor(d.name)}</TableCell>
+                    <TableCell className="px-2 py-2.5 text-right tabular-nums text-[var(--ink-2)]">{d.count}</TableCell>
+                    <TableCell className="px-2 py-2.5 text-right tabular-nums font-bold text-[var(--ink)]">
+                      {d.revenue > 0 ? formatMoney(d.revenue) : "—"}
+                    </TableCell>
+                    <TableCell className="px-2 py-2.5 text-right tabular-nums text-[var(--ink-2)]">
+                      {d.avgCheck > 0 ? formatMoney(d.avgCheck) : "—"}
+                    </TableCell>
+                    <TableCell className="px-2 py-2.5 text-right tabular-nums text-[var(--ink-2)]">{d.utilization}%</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <TableFooter className="bg-transparent">
+                <TableRow className="border-t-2 border-[var(--teal-mid)] text-[var(--teal-dark)] hover:bg-transparent">
+                  <TableCell className="px-2 py-2.5 font-black">Разом</TableCell>
+                  <TableCell className="px-2 py-2.5 text-right tabular-nums font-black">{total}</TableCell>
+                  <TableCell className="px-2 py-2.5 text-right tabular-nums font-black">{formatMoney(totalRevenue)}</TableCell>
+                  <TableCell className="px-2 py-2.5 text-right tabular-nums font-black">{avgCheck > 0 ? formatMoney(avgCheck) : "—"}</TableCell>
+                  <TableCell className="px-2 py-2.5 text-right tabular-nums font-black">{utilization.avgPct}%</TableCell>
+                </TableRow>
+              </TableFooter>
+            </Table>
           )}
         </Section>
       )}

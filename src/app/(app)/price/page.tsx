@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from "react"
 import { PRICE_LIST, type PriceCategory } from "@/lib/price-list"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 
 function norm(s: string) {
   return s.trim().toLowerCase()
@@ -57,7 +59,7 @@ export default function PricePage() {
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-col)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
           </svg>
-          <input
+          <Input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -65,7 +67,7 @@ export default function PricePage() {
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
-            className="h-11 w-full rounded-xl border border-[var(--line)] bg-white pl-10 pr-10 text-[14px] text-[var(--ink)] outline-none transition focus:border-[var(--teal)] md:h-12 md:rounded-2xl md:shadow-sm"
+            className="h-11 rounded-xl border-[var(--line)] bg-white pl-10 pr-10 text-[14px] text-[var(--ink)] focus-visible:border-[var(--teal)] focus-visible:ring-0 md:h-12 md:rounded-2xl md:shadow-sm"
           />
           {query && (
             <button type="button" onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-[var(--muted-col)] text-white flex items-center justify-center">
@@ -83,17 +85,18 @@ export default function PricePage() {
       ) : (
         <div className="flex flex-col gap-4 px-4 md:grid md:grid-cols-2 md:items-start md:gap-5 md:px-0 xl:grid-cols-3">
           {filtered.map((cat) => (
-            <section
+            <Card
               key={cat.title}
-              className="overflow-hidden rounded-2xl border border-[var(--line)] bg-white md:shadow-sm"
+              className="gap-0 rounded-2xl border border-[var(--line)] bg-white py-0 ring-0 md:shadow-sm"
             >
-              <div className="border-b border-[var(--line)] bg-[var(--paper)] px-4 py-3">
-                <h2 className="text-[14px] font-black text-[var(--ink)]">{cat.title}</h2>
+              <CardHeader className="border-b border-[var(--line)] bg-[var(--paper)] px-4 py-3">
+                <CardTitle className="text-[14px] font-black text-[var(--ink)]">{cat.title}</CardTitle>
                 {cat.subtitle && (
                   <p className="mt-0.5 text-[11px] font-semibold text-[var(--muted-col)]">{cat.subtitle}</p>
                 )}
-              </div>
+              </CardHeader>
 
+              <CardContent className="px-0">
               <ul>
                 {cat.items.map((item) => (
                   <li
@@ -124,7 +127,8 @@ export default function PricePage() {
                   </li>
                 ))}
               </ul>
-            </section>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}

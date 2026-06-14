@@ -38,6 +38,9 @@ export default function AppointmentForm({
   const [phone, setPhone] = useState("")
   const [pet, setPet] = useState("")
   const [animal, setAnimal] = useState("")
+  const [age, setAge] = useState("")
+  const [weight, setWeight] = useState("")
+  const [address, setAddress] = useState("")
   const [services, setServices] = useState<string[]>([])
   const [price, setPrice] = useState("")
   const [doctor, setDoctor] = useState<string>(DOCTORS[0])
@@ -62,6 +65,9 @@ export default function AppointmentForm({
         setPhone(editing.phone)
         setPet(editing.pet)
         setAnimal(editing.animal)
+        setAge(editing.age)
+        setWeight(editing.weight)
+        setAddress(editing.address)
         setServices(parseServices(editing.service))
         setPrice(editing.price ? String(editing.price) : "")
         setDoctor(editing.doctor)
@@ -74,6 +80,9 @@ export default function AppointmentForm({
         setPhone("")
         setPet("")
         setAnimal("")
+        setAge("")
+        setWeight("")
+        setAddress("")
         setServices([])
         setPrice("")
         setDoctor(DOCTORS[0])
@@ -104,6 +113,9 @@ export default function AppointmentForm({
       phone: phone.trim(),
       pet: pet.trim(),
       animal: (animal || pet).trim(),
+      age: age.trim(),
+      weight: weight.trim(),
+      address: address.trim(),
       service: joinServices(services),
       doctor,
       comment: comment.trim(),
@@ -138,6 +150,9 @@ export default function AppointmentForm({
   // мають нестискувану intrinsic-ширину й розпирають контейнер за межі екрана.
   const fieldClass =
     "block w-full min-w-0 max-w-full appearance-none h-11 rounded-xl border border-[var(--line)] bg-white px-3 text-[15px] text-[var(--ink)] font-medium outline-none focus:border-[var(--teal)] focus:ring-2 focus:ring-[var(--teal)]/10 transition"
+  // iOS Safari не центрує текст у <input type="date|time"> по вертикалі за
+  // наявності фіксованої висоти — inline-flex + items-center це виправляє.
+  const dateFieldClass = `${fieldClass} inline-flex items-center`
   const labelClass =
     "flex min-w-0 w-full flex-col gap-1.5 text-[11px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]"
 
@@ -145,18 +160,20 @@ export default function AppointmentForm({
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent
         side="bottom"
-        className="max-h-[94svh] overflow-y-auto overflow-x-hidden rounded-t-[18px] px-4 pb-6 md:max-h-[86dvh] md:rounded-[28px] md:bg-white md:px-6 md:pt-5 md:pb-0"
+        showCloseButton={false}
+        className="inset-0 h-[100dvh] max-h-[100dvh] w-full max-w-full rounded-none px-0 py-0 md:inset-auto md:left-1/2 md:top-1/2 md:h-auto md:max-h-[86dvh] md:w-[min(920px,calc(100vw-3rem))] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-[28px] md:bg-white"
       >
-        {/* Handle bar */}
-        <div className="mx-auto mb-5 mt-1 h-1 w-10 rounded-full bg-[var(--line)] md:hidden" />
-
-        <SheetHeader className="mb-5 border-b border-[var(--line)] pb-4 text-left md:mb-6">
+        <SheetHeader className="shrink-0 border-b border-[var(--line)] px-4 pb-4 pt-[max(env(safe-area-inset-top),1rem)] text-left md:px-6 md:pt-5">
           <SheetTitle className="text-[20px] font-black text-[var(--ink)] md:text-[26px]">
             {editing ? "Редагувати запис" : "Новий запис"}
           </SheetTitle>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-4 md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-5">
+        <form
+          id="appointment-form"
+          onSubmit={handleSubmit}
+          className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden px-4 py-5 md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-5 md:px-6"
+        >
           {formError && (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-600 md:col-span-2">
               {formError}
@@ -165,12 +182,12 @@ export default function AppointmentForm({
 
           <label className={labelClass}>
             Дата
-            <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className={fieldClass} />
+            <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className={dateFieldClass} />
           </label>
 
           <label className={labelClass}>
             Час початку
-            <input type="time" required value={start} onChange={(e) => setStart(e.target.value)} className={fieldClass} />
+            <input type="time" required value={start} onChange={(e) => setStart(e.target.value)} className={dateFieldClass} />
           </label>
 
           <label className={labelClass}>
@@ -192,6 +209,11 @@ export default function AppointmentForm({
             <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+380671112233" className={fieldClass} />
           </label>
 
+          <label className={`${labelClass} md:col-span-2`}>
+            Адреса <span className="normal-case text-[10px] font-normal text-[var(--muted-col)]">— необов&apos;язково</span>
+            <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="вул. Шевченка, 12, кв. 5" className={fieldClass} />
+          </label>
+
           <label className={labelClass}>
             Тварина
             <input type="text" required value={pet} onChange={(e) => setPet(e.target.value)} placeholder="Рекс" className={fieldClass} />
@@ -200,6 +222,16 @@ export default function AppointmentForm({
           <label className={labelClass}>
             Вид/порода
             <input type="text" value={animal} onChange={(e) => setAnimal(e.target.value)} placeholder="собака, лабрадор" className={fieldClass} />
+          </label>
+
+          <label className={labelClass}>
+            Вік
+            <input type="text" required value={age} onChange={(e) => setAge(e.target.value)} placeholder="3 роки" className={fieldClass} />
+          </label>
+
+          <label className={labelClass}>
+            Вага <span className="normal-case text-[10px] font-normal text-[var(--muted-col)]">— необов&apos;язково</span>
+            <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="4.2 кг" className={fieldClass} />
           </label>
 
           <div className={`${labelClass} md:col-span-2`}>
@@ -256,25 +288,29 @@ export default function AppointmentForm({
               className="h-auto min-h-[80px] w-full resize-y rounded-xl border border-[var(--line)] bg-white px-3 py-3 text-[15px] font-medium text-[var(--ink)] outline-none transition focus:border-[var(--teal)] focus:ring-2 focus:ring-[var(--teal)]/10 md:min-h-[96px]"
             />
           </label>
-
-          {/* Sticky actions */}
-          <div className="sticky bottom-0 grid min-w-0 grid-cols-2 gap-3 bg-white pt-4 pb-2 md:col-span-2 md:-mx-6 md:border-t md:border-[var(--line)] md:px-6 md:py-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="h-11 rounded-xl border border-[var(--line)] bg-[var(--paper)] text-[14px] font-semibold text-[var(--ink-2)] transition-transform active:scale-[0.98] md:h-12 md:rounded-2xl"
-            >
-              Закрити
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="h-11 rounded-xl bg-[var(--teal)] text-[14px] font-semibold text-white transition-all hover:bg-[var(--teal-dark)] active:scale-[0.98] disabled:opacity-60 md:h-12 md:rounded-2xl md:shadow-lg md:shadow-teal-700/20"
-            >
-              {saving ? "Зберігаю…" : "Зберегти"}
-            </button>
-          </div>
         </form>
+
+        {/* Actions — фіксований футер поза скрол-областю форми */}
+        <div
+          className="grid min-w-0 shrink-0 grid-cols-2 gap-3 border-t border-[var(--line)] bg-white px-4 pt-4 md:px-6 md:py-4"
+          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1rem)" }}
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-11 rounded-xl border border-[var(--line)] bg-[var(--paper)] text-[14px] font-semibold text-[var(--ink-2)] transition-transform active:scale-[0.98] md:h-12 md:rounded-2xl"
+          >
+            Закрити
+          </button>
+          <button
+            type="submit"
+            form="appointment-form"
+            disabled={saving}
+            className="h-11 rounded-xl bg-[var(--teal)] text-[14px] font-semibold text-white transition-all hover:bg-[var(--teal-dark)] active:scale-[0.98] disabled:opacity-60 md:h-12 md:rounded-2xl md:shadow-lg md:shadow-teal-700/20"
+          >
+            {saving ? "Зберігаю…" : "Зберегти"}
+          </button>
+        </div>
       </SheetContent>
     </Sheet>
   )

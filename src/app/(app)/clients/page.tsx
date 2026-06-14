@@ -5,6 +5,9 @@ import { useCalendarContext } from "@/context/calendar"
 import { formatShortDate } from "@/lib/utils-app"
 import { deleteAppointment } from "@/lib/appointments"
 import { Appointment } from "@/types"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 type ClientEntry = {
   client: string
@@ -181,7 +184,7 @@ export default function ClientsPage() {
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-col)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
-          <input
+          <Input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -189,7 +192,7 @@ export default function ClientsPage() {
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
-            className="h-11 w-full rounded-xl border border-[var(--line)] bg-white pl-10 pr-10 text-[14px] text-[var(--ink)] outline-none transition focus:border-[var(--teal)] md:h-12 md:rounded-2xl md:shadow-sm"
+            className="h-11 rounded-xl border-[var(--line)] bg-white pl-10 pr-10 text-[14px] text-[var(--ink)] focus-visible:border-[var(--teal)] focus-visible:ring-0 md:h-12 md:rounded-2xl md:shadow-sm"
           />
           {query && (
             <button type="button" onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-[var(--muted-col)] text-white flex items-center justify-center">
@@ -231,13 +234,13 @@ export default function ClientsPage() {
                     <div className="flex items-center gap-2">
                       <span className="text-[14px] font-bold text-[var(--ink)] truncate">{c.client}</span>
                       {/* Visits badge */}
-                      <span className="flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--teal-light)] text-[var(--teal)]">
+                      <Badge className="flex-shrink-0 bg-[var(--teal-light)] text-[10px] font-bold text-[var(--teal)]">
                         {c.visits} {c.visits === 1 ? "візит" : c.visits < 5 ? "візити" : "візитів"}
-                      </span>
+                      </Badge>
                       {c.duplicateCount > 1 && (
-                        <span className="flex-shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                        <Badge className="flex-shrink-0 bg-amber-100 text-[10px] font-bold text-amber-700">
                           дубль
-                        </span>
+                        </Badge>
                       )}
                     </div>
                     {/* Pets */}
@@ -323,30 +326,29 @@ export default function ClientsPage() {
                     <div className="px-4 py-3">
                       {confirmDeleteKey === key ? (
                         <div className="flex gap-2">
-                          <button
-                            type="button"
+                          <Button
+                            variant="outline"
                             onClick={() => setConfirmDeleteKey(null)}
-                            className="h-9 flex-1 rounded-xl border border-[var(--line)] bg-[var(--paper)] text-[13px] font-semibold text-[var(--ink-2)] transition-transform active:scale-[0.98]"
+                            className="h-9 flex-1 rounded-xl border-[var(--line)] bg-[var(--paper)] text-[13px] font-semibold text-[var(--ink-2)]"
                           >
                             Скасувати
-                          </button>
-                          <button
-                            type="button"
+                          </Button>
+                          <Button
                             disabled={deletingKey === key}
                             onClick={() => handleDeleteClient(key, c.history)}
-                            className="h-9 flex-1 rounded-xl bg-red-500 text-[13px] font-semibold text-white transition-transform active:scale-[0.98] disabled:opacity-60"
+                            className="h-9 flex-1 rounded-xl bg-red-500 text-[13px] font-semibold text-white hover:bg-red-600"
                           >
                             {deletingKey === key ? "Видаляю…" : `Так, видалити (${c.visits})`}
-                          </button>
+                          </Button>
                         </div>
                       ) : (
-                        <button
-                          type="button"
+                        <Button
+                          variant="destructive"
                           onClick={() => setConfirmDeleteKey(key)}
-                          className="w-full h-9 rounded-xl border border-red-200 bg-red-50 text-[13px] font-semibold text-red-600 transition-transform active:scale-[0.98]"
+                          className="h-9 w-full rounded-xl border border-red-200 bg-red-50 text-[13px] font-semibold text-red-600 hover:bg-red-100"
                         >
                           Видалити клієнта
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </div>

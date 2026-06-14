@@ -4,6 +4,9 @@ import { useEffect, useState, useCallback } from "react"
 import { useCalendarContext } from "@/context/calendar"
 import { fetchNotices, createNotice, deleteNotice } from "@/lib/notices"
 import { Notice } from "@/types"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Textarea } from "@/components/ui/textarea"
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -73,21 +76,21 @@ export default function AlertsPage() {
           )}
         </div>
         {isHead && (
-          <button
-            type="button"
+          <Button
+            variant="outline"
             onClick={() => triggerBanner({
               id: "test",
               text: "Увага! Завтра о 9:00 нарада всього персоналу клініки.",
               created_by: user.id,
               created_at: new Date().toISOString(),
             })}
-            className="flex h-8 items-center gap-1.5 rounded-xl border border-[var(--line)] bg-white px-3 text-[12px] font-semibold text-[var(--muted-col)] transition-transform active:scale-[0.97] md:h-10 md:rounded-2xl md:px-4 md:shadow-sm"
+            className="h-8 gap-1.5 rounded-xl border-[var(--line)] bg-white px-3 text-[12px] font-semibold text-[var(--muted-col)] hover:bg-white hover:text-[var(--ink)] md:h-10 md:rounded-2xl md:px-4 md:shadow-sm"
           >
             <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <polygon points="5 3 19 12 5 21 5 3"/>
             </svg>
             Тест
-          </button>
+          </Button>
         )}
       </header>
 
@@ -105,25 +108,25 @@ export default function AlertsPage() {
                 Нове сповіщення
               </span>
             </div>
-            <textarea
+            <Textarea
               rows={3}
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Введіть текст для всіх лікарів…"
               required
-              className="w-full rounded-xl bg-white/15 border border-white/20 px-3 py-2.5 text-[14px] text-white placeholder:text-white/50 outline-none focus:bg-white/20 resize-none mb-3"
+              className="mb-3 resize-none rounded-xl border-white/20 bg-white/15 px-3 py-2.5 text-[14px] text-white placeholder:text-white/50 focus-visible:border-white/30 focus-visible:bg-white/20 focus-visible:ring-0"
             />
             <div className="flex items-center justify-between">
               <span className="text-[11px] text-white/60">
                 Побачать усі при відкритті
               </span>
-              <button
+              <Button
                 type="submit"
                 disabled={publishing || !text.trim()}
-                className="flex items-center gap-1.5 h-8 px-4 rounded-xl bg-white text-[var(--teal)] text-[13px] font-bold disabled:opacity-50 transition-opacity active:scale-[0.97]"
+                className="h-8 gap-1.5 rounded-xl bg-white px-4 text-[13px] font-bold text-[var(--teal)] hover:bg-white/90"
               >
                 {publishing ? "Надсилаю…" : "Надіслати"}
-              </button>
+              </Button>
             </div>
           </form>
         )}
@@ -155,9 +158,9 @@ export default function AlertsPage() {
         {!loading && notices.length > 0 && (
           <div className="flex flex-col gap-2.5 md:grid md:grid-cols-2 md:gap-4 xl:grid-cols-3">
             {notices.map((notice, i) => (
-              <article
+              <Card
                 key={notice.id}
-                className="desktop-card-hover overflow-hidden rounded-2xl border border-[var(--line)] bg-white"
+                className="desktop-card-hover gap-0 rounded-2xl border border-[var(--line)] bg-white py-0 ring-0"
                 style={{ opacity: i > 0 ? Math.max(0.6, 1 - i * 0.08) : 1 }}
               >
                 {/* Кольорова смужка зверху */}
@@ -172,11 +175,12 @@ export default function AlertsPage() {
                       {timeAgo(notice.created_at)}
                     </span>
                     {isHead && (
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
+                        size="xs"
                         disabled={deletingId === notice.id}
                         onClick={() => handleDelete(notice.id)}
-                        className="flex items-center gap-1 text-[11px] font-semibold text-[var(--muted-col)] hover:text-red-500 transition-colors disabled:opacity-40"
+                        className="gap-1 px-1.5 text-[11px] font-semibold text-[var(--muted-col)] hover:bg-transparent hover:text-red-500"
                       >
                         {deletingId === notice.id ? (
                           "…"
@@ -188,11 +192,11 @@ export default function AlertsPage() {
                             Видалити
                           </>
                         )}
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
-              </article>
+              </Card>
             ))}
           </div>
         )}

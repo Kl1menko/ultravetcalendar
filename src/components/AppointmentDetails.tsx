@@ -100,6 +100,15 @@ export default function AppointmentDetails({
               { label: "Клієнт", value: appointment.client, phone: false, full: false },
               { label: "Телефон", value: appointment.phone, phone: true, full: false },
               { label: "Тварина", value: appointment.animal || appointment.pet, phone: false, full: false },
+              ...(appointment.age
+                ? [{ label: "Вік", value: appointment.age, phone: false, full: false }]
+                : []),
+              ...(appointment.weight
+                ? [{ label: "Вага", value: appointment.weight, phone: false, full: false }]
+                : []),
+              ...(appointment.address
+                ? [{ label: "Адреса", value: appointment.address, phone: false, full: true }]
+                : []),
               { label: "Лікар", value: doctorShortName(appointment.doctor), phone: false, full: false },
               ...(appointment.comment
                 ? [{ label: "Коментар", value: appointment.comment, phone: false, full: true }]

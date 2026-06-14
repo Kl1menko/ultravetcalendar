@@ -7,6 +7,9 @@ export type Appointment = {
   phone: string
   pet: string
   animal: string
+  age: string
+  weight: string
+  address: string
   service: string
   doctor: string
   comment: string
@@ -29,6 +32,9 @@ export type AppointmentRow = {
   phone: string
   pet: string
   animal: string | null
+  age: string | null
+  weight: string | null
+  address: string | null
   service: string
   doctor: string
   comment: string | null
