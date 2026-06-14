@@ -47,14 +47,17 @@ export default function CalendarPage() {
     goToDate(new Date())
   }, [goToDate])
 
-  // Іконка календаря → системний date picker. Значення input у форматі
-  // "YYYY-MM-DD" парсимо як ЛОКАЛЬНУ дату (через isoDate уникаємо UTC-зсуву).
+  // Клік по обгортці іконки → пробуємо showPicker() (десктоп/сучасні браузери).
+  // На iOS це може кинути — ігноруємо: там пікер відкриє сам клікабельний input
+  // (прозорий оверлей). Значення парситься як локальна дата (без UTC-зсуву).
   const openDatePicker = useCallback(() => {
-    const input = dateInputRef.current
-    if (!input) return
-    input.value = isoDate(selectedDate)
-    input.showPicker?.()
-  }, [selectedDate])
+    try {
+      dateInputRef.current?.showPicker?.()
+    } catch {
+      // iOS Safari: showPicker недоступний поза певним контекстом — ок, тап по
+      // самому input усе одно відкриє нативний пікер.
+    }
+  }, [])
 
   const handleDatePicked = useCallback((value: string) => {
     if (!value) return
@@ -88,7 +91,7 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="flex h-[calc(100svh-env(safe-area-inset-top)-var(--bottom-nav-total))] flex-col md:h-[calc(100dvh-96px)] md:rounded-[28px] md:border md:border-white/80 md:bg-white/88 md:p-5 md:shadow-[var(--desktop-shadow)] md:backdrop-blur-xl">
+    <div className="flex min-h-0 flex-1 flex-col md:h-[calc(100dvh-96px)] md:flex-none md:rounded-[28px] md:border md:border-white/80 md:bg-white/88 md:p-5 md:shadow-[var(--desktop-shadow)] md:backdrop-blur-xl">
       {/* ─── CALENDAR HEADER ─── */}
       <header className="flex items-center justify-between gap-2 px-4 pt-2 pb-1.5 md:px-0 md:pb-5">
         <h2 className="text-[19px] font-black tracking-tight text-[var(--ink)] md:text-3xl">
@@ -104,11 +107,13 @@ export default function CalendarPage() {
             Сьогодні
           </button>
 
-          {/* Date picker (native, відкривається іконкою) */}
-          <button
-            onClick={openDatePicker}
-            aria-label="Вибрати дату"
+          {/* Date picker (native). Сам input лежить прозорим оверлеєм над іконкою
+              і є клікабельною ціллю — так нативний пікер відкривається тапом
+              навіть на iOS Safari, де showPicker() ненадійний. На десктопі
+              клік по іконці додатково викликає showPicker(). */}
+          <div
             className="relative grid h-8 w-8 place-items-center rounded-xl border border-[var(--line)] bg-white text-[var(--ink-2)] transition-colors hover:border-[var(--teal)] hover:text-[var(--teal)] md:h-10 md:w-10 md:rounded-2xl"
+            onClick={openDatePicker}
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4 md:h-5 md:w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -117,12 +122,12 @@ export default function CalendarPage() {
             <input
               ref={dateInputRef}
               type="date"
-              aria-hidden="true"
-              tabIndex={-1}
+              aria-label="Вибрати дату"
+              value={isoDate(selectedDate)}
               onChange={(e) => handleDatePicked(e.target.value)}
-              className="pointer-events-none absolute inset-0 h-px w-px opacity-0"
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
             />
-          </button>
+          </div>
 
           {/* Doctor filter (desktop dropdown) */}
           <div className="hidden h-10 items-center gap-2 rounded-2xl border border-[var(--line)] bg-[var(--paper)] px-3 md:flex">

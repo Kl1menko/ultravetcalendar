@@ -169,7 +169,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
 
       {/* ─── MAIN CONTENT ────────────────────────────────── */}
       <main
-        className="w-full px-0 pt-[env(safe-area-inset-top)] pb-[var(--bottom-nav-total)] md:mx-auto md:max-w-[1440px] md:px-8 md:pb-10 md:pt-7 xl:px-10"
+        className="flex min-h-svh w-full flex-col px-0 pt-[env(safe-area-inset-top)] pb-[var(--bottom-nav-total)] md:mx-auto md:block md:min-h-0 md:max-w-[1440px] md:px-8 md:pb-10 md:pt-7 xl:px-10"
       >
         {children}
       </main>
