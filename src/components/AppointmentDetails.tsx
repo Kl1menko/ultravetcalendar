@@ -43,10 +43,13 @@ export default function AppointmentDetails({
     <Sheet open={!!appointment} onOpenChange={(v) => { if (!v) { setConfirmDelete(false); onClose() } }}>
       <SheetContent
         side="bottom"
-        className="max-h-[92svh] overflow-y-auto rounded-t-[20px] px-0 pb-0 md:max-h-[84dvh] md:w-[min(760px,calc(100vw-3rem))] md:rounded-[28px]"
+        className="flex max-h-[92svh] flex-col rounded-t-[20px] px-0 pb-0 md:max-h-[84dvh] md:w-[min(760px,calc(100vw-3rem))] md:rounded-[28px]"
       >
         {/* Handle */}
-        <div className="mx-auto mb-3 mt-1.5 h-1 w-10 rounded-full bg-[var(--line)] md:hidden" />
+        <div className="mx-auto mb-3 mt-1.5 h-1 w-10 shrink-0 rounded-full bg-[var(--line)] md:hidden" />
+
+        {/* Прокручувана частина — герой + інфо-рядки */}
+        <div className="min-h-0 flex-1 overflow-y-auto">
 
         {/* Hero block — кольоровий акцент лікаря */}
         <div
@@ -159,9 +162,12 @@ export default function AppointmentDetails({
           })()}
         </div>
 
-        {/* Дії */}
+        </div>
+        {/* кінець прокручуваної частини */}
+
+        {/* Дії — закріплені знизу */}
         <div
-          className="grid grid-cols-2 gap-2.5 border-t border-[var(--line)] px-4 pt-3 pb-4 md:gap-3 md:px-6 md:py-4"
+          className="grid shrink-0 grid-cols-2 gap-2.5 border-t border-[var(--line)] px-4 pt-3 pb-4 md:gap-3 md:px-6 md:py-4"
           style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}
         >
           <a
