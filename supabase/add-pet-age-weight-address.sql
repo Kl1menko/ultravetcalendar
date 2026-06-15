@@ -21,8 +21,14 @@ grant insert (age, weight, address) on public.appointments to authenticated;
 grant update (age, weight, address) on public.appointments to authenticated;
 
 -- ─── 3. View appointments_public — додаємо нові колонки ──────────────────────
+--
+-- ⚠️ create or replace view не вміє вставляти колонки в середину — лише
+-- дописувати в кінець. Нові поля (age, weight, address) йдуть до service, тож
+-- порядок змінюється і Postgres падає з 42P16. Тому спершу дропаємо view.
 
-create or replace view public.appointments_public
+drop view if exists public.appointments_public;
+
+create view public.appointments_public
 with (security_invoker = true)
 as
 select
