@@ -11,6 +11,7 @@ import { Appointment } from "@/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ChevronDown, Phone, PawPrint, Search, X } from "lucide-react"
 
 type ClientEntry = {
   client: string
@@ -103,25 +104,10 @@ function buildClients(appointments: Appointment[]): ClientEntry[] {
   return clients.sort((a, b) => b.visits - a.visits)
 }
 
-function PhoneIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16z"/>
-    </svg>
-  )
-}
-
-function ChevronIcon({ open }: { open: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" className={`w-4 h-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-      <path d="m6 9 6 6 6-6"/>
-    </svg>
-  )
-}
-
 export default function ClientsPage() {
   const { appointments, reload, canSeeClients } = useCalendarContext()
   const [query, setQuery] = useState("")
+  const [scope, setScope] = useState<"all" | "duplicates">("all")
   const [expanded, setExpanded] = useState<string | null>(null)
   const [confirmDeleteKey, setConfirmDeleteKey] = useState<string | null>(null)
   const [deletingKey, setDeletingKey] = useState<string | null>(null)
@@ -140,16 +126,20 @@ export default function ClientsPage() {
 
   const filtered = useMemo(() => {
     const raw = query.trim()
-    if (!raw) return allClients
+    const base = scope === "duplicates"
+      ? allClients.filter((client) => client.duplicateCount > 1)
+      : allClients
+
+    if (!raw) return base
     const q = raw.toLowerCase()
-    return allClients.filter((c) => {
+    return base.filter((c) => {
       // Текстовий матч — ім'я клієнта / клички тварин.
       const text = [c.client, ...[...c.pets.keys()]].join(" ").toLowerCase().includes(q)
       // Телефонний матч — нормалізований номер (формат вводу не важливий).
       const phone = hasDigits(raw) && phoneMatches(c.phone, raw)
       return text || phone
     })
-  }, [allClients, query])
+  }, [allClients, query, scope])
 
   const toggle = (key: string) => setExpanded((prev) => (prev === key ? null : key))
 
@@ -173,25 +163,33 @@ export default function ClientsPage() {
     <div className="pb-6 md:flex md:flex-col md:gap-5 md:px-0 md:pt-0">
       {/* Header */}
       <header className="px-4 pt-4 pb-3 md:desktop-page-header md:px-6 md:py-5">
-        <h1 className="text-[22px] font-black text-[var(--ink)] md:text-[28px]">
-          Клієнти
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <h1 className="text-[24px] font-black leading-tight text-[var(--ink)] md:text-[28px]">
+              Клієнти
+              {allClients.length > 0 && (
+                <span className="ml-2 text-[16px] font-semibold text-[var(--muted-col)]">{allClients.length}</span>
+              )}
+            </h1>
+            {duplicatesCount > 0 && (
+              <p className="mt-1 text-[13px] font-semibold text-amber-700">
+                {duplicatesCount} потенційних {clientsCountLabel(duplicatesCount)} для перевірки
+              </p>
+            )}
+          </div>
           {allClients.length > 0 && (
-            <span className="ml-2 text-[16px] font-semibold text-[var(--muted-col)]">{allClients.length}</span>
+            <div className="hidden text-right md:block">
+              <div className="text-[11px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]">Показано</div>
+              <div className="text-[18px] font-black text-[var(--ink)]">{filtered.length}</div>
+            </div>
           )}
-        </h1>
-        {duplicatesCount > 0 && (
-          <p className="mt-1 text-[13px] font-semibold text-amber-700">
-            Потенційних дублів: {duplicatesCount}
-          </p>
-        )}
+        </div>
       </header>
 
       {/* Search */}
-      <div className="px-4 mb-4 md:mb-0 md:px-0">
+      <div className="mb-3 px-4 md:mb-0 md:px-0">
         <div className="relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-col)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          </svg>
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-col)]" />
           <Input
             type="search"
             value={query}
@@ -200,14 +198,41 @@ export default function ClientsPage() {
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
-            className="h-11 rounded-xl border-[var(--line)] bg-white pl-10 pr-10 text-[14px] text-[var(--ink)] focus-visible:border-[var(--teal)] focus-visible:ring-0 md:h-12 md:rounded-2xl md:shadow-sm"
+            className="h-11 rounded-lg border-[var(--line)] bg-white pl-10 pr-10 text-[14px] text-[var(--ink)] shadow-sm focus-visible:border-[var(--teal)] focus-visible:ring-0 md:h-12"
           />
           {query && (
-            <button type="button" onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-[var(--muted-col)] text-white flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            <button type="button" onClick={() => setQuery("")} className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-[var(--muted-col)] hover:bg-[var(--paper)] hover:text-[var(--ink)]">
+              <X className="h-4 w-4" />
             </button>
           )}
         </div>
+      </div>
+
+      {/* Scope */}
+      <div className="mb-4 flex gap-2 overflow-x-auto px-4 md:mb-0 md:px-0">
+        {[
+          { key: "all" as const, label: "Усі", count: allClients.length },
+          { key: "duplicates" as const, label: "Дублі", count: duplicatesCount },
+        ].map((item) => {
+          const active = scope === item.key
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => setScope(item.key)}
+              className={`flex h-9 items-center gap-2 rounded-lg border px-3 text-[13px] font-bold transition-colors ${
+                active
+                  ? "border-[var(--teal)] bg-[var(--teal)] text-white shadow-sm"
+                  : "border-[var(--line)] bg-white text-[var(--ink-2)] hover:bg-[var(--paper)]"
+              }`}
+            >
+              <span>{item.label}</span>
+              <span className={`rounded-md px-1.5 py-0.5 text-[11px] ${active ? "bg-white/20 text-white" : "bg-[var(--paper)] text-[var(--muted-col)]"}`}>
+                {item.count}
+              </span>
+            </button>
+          )
+        })}
       </div>
 
       {/* List */}
@@ -221,7 +246,7 @@ export default function ClientsPage() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="flex flex-col gap-3 px-4 md:grid md:grid-cols-2 md:px-0 xl:grid-cols-3"
+          className="flex flex-col gap-2.5 px-4 md:grid md:grid-cols-2 md:px-0 xl:grid-cols-3"
         >
           {filtered.map((c) => {
             const key = `${c.client}-${c.phone}`
@@ -230,53 +255,58 @@ export default function ClientsPage() {
             const pets = [...c.pets.entries()]
 
             return (
-              <motion.div key={key} variants={staggerItem} className="desktop-card-hover overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-sm">
+              <motion.div key={key} variants={staggerItem} className={`desktop-card-hover overflow-hidden rounded-lg border bg-white shadow-sm transition-colors ${
+                c.duplicateCount > 1 ? "border-amber-200" : "border-[var(--line)]"
+              }`}>
 
                 {/* Main row */}
                 <button
                   type="button"
                   onClick={() => toggle(key)}
-                  className="w-full flex items-center gap-3 p-4 text-left active:bg-[var(--paper)] transition-colors"
+                  className="flex w-full items-center gap-3 p-3.5 text-left transition-colors active:bg-[var(--paper)] md:p-4"
                 >
                   {/* Avatar */}
-                  <div className="flex-shrink-0 w-11 h-11 rounded-full bg-[var(--teal-light)] text-[var(--teal-dark)] text-[13px] font-black grid place-items-center">
-                    {initials}
+                  <div className="relative grid h-11 w-11 flex-shrink-0 place-items-center rounded-lg bg-[var(--paper)] text-[13px] font-black text-[var(--ink)]">
+                    <span>{initials}</span>
+                    {c.duplicateCount > 1 && (
+                      <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-amber-500" />
+                    )}
                   </div>
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[14px] font-bold text-[var(--ink)] truncate">{c.client}</span>
+                    <div className="flex items-center gap-2 pr-1">
+                      <span className="truncate text-[15px] font-black leading-tight text-[var(--ink)]">{c.client}</span>
                       {/* Visits badge */}
-                      <Badge className="flex-shrink-0 bg-[var(--teal-light)] text-[10px] font-bold text-[var(--teal)]">
+                      <Badge className="h-6 flex-shrink-0 rounded-md bg-[var(--paper)] px-2 text-[11px] font-bold text-[var(--ink)]">
                         {c.visits} {c.visits === 1 ? "візит" : c.visits < 5 ? "візити" : "візитів"}
                       </Badge>
                       {c.duplicateCount > 1 && (
-                        <Badge className="flex-shrink-0 bg-amber-100 text-[10px] font-bold text-amber-700">
+                        <Badge className="h-6 flex-shrink-0 rounded-md bg-amber-100 px-2 text-[11px] font-bold text-amber-700">
                           дубль
                         </Badge>
                       )}
                     </div>
                     {/* Pets */}
-                    <div className="text-[12px] font-semibold text-[var(--teal-dark)] truncate">
+                    <div className="mt-0.5 truncate text-[13px] font-bold leading-snug text-[var(--ink)]">
                       {pets.map(([name, animal]) => animal && animal !== name ? `${name} (${animal})` : name).join(", ")}
                     </div>
                     {/* Last visit */}
-                    <div className="text-[11px] text-[var(--muted-col)] truncate">
+                    <div className="mt-0.5 truncate text-[12px] text-[var(--muted-col)]">
                       {c.last.service} · {formatShortDate(new Date(c.last.date + "T12:00:00"))}
                     </div>
                   </div>
 
-                  <ChevronIcon open={isOpen} />
+                  <ChevronDown className={`h-4 w-4 flex-shrink-0 text-[var(--ink)] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
                 </button>
 
                 {/* Expanded details */}
                 {isOpen && (
                   <div className="border-t border-[var(--line)]">
                     {/* Phone + call */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--line)]">
+                    <div className="flex items-center justify-between border-b border-[var(--line)] px-4 py-3">
                       <div>
-                        <div className="text-[10px] font-bold text-[var(--muted-col)] uppercase tracking-[0.4px] mb-0.5">Телефон</div>
+                        <div className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]">Телефон</div>
                       <a href={`tel:${c.phone}`} className="text-[14px] font-bold text-[var(--teal)]">{c.phone}</a>
                         {c.duplicateCount > 1 && (
                           <div className="mt-1 text-[11px] font-semibold text-amber-700">
@@ -287,20 +317,20 @@ export default function ClientsPage() {
                       <a
                         href={`tel:${c.phone}`}
                         aria-label={`Подзвонити ${c.client}`}
-                        className="w-10 h-10 rounded-full bg-[var(--teal)] text-white grid place-items-center hover:bg-[var(--teal-dark)] active:scale-95 transition-all"
+                        className="grid h-10 w-10 place-items-center rounded-lg bg-[var(--teal)] text-white transition-all hover:bg-[var(--teal-dark)] active:scale-95"
                       >
-                        <PhoneIcon />
+                        <Phone className="h-[18px] w-[18px]" />
                       </a>
                     </div>
 
                     {/* Pets list */}
                     {pets.length > 0 && (
-                      <div className="px-4 py-3 border-b border-[var(--line)]">
-                        <div className="text-[10px] font-bold text-[var(--muted-col)] uppercase tracking-[0.4px] mb-2">Тварини</div>
+                      <div className="border-b border-[var(--line)] px-4 py-3">
+                        <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]">Тварини</div>
                         <div className="flex flex-col gap-1.5">
                           {pets.map(([name, animal]) => (
                             <div key={name} className="flex items-center gap-2">
-                              <span className="text-base leading-none">🐾</span>
+                              <PawPrint className="h-3.5 w-3.5 text-[var(--teal)]" />
                               <span className="text-[13px] font-semibold text-[var(--ink)]">{name}</span>
                               {animal && animal !== name && (
                                 <span className="text-[11px] text-[var(--muted-col)]">{animal}</span>
@@ -312,8 +342,8 @@ export default function ClientsPage() {
                     )}
 
                     {/* Visit history */}
-                    <div className="px-4 py-3 border-b border-[var(--line)]">
-                      <div className="text-[10px] font-bold text-[var(--muted-col)] uppercase tracking-[0.4px] mb-2">
+                    <div className="border-b border-[var(--line)] px-4 py-3">
+                      <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]">
                         Історія візитів ({c.visits})
                       </div>
                       <div className="flex flex-col gap-2">
@@ -343,14 +373,14 @@ export default function ClientsPage() {
                           <Button
                             variant="outline"
                             onClick={() => setConfirmDeleteKey(null)}
-                            className="h-9 flex-1 rounded-xl border-[var(--line)] bg-[var(--paper)] text-[13px] font-semibold text-[var(--ink-2)]"
+                            className="h-9 flex-1 rounded-lg border-[var(--line)] bg-[var(--paper)] text-[13px] font-semibold text-[var(--ink-2)]"
                           >
                             Скасувати
                           </Button>
                           <Button
                             disabled={deletingKey === key}
                             onClick={() => handleDeleteClient(key, c.history)}
-                            className="h-9 flex-1 rounded-xl bg-red-500 text-[13px] font-semibold text-white hover:bg-red-600"
+                            className="h-9 flex-1 rounded-lg bg-red-500 text-[13px] font-semibold text-white hover:bg-red-600"
                           >
                             {deletingKey === key ? "Видаляю…" : `Так, видалити (${c.visits})`}
                           </Button>
@@ -359,7 +389,7 @@ export default function ClientsPage() {
                         <Button
                           variant="destructive"
                           onClick={() => setConfirmDeleteKey(key)}
-                          className="h-9 w-full rounded-xl border border-red-200 bg-red-50 text-[13px] font-semibold text-red-600 hover:bg-red-100"
+                          className="h-9 w-full rounded-lg border border-red-200 bg-red-50 text-[13px] font-semibold text-red-600 hover:bg-red-100"
                         >
                           Видалити клієнта
                         </Button>
