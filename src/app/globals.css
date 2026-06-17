@@ -136,20 +136,54 @@
   }
 }
 
-/* ─── BRAND TOKENS ─────────────────────────────────────────────────── */
+/* ─── ULTRAVET / min.studio TOKENS ─────────────────────────────────── */
 :root {
-  --teal:       #0d7377;
-  --teal-dark:  #085a5e;
-  --teal-light: #e6f5f5;
-  --teal-mid:   #b2dede;
-  --ink:        #111827;
-  --ink-2:      #374151;
-  --muted-col:  #6b7280;
-  --line:       #e5e7eb;
-  --paper:      #f4f6f8;
+  /* Палітра UltraVet: теплий сіро-білий фон, glass-панелі, майже-чорний текст,
+     чорний як головна дія. Колір лишається тільки для статусів. */
+  --uv-bg:            #f4f4f2;
+  --uv-bg-soft:       #fafafa;
+  --uv-panel:         rgba(255, 255, 255, 0.72);
+  --uv-panel-strong:  rgba(255, 255, 255, 0.9);
+
+  --uv-black:         #0d0d0d;
+  --uv-ink:           #171717;
+  --uv-gray-900:      #262626;
+  --uv-gray-700:      #525252;
+  --uv-gray-500:      #737373;
+  --uv-gray-300:      #d4d4d4;
+  --uv-gray-200:      #e5e5e5;
+  --uv-gray-100:      #f1f1ef;
+
+  --uv-border:         rgba(23, 23, 23, 0.08);
+  --uv-border-strong:  rgba(23, 23, 23, 0.14);
+
+  --uv-glass:         rgba(255, 255, 255, 0.62);
+  --uv-glass-border:  rgba(255, 255, 255, 0.72);
+
+  --uv-shadow:        0 24px 80px rgba(0, 0, 0, 0.06);
+  --uv-shadow-soft:   0 8px 30px rgba(0, 0, 0, 0.045);
+
+  --uv-radius-sm: 12px;
+  --uv-radius-md: 18px;
+  --uv-radius-lg: 24px;
+  --uv-radius-xl: 32px;
+
+  /* ─── Legacy-bridge ──────────────────────────────────────────────────
+     Решта коду масово використовує --teal/--ink/--line/--paper. Замість
+     правок у кожному файлі перенаправляємо ці токени на нову палітру:
+     «teal» (бренд/головна дія) → чорний; світлі/проміжні відтінки → сірі. */
+  --teal:       var(--uv-black);   /* головна дія */
+  --teal-dark:  #000000;           /* hover головної дії */
+  --teal-light: var(--uv-gray-100);/* активний фон навігації */
+  --teal-mid:   var(--uv-gray-300);/* hover-бордюр */
+  --ink:        var(--uv-ink);
+  --ink-2:      var(--uv-gray-700);
+  --muted-col:  var(--uv-gray-500);
+  --line:       var(--uv-gray-200);
+  --paper:      var(--uv-bg);
   --panel:      #ffffff;
-  --desktop-shadow: 0 20px 60px rgba(17, 24, 39, 0.08);
-  --desktop-soft: 0 10px 30px rgba(13, 115, 119, 0.08);
+  --desktop-shadow: var(--uv-shadow);
+  --desktop-soft:   var(--uv-shadow-soft);
   --red:        #dc2626;
   --red-bg:     #fee2e2;
   --amber:      #d97706;
@@ -186,11 +220,10 @@
   }
 
   .desktop-page-header {
-    border: 1px solid rgba(229, 231, 235, 0.9);
-    border-radius: 24px;
+    border: 1px solid var(--uv-border);
+    border-radius: var(--uv-radius-lg);
     background:
-      linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(230, 245, 245, 0.76)),
-      radial-gradient(circle at 88% 20%, rgba(13, 115, 119, 0.16), transparent 34%);
+      linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(244, 244, 242, 0.82));
     box-shadow: var(--desktop-soft);
   }
 
@@ -230,7 +263,7 @@
 /* ─── FULLCALENDAR OVERRIDES ──────────────────────────────────────── */
 .fc {
   font-family: var(--font-inter), -apple-system, sans-serif;
-  background: #f0f2f5;
+  background: var(--uv-bg);
   width: 100%;
   max-width: 100%;
 }
@@ -255,7 +288,7 @@
 .fc .fc-timegrid-col,
 .fc-theme-standard .fc-timegrid-col,
 .fc .fc-scrollgrid-sync-inner {
-  background: #f0f2f5 !important;
+  background: var(--uv-bg) !important;
 }
 
 /* Основні лінії годин — трохи темніші */
@@ -285,7 +318,7 @@
   border: none !important;
 }
 .fc .fc-col-header-cell {
-  background: #f0f2f5;
+  background: var(--uv-bg);
   font-size: 12px;
   font-weight: 700;
   color: var(--muted-col);
@@ -296,7 +329,7 @@
   font-size: 11px;
   font-weight: 600;
   color: #9ca3af;
-  background: #f0f2f5;
+  background: var(--uv-bg);
 }
 .fc .fc-event {
   border-radius: 8px !important;
@@ -337,6 +370,34 @@
 }
 .fc .fc-timegrid-col-events {
   margin: 0 2px !important;
+}
+
+/* ─── MONTH GRID (dayGridMonth) ───────────────────────────────────── */
+.fc .fc-daygrid-day {
+  background: var(--uv-bg);
+}
+.fc .fc-daygrid-day.fc-day-today {
+  background: var(--uv-gray-100) !important;
+}
+.fc .fc-daygrid-day-number {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
+  padding: 4px 6px;
+}
+.fc .fc-day-other .fc-daygrid-day-number {
+  color: var(--uv-gray-300);
+}
+.fc .fc-daygrid-event {
+  border-radius: 6px !important;
+  font-size: 11px;
+  padding: 1px 4px;
+  margin: 1px 2px;
+}
+.fc .fc-daygrid-more-link {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-2);
 }
 
 /* ─── ANIMATIONS ──────────────────────────────────────────────────── */

@@ -1,17 +1,21 @@
 "use client"
 
 import { useState } from "react"
+import { motion } from "motion/react"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
-import { Appointment } from "@/types"
+import { Appointment, AppointmentStatus } from "@/types"
 import { minutesFromTime, durationLabel, formatShortDate } from "@/lib/utils-app"
 import { doctorColor, doctorShortName } from "@/lib/doctors"
+import { STATUSES, statusStyle } from "@/lib/status"
+import { springPop } from "@/lib/motion"
 import { parseServices } from "@/lib/services"
-import { deleteAppointment } from "@/lib/appointments"
+import { deleteAppointment, updateStatus } from "@/lib/appointments"
 
 type Props = {
   appointment: Appointment | null
   onClose: () => void
   onEdit: (appt: Appointment) => void
+  onDuplicate: (appt: Appointment) => void
   onDeleted: () => void
   canSeePrices?: boolean
 }
@@ -20,16 +24,45 @@ export default function AppointmentDetails({
   appointment,
   onClose,
   onEdit,
+  onDuplicate,
   onDeleted,
   canSeePrices = false,
 }: Props) {
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [savingStatus, setSavingStatus] = useState(false)
+  // Оптимістичний статус: батьківський detailsAppt не оновлюється після reload,
+  // тож тримаємо відображуваний статус локально і скидаємо оверайд при зміні
+  // запису (id+status у залежності рендер-синхронізації нижче).
+  const [statusOverride, setStatusOverride] = useState<AppointmentStatus | null>(null)
+  const [syncKey, setSyncKey] = useState<string>("")
+
+  // Синхронізація під час рендеру (без ефекту): коли відкрито інший запис або
+  // прийшов новий статус із пропсів — скидаємо локальний оверайд.
+  const currentKey = `${appointment?.id ?? ""}:${appointment?.status ?? ""}`
+  if (currentKey !== syncKey) {
+    setSyncKey(currentKey)
+    setStatusOverride(null)
+  }
 
   if (!appointment) return null
 
   const durMins = minutesFromTime(appointment.end) - minutesFromTime(appointment.start)
   const color = doctorColor(appointment.doctor)
+  const status = statusOverride ?? appointment.status
+
+  const handleStatusChange = async (next: AppointmentStatus) => {
+    if (next === status || savingStatus) return
+    setSavingStatus(true)
+    setStatusOverride(next) // оптимістично
+    const { error } = await updateStatus(appointment.id, next)
+    setSavingStatus(false)
+    if (error) {
+      setStatusOverride(appointment.status) // відкат
+      return
+    }
+    onDeleted() // = reload зі layout — оновлює список/календар
+  }
 
   const handleDelete = async () => {
     setDeleting(true)
@@ -56,8 +89,18 @@ export default function AppointmentDetails({
           className="mx-4 mb-4 rounded-2xl px-4 py-3.5 md:mx-6 md:mt-6 md:rounded-[24px] md:px-6 md:py-5"
           style={{ background: color.bg }}
         >
-          {/* Дата */}
-          <div className="flex items-center justify-end mb-2">
+          {/* Статус + дата */}
+          <div className="flex items-center justify-between mb-2">
+            <motion.span
+              key={status}
+              variants={springPop}
+              initial="hidden"
+              animate="visible"
+              className="rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.3px]"
+              style={{ background: statusStyle(status).bg, color: statusStyle(status).text }}
+            >
+              {status}
+            </motion.span>
             <span className="text-[12px] font-semibold" style={{ color: color.border }}>
               {formatShortDate(new Date(appointment.date + "T12:00:00"))}
             </span>
@@ -162,6 +205,34 @@ export default function AppointmentDetails({
           })()}
         </div>
 
+        {/* Швидка зміна статусу */}
+        <div className="mx-4 mb-4 md:mx-6">
+          <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]">
+            Статус
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {STATUSES.map((s) => {
+              const active = status === s
+              const style = statusStyle(s)
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  disabled={savingStatus}
+                  onClick={() => handleStatusChange(s)}
+                  className={[
+                    "rounded-full border px-3 py-1.5 text-[13px] font-semibold transition active:scale-[0.97] disabled:opacity-60",
+                    active ? "border-transparent" : "border-[var(--line)] bg-white text-[var(--ink-2)]",
+                  ].join(" ")}
+                  style={active ? { background: style.bg, color: style.text } : undefined}
+                >
+                  {s}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
         </div>
         {/* кінець прокручуваної частини */}
 
@@ -172,13 +243,25 @@ export default function AppointmentDetails({
         >
           <a
             href={`tel:${appointment.phone}`}
-            className="col-span-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--teal)] text-[14px] font-semibold text-white transition-transform active:scale-[0.98] md:h-12 md:rounded-2xl md:shadow-lg md:shadow-teal-700/20"
+            className="col-span-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--teal)] text-[14px] font-semibold text-white transition-transform active:scale-[0.98] md:h-12 md:rounded-2xl md:shadow-lg md:shadow-black/15"
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.08 6.08l.98-.98a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
             </svg>
             Подзвонити
           </a>
+          {!confirmDelete && (
+            <button
+              type="button"
+              onClick={() => { onClose(); onDuplicate(appointment) }}
+              className="col-span-2 flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--paper)] text-[14px] font-semibold text-[var(--ink-2)] transition-transform active:scale-[0.98] md:h-12 md:rounded-2xl"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 1l4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="M7 23l-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" />
+              </svg>
+              Повторити запис
+            </button>
+          )}
           {confirmDelete ? (
             <>
               <button

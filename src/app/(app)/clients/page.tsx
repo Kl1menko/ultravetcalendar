@@ -1,8 +1,11 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { motion } from "motion/react"
 import { useCalendarContext } from "@/context/calendar"
+import { staggerContainer, staggerItem } from "@/lib/motion"
 import { formatShortDate } from "@/lib/utils-app"
+import { phoneMatches, hasDigits } from "@/lib/phone"
 import { deleteAppointment } from "@/lib/appointments"
 import { Appointment } from "@/types"
 import { Badge } from "@/components/ui/badge"
@@ -136,11 +139,16 @@ export default function ClientsPage() {
   const duplicatesCount = allClients.filter((client) => client.duplicateCount > 1).length
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return allClients
-    return allClients.filter((c) =>
-      [c.client, c.phone, ...[...c.pets.keys()]].join(" ").toLowerCase().includes(q)
-    )
+    const raw = query.trim()
+    if (!raw) return allClients
+    const q = raw.toLowerCase()
+    return allClients.filter((c) => {
+      // Текстовий матч — ім'я клієнта / клички тварин.
+      const text = [c.client, ...[...c.pets.keys()]].join(" ").toLowerCase().includes(q)
+      // Телефонний матч — нормалізований номер (формат вводу не важливий).
+      const phone = hasDigits(raw) && phoneMatches(c.phone, raw)
+      return text || phone
+    })
   }, [allClients, query])
 
   const toggle = (key: string) => setExpanded((prev) => (prev === key ? null : key))
@@ -208,7 +216,13 @@ export default function ClientsPage() {
           {query ? "Нічого не знайдено." : "Клієнтів поки немає."}
         </div>
       ) : (
-        <div className="flex flex-col gap-3 px-4 md:grid md:grid-cols-2 md:px-0 xl:grid-cols-3">
+        <motion.div
+          key={query.trim().toLowerCase()}
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="flex flex-col gap-3 px-4 md:grid md:grid-cols-2 md:px-0 xl:grid-cols-3"
+        >
           {filtered.map((c) => {
             const key = `${c.client}-${c.phone}`
             const isOpen = expanded === key
@@ -216,7 +230,7 @@ export default function ClientsPage() {
             const pets = [...c.pets.entries()]
 
             return (
-              <div key={key} className="desktop-card-hover overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-sm">
+              <motion.div key={key} variants={staggerItem} className="desktop-card-hover overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-sm">
 
                 {/* Main row */}
                 <button
@@ -353,10 +367,10 @@ export default function ClientsPage() {
                     </div>
                   </div>
                 )}
-              </div>
+              </motion.div>
             )
           })}
-        </div>
+        </motion.div>
       )}
     </div>
   )

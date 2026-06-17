@@ -30,6 +30,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [formOpen, setFormOpen] = useState(false)
   const [prefillTime, setPrefillTime] = useState<string | undefined>()
   const [editingAppt, setEditingAppt] = useState<Appointment | null>(null)
+  const [duplicatingAppt, setDuplicatingAppt] = useState<Appointment | null>(null)
   const [detailsAppt, setDetailsAppt] = useState<Appointment | null>(null)
   const [searchOpen, setSearchOpen] = useState(false)
 
@@ -116,25 +117,37 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const openNewAppointment = () => {
     setEditingAppt(null)
+    setDuplicatingAppt(null)
     setPrefillTime(undefined)
     setFormOpen(true)
   }
 
   const openNewAppointmentAtTime = (time: string) => {
     setEditingAppt(null)
+    setDuplicatingAppt(null)
     setPrefillTime(time)
     setFormOpen(true)
   }
 
   const openEditAppointment = (appt: Appointment) => {
+    setDuplicatingAppt(null)
     setEditingAppt(appt)
+    setFormOpen(true)
+  }
+
+  // «Повторити»: відкриваємо форму, заповнену даними запису, але як НОВИЙ
+  // (editing=null), тож збереження створить окрему копію, яку можна редагувати.
+  const openDuplicateAppointment = (appt: Appointment) => {
+    setEditingAppt(null)
+    setPrefillTime(undefined)
+    setDuplicatingAppt(appt)
     setFormOpen(true)
   }
 
   if (authLoading || !user) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-[var(--teal-light)]">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-lg shadow-teal-700/15 ring-1 ring-[var(--teal-mid)] animate-pulse-logo">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-lg shadow-black/10 ring-1 ring-[var(--teal-mid)] animate-pulse-logo">
           <Image src="/logo.svg" alt="UltraVet" width={40} height={40} unoptimized />
         </div>
       </div>
@@ -182,6 +195,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         selectedDate={selectedDate}
         prefillTime={prefillTime}
         editing={editingAppt}
+        duplicating={duplicatingAppt}
         userId={user.id}
         canEditPrice
       />
@@ -190,6 +204,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         appointment={detailsAppt}
         onClose={() => setDetailsAppt(null)}
         onEdit={(appt) => { setDetailsAppt(null); openEditAppointment(appt) }}
+        onDuplicate={(appt) => { setDetailsAppt(null); openDuplicateAppointment(appt) }}
         onDeleted={reload}
         canSeePrices={userCanSeeApptPrices}
       />

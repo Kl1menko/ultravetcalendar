@@ -85,12 +85,12 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
   const isCalendar = pathname === "/calendar"
 
   return (
-    <div className="min-h-svh bg-[var(--paper)] md:grid md:grid-cols-[280px_minmax(0,1fr)] md:bg-[linear-gradient(135deg,#f8fafb_0%,#eef7f7_42%,#f4f6f8_100%)]">
+    <div className="min-h-svh bg-[var(--paper)] md:grid md:grid-cols-[280px_minmax(0,1fr)] md:bg-[linear-gradient(135deg,#fafafa_0%,#f4f4f2_50%,#f1f1ef_100%)]">
       {/* ─── DESKTOP SIDEBAR ─────────────────────────────── */}
-      <aside className="hidden md:flex md:flex-col sticky top-0 h-dvh w-[280px] border-r border-white/70 bg-white/78 px-5 py-5 shadow-[12px_0_40px_rgba(13,115,119,0.08)] backdrop-blur-2xl">
+      <aside className="hidden md:flex md:flex-col sticky top-0 h-dvh w-[280px] border-r border-white/70 bg-white/78 px-5 py-5 shadow-[12px_0_40px_rgba(0,0,0,0.05)] backdrop-blur-2xl">
         {/* Brand */}
         <div className="mb-8 flex items-center gap-3 rounded-2xl border border-[var(--line)] bg-white p-2 shadow-sm">
-          <div className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-2xl bg-white shadow-lg shadow-teal-700/15 ring-1 ring-[var(--teal-mid)]">
+          <div className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-2xl bg-white shadow-lg shadow-black/10 ring-1 ring-[var(--teal-mid)]">
             <Image src="/logo.svg" alt="UltraVet" width={32} height={32} unoptimized />
           </div>
           <div className="min-w-0">
@@ -101,7 +101,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
         {/* New appt button */}
         <button
           onClick={onNewAppointment}
-          className="mb-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--teal)] text-[14px] font-black text-white shadow-lg shadow-teal-700/20 transition-all hover:-translate-y-0.5 hover:bg-[var(--teal-dark)] active:scale-[0.98]"
+          className="mb-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--teal)] text-[14px] font-black text-white shadow-lg shadow-black/15 transition-all hover:-translate-y-0.5 hover:bg-[var(--teal-dark)] active:scale-[0.98]"
         >
           <span className="text-lg font-light leading-none">+</span>
           Новий запис
@@ -169,7 +169,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
 
       {/* ─── MAIN CONTENT ────────────────────────────────── */}
       <main
-        className="flex min-h-svh w-full flex-col px-0 pt-[env(safe-area-inset-top)] pb-[var(--bottom-nav-total)] md:mx-auto md:block md:min-h-0 md:max-w-[1440px] md:px-8 md:pb-10 md:pt-7 xl:px-10"
+        className="flex h-svh w-full flex-col overflow-y-auto px-0 pt-[env(safe-area-inset-top)] pb-[var(--bottom-nav-total)] md:mx-auto md:block md:h-auto md:overflow-visible md:max-w-[1440px] md:px-8 md:pb-10 md:pt-7 xl:px-10"
       >
         {children}
       </main>
@@ -212,7 +212,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
         <button
           onClick={onNewAppointment}
           aria-label="Новий запис"
-          className="md:hidden fixed right-4 z-20 w-14 h-14 rounded-full bg-[var(--teal)] text-white text-2xl font-light leading-none shadow-lg shadow-teal-500/30 flex items-center justify-center active:scale-[0.92] transition-transform"
+          className="md:hidden fixed right-4 z-20 w-14 h-14 rounded-full bg-[var(--teal)] text-white text-2xl font-light leading-none shadow-lg shadow-black/20 flex items-center justify-center active:scale-[0.92] transition-transform"
           style={{ bottom: "calc(var(--bottom-nav-total) + 12px)" }}
         >
           +

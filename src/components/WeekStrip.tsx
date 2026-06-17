@@ -82,7 +82,7 @@ export default function WeekStrip({ selectedDate, appointments, onSelectDate }: 
               className={[
                 "flex flex-col items-center gap-[2px] min-w-[52px] py-2 px-2 rounded-2xl border cursor-pointer transition-all duration-150 active:scale-95 select-none md:min-w-0 md:flex-1 md:py-2.5",
                 isSelected
-                  ? "bg-[var(--teal)] border-[var(--teal)] shadow-md shadow-teal-500/25"
+                  ? "bg-[var(--teal)] border-[var(--teal)] shadow-md shadow-black/20"
                   : isTodayDay
                   ? "bg-[var(--teal-light)] border-[var(--teal)]"
                   : "bg-white border-[var(--line)]",
@@ -112,17 +112,33 @@ export default function WeekStrip({ selectedDate, appointments, onSelectDate }: 
               >
                 {d.getDate()}
               </span>
+              {/* Індикатор завантаженості: тонка смужка + дрібний відсоток.
+                  Ширина смужки = pct, колір контрастний до фону картки. */}
               <span
                 className={[
                   "text-[10px] font-semibold leading-none",
                   isSelected
-                    ? "text-white/70"
+                    ? "text-white/80"
                     : isTodayDay
                     ? "text-[var(--teal)]"
                     : "text-[var(--muted-col)]",
                 ].join(" ")}
               >
                 {pct}%
+              </span>
+              <span
+                className={[
+                  "mt-0.5 h-1 w-full overflow-hidden rounded-full",
+                  isSelected ? "bg-white/25" : "bg-[var(--line)]",
+                ].join(" ")}
+              >
+                <span
+                  className={[
+                    "block h-full rounded-full transition-[width] duration-300",
+                    isSelected ? "bg-white" : isTodayDay ? "bg-[var(--teal)]" : "bg-[var(--teal-mid)]",
+                  ].join(" ")}
+                  style={{ width: `${pct}%` }}
+                />
               </span>
             </button>
           )

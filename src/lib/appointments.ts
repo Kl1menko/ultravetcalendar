@@ -1,5 +1,6 @@
 import { supabase } from "./supabase"
-import { Appointment, AppointmentRow } from "@/types"
+import { Appointment, AppointmentRow, AppointmentStatus } from "@/types"
+import { normalizeStatus } from "./status"
 
 function normalizeRow(row: AppointmentRow): Appointment {
   return {
@@ -18,6 +19,7 @@ function normalizeRow(row: AppointmentRow): Appointment {
     doctor: row.doctor,
     comment: row.comment || "",
     price: row.price || 0,
+    status: normalizeStatus(row.status) ?? "Заплановано",
   }
 }
 
@@ -75,6 +77,7 @@ export type AppointmentPayload = {
   address: string
   service: string
   price?: number
+  status?: AppointmentStatus
   doctor: string
   comment: string
   created_by?: string
@@ -93,6 +96,14 @@ export async function updateAppointment(
 ): Promise<{ error: Error | null }> {
   const { error } = await supabase.from("appointments").update(payload).eq("id", id)
   return { error: error ? new Error(error.message) : null }
+}
+
+// Тонка обгортка для швидкої зміни статусу з деталей запису.
+export async function updateStatus(
+  id: string,
+  status: AppointmentStatus
+): Promise<{ error: Error | null }> {
+  return updateAppointment(id, { status })
 }
 
 export async function deleteAppointment(id: string): Promise<{ error: Error | null }> {

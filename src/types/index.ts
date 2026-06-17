@@ -1,3 +1,12 @@
+// Статус запису — синхронно з enum public.appointment_status у
+// supabase/add-appointment-status.sql та STATUSES у src/lib/status.ts.
+export type AppointmentStatus =
+  | "Заплановано"
+  | "Очікує"
+  | "В кабінеті"
+  | "Завершено"
+  | "Скасовано"
+
 export type Appointment = {
   id: string
   date: string
@@ -14,6 +23,7 @@ export type Appointment = {
   doctor: string
   comment: string
   price: number
+  status: AppointmentStatus
 }
 
 export type Notice = {
@@ -39,6 +49,7 @@ export type AppointmentRow = {
   doctor: string
   comment: string | null
   price: number | null
+  status: AppointmentStatus | null
   created_by: string | null
   created_at: string
   updated_at: string

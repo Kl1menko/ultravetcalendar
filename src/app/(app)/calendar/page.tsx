@@ -8,6 +8,7 @@ import DoctorFilterSheet from "@/components/DoctorFilterSheet"
 import { DOCTORS, doctorShortName } from "@/lib/doctors"
 import { isoDate, formatMonthYear } from "@/lib/utils-app"
 import { Appointment } from "@/types"
+import type { CalendarViewMode } from "@/components/CalendarView"
 import type FullCalendar from "@fullcalendar/react"
 
 const CalendarView = dynamic(() => import("@/components/CalendarView"), {
@@ -32,6 +33,7 @@ export default function CalendarPage() {
   const dateInputRef = useRef<HTMLInputElement>(null)
   const [doctorFilter, setDoctorFilter] = useState("Всі лікарі")
   const [doctorSheetOpen, setDoctorSheetOpen] = useState(false)
+  const [view, setView] = useState<CalendarViewMode>("day")
   const [currentMonth, setCurrentMonth] = useState(() => formatMonthYear(new Date()))
 
   const goToDate = useCallback((date: Date) => {
@@ -65,12 +67,6 @@ export default function CalendarPage() {
     goToDate(new Date(y, m - 1, d))
   }, [goToDate])
 
-  const dayCount = appointments.filter(
-    (a) =>
-      a.date === isoDate(selectedDate) &&
-      (doctorFilter === "Всі лікарі" || a.doctor === doctorFilter)
-  ).length
-
   const doctorActive = doctorFilter !== "Всі лікарі"
 
   const handleEventClick = (appt: Appointment) => {
@@ -91,10 +87,10 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="flex h-[calc(100svh-env(safe-area-inset-top)-var(--bottom-nav-total))] w-full max-w-full flex-none flex-col overflow-hidden md:h-[calc(100dvh-96px)] md:rounded-[28px] md:border md:border-white/80 md:bg-white/88 md:p-5 md:shadow-[var(--desktop-shadow)] md:backdrop-blur-xl">
+    <div className="flex min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden md:h-[calc(100dvh-96px)] md:flex-none md:rounded-[28px] md:border md:border-white/80 md:bg-white/88 md:p-5 md:shadow-[var(--desktop-shadow)] md:backdrop-blur-xl">
       {/* ─── CALENDAR HEADER ─── */}
-      <header className="flex shrink-0 items-center justify-between gap-2 px-4 pt-2 pb-1.5 md:px-0 md:pb-5">
-        <h2 className="text-[19px] font-black tracking-tight text-[var(--ink)] md:text-3xl">
+      <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-2 bg-[var(--paper)]/95 px-4 pt-2 pb-1.5 backdrop-blur-sm md:static md:bg-transparent md:px-0 md:pb-5 md:backdrop-blur-none">
+        <h2 className="text-[16px] font-black tracking-tight text-[var(--ink)] md:text-2xl">
           {currentMonth}
         </h2>
         <div className="flex items-center gap-2">
@@ -102,7 +98,7 @@ export default function CalendarPage() {
           <button
             onClick={goToToday}
             aria-label="Сьогодні"
-            className="grid h-8 place-items-center rounded-xl border-2 border-[var(--teal)] px-3 text-[13px] font-black text-[var(--teal)] transition-colors hover:bg-[var(--teal-light)] md:h-10 md:rounded-2xl md:px-4 md:text-[14px]"
+            className="grid h-10 place-items-center rounded-2xl border-2 border-[var(--teal)] px-3.5 text-[14px] font-black text-[var(--teal)] transition-colors hover:bg-[var(--teal-light)] md:px-4"
           >
             Сьогодні
           </button>
@@ -112,10 +108,10 @@ export default function CalendarPage() {
               навіть на iOS Safari, де showPicker() ненадійний. На десктопі
               клік по іконці додатково викликає showPicker(). */}
           <div
-            className="relative grid h-8 w-8 place-items-center rounded-xl border border-[var(--line)] bg-white text-[var(--ink-2)] transition-colors hover:border-[var(--teal)] hover:text-[var(--teal)] md:h-10 md:w-10 md:rounded-2xl"
+            className="relative grid h-10 w-10 place-items-center rounded-2xl border border-[var(--line)] bg-white text-[var(--ink-2)] transition-colors hover:border-[var(--teal)] hover:text-[var(--teal)]"
             onClick={openDatePicker}
           >
-            <svg viewBox="0 0 24 24" className="h-4 w-4 md:h-5 md:w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <path d="M16 2v4M8 2v4M3 10h18" />
             </svg>
@@ -134,7 +130,7 @@ export default function CalendarPage() {
             <select
               value={doctorFilter}
               onChange={(e) => setDoctorFilter(e.target.value)}
-              className="text-[13px] font-semibold text-[var(--ink)] outline-none bg-transparent cursor-pointer"
+              className="cursor-pointer bg-transparent text-[13px] font-semibold text-[var(--ink)] outline-none"
             >
               <option>Всі лікарі</option>
               {DOCTORS.map((d) => <option key={d} value={d}>{doctorShortName(d)}</option>)}
@@ -145,17 +141,17 @@ export default function CalendarPage() {
           <button
             onClick={() => setDoctorSheetOpen(true)}
             aria-label="Фільтр лікаря"
-            className={`md:hidden w-8 h-8 rounded-xl border grid place-items-center relative transition-colors ${
+            className={`relative grid h-10 w-10 place-items-center rounded-2xl border transition-colors md:hidden ${
               doctorActive
                 ? "border-[var(--teal)] bg-[var(--teal-light)] text-[var(--teal-dark)]"
                 : "border-[var(--line)] bg-white text-[var(--ink-2)]"
             }`}
           >
-            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
             {doctorActive && (
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[var(--teal)] border border-white" />
+              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border border-white bg-[var(--teal)]" />
             )}
           </button>
 
@@ -169,27 +165,49 @@ export default function CalendarPage() {
         onSelectDate={setSelectedDate}
       />
 
-      {/* ─── DAY SUMMARY ─── */}
-      <div className="flex shrink-0 items-center gap-2 px-4 py-1 md:px-0 md:py-2">
-        <span className="text-[13px] text-[var(--muted-col)] font-medium">Записів:</span>
-        <strong className="text-[13px] font-bold text-[var(--ink)]">{dayCount}</strong>
-        {doctorActive && (
-          <span className="ml-1 px-2 py-0.5 rounded-full bg-[var(--teal-light)] text-[var(--teal)] text-[11px] font-bold">
-            {doctorFilter}
-          </span>
-        )}
+      {/* ─── VIEW TABS: День / Тиждень / Місяць / Список ─── */}
+      <div className="mx-4 mb-1.5 shrink-0 rounded-2xl border border-[var(--line)] bg-white px-1 shadow-sm md:mx-0">
+        <div className="flex">
+          {([
+            { key: "day", label: "День" },
+            { key: "week", label: "Тиждень" },
+            { key: "month", label: "Місяць" },
+            { key: "list", label: "Список" },
+          ] as const).map((v) => {
+            const active = view === v.key
+            return (
+              <button
+                key={v.key}
+                onClick={() => setView(v.key)}
+                className={[
+                  "relative flex-1 py-2.5 text-center text-[14px] font-semibold transition-colors",
+                  active
+                    ? "text-[var(--ink)]"
+                    : "text-[var(--muted-col)] hover:text-[var(--ink-2)]",
+                ].join(" ")}
+              >
+                {v.label}
+                {active && (
+                  <span className="absolute inset-x-3 bottom-0 h-[2.5px] rounded-full bg-[var(--uv-black)]" />
+                )}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* ─── FULLCALENDAR ─── */}
-      <div className="min-h-0 flex-1 px-3 pb-2 md:px-0 md:pb-0 md:overflow-hidden md:rounded-3xl md:border md:border-[var(--line)] md:bg-white">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 pb-2 md:px-0 md:pb-0 md:rounded-3xl md:border md:border-[var(--line)] md:bg-white">
         <CalendarView
           appointments={appointments}
           doctorFilter={doctorFilter}
           selectedDate={selectedDate}
+          view={view}
           onDateChange={handleDateChange}
           onMonthChange={setCurrentMonth}
           onEventClick={handleEventClick}
           onDateClick={handleDateClick}
+          onDayNavigate={(date) => { goToDate(date); setView("day") }}
           calendarRef={calendarRef}
         />
       </div>

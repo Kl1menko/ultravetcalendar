@@ -97,7 +97,7 @@ export default function AlertsPage() {
       <div className="flex flex-col gap-3 px-4 pb-6 md:px-0">
         {/* Форма публікації (тільки head) */}
         {isHead && (
-          <form onSubmit={handlePublish} className="rounded-2xl bg-[var(--teal)] p-4 shadow-lg shadow-teal-700/20 md:rounded-[24px] md:p-5">
+          <form onSubmit={handlePublish} className="rounded-2xl bg-[var(--teal)] p-4 shadow-lg shadow-black/15 md:rounded-[24px] md:p-5">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
                 <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
