@@ -1,6 +1,8 @@
 -- Run this in the Supabase SQL editor or as a migration.
 --
 -- Модель доступу (тримай у синхроні з src/lib/doctors.ts → DOCTOR_ACCESS):
+--   admin     — адміністратор системи: бачить і може все; на рівні БД прирівняний
+--               до head (див. supabase/add-admin-role.sql — запусти його після цього).
 --   head      — головний лікар (Остап): бачить усе, включно з сумами (price).
 --   doctor    — звичайний лікар: бачить записи без price, має доступ до клієнтів.
 --   assistant — асистент (Анна, Устим): бачить записи без price, без бази клієнтів (UI).

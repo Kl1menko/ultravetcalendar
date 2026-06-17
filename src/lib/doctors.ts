@@ -37,21 +37,30 @@ export function doctorShortName(doctorName: string): string {
 // Роль визначається через email → запис у DOCTOR_ACCESS. Це надійніше за звірку
 // display_name (його юзер може змінити) і легко синхронізується з RLS у БД.
 //
+//   admin     — адміністратор системи: бачить усе + сторінку /admin, debug/dev,
+//               фінанси, помилки. Для прив'язки записів дивиться як головний лікар.
 //   head      — головний лікар (Остап): бачить усе, включно з сумами та аналітикою коштів.
 //   doctor    — звичайний лікар: бачить записи без сум, має доступ до бази клієнтів.
 //   assistant — асистент (Анна, Устим): бачить записи без сум і НЕ має доступу до клієнтів.
 
-export type DoctorRole = "head" | "doctor" | "assistant"
+export type DoctorRole = "admin" | "head" | "doctor" | "assistant"
 
 type DoctorAccount = {
-  /** Має збігатися з елементом DOCTORS, щоб прив'язати записи до лікаря. */
-  doctor: DoctorName
+  /**
+   * Лікар, до якого прив'язані записи. Має збігатися з елементом DOCTORS.
+   * Для admin може бути null (адмін не є лікарем у розкладі) — тоді
+   * currentDoctor буде null, що безпечно обробляється у profile/аналітиці.
+   */
+  doctor: DoctorName | null
   role: DoctorRole
 }
 
 // Email → акаунт лікаря. Email порівнюється без урахування регістру.
 // ⚠️ Тримай у синхроні з RLS-політиками у supabase/rls-policies.sql.
 export const DOCTOR_ACCESS: Record<string, DoctorAccount> = {
+  // Admin прив'язаний до головного лікаря, щоб бачити календар як повноцінний
+  // користувач і не ламати currentDoctor / doctorForEmail.
+  "v.klimenko2014@gmail.com": { doctor: "Остап (головний лікар)", role: "admin" },
   "head@clinic.com": { doctor: "Остап (головний лікар)", role: "head" },
   "yurii@clinic.com": { doctor: "Юрій (лікар)", role: "doctor" },
   "iryna@clinic.com": { doctor: "Ірина (лікар)", role: "doctor" },
@@ -73,9 +82,10 @@ export function doctorForEmail(email: string | null | undefined): DoctorName | n
   return accountForEmail(email)?.doctor ?? null
 }
 
-/** Доступ до аналітики коштів (сторінка «Аналітика») — лише головний лікар. */
+/** Доступ до аналітики коштів (сторінка «Аналітика») — admin та головний лікар. */
 export function canSeePrices(email: string | null | undefined): boolean {
-  return roleForEmail(email) === "head"
+  const role = roleForEmail(email)
+  return role === "admin" || role === "head"
 }
 
 /**
@@ -88,14 +98,33 @@ export function canSeeAppointmentPrices(email: string | null | undefined): boole
   return roleForEmail(email) !== "assistant"
 }
 
-/** Має доступ до бази клієнтів — усі лікарі та асистенти.
+/** Має доступ до бази клієнтів — admin, головний лікар та звичайні лікарі.
+ *  Асистенти бази клієнтів НЕ бачать.
  *  (Дані клієнтів будуються з записів, які за RLS читають усі автентифіковані.) */
-export function canSeeClients(): boolean {
-  return true
+export function canSeeClients(email: string | null | undefined): boolean {
+  const role = roleForEmail(email)
+  return role === "admin" || role === "head" || role === "doctor"
+}
+
+/** Доступ до сторінки /admin — лише admin. */
+export function canSeeAdmin(email: string | null | undefined): boolean {
+  return roleForEmail(email) === "admin"
+}
+
+/** Керування користувачами — лише admin (найбезпечніший варіант). */
+export function canManageUsers(email: string | null | undefined): boolean {
+  return roleForEmail(email) === "admin"
+}
+
+/** Доступ до debug/dev-інформації та логу помилок — лише admin. */
+export function canSeeDebug(email: string | null | undefined): boolean {
+  return roleForEmail(email) === "admin"
 }
 
 export function roleLabel(role: DoctorRole): string {
   switch (role) {
+    case "admin":
+      return "Адмін системи"
     case "head":
       return "Головний лікар"
     case "doctor":

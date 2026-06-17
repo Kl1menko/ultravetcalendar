@@ -1,6 +1,7 @@
 import { supabase } from "./supabase"
 import { Appointment, AppointmentRow, AppointmentStatus } from "@/types"
 import { normalizeStatus } from "./status"
+import { logAppError } from "./error-log"
 
 function normalizeRow(row: AppointmentRow): Appointment {
   return {
@@ -48,11 +49,12 @@ export async function fetchAppointments(canSeePrices = false): Promise<Appointme
 
   if (error) {
     if (isMissingObject(error.code)) {
-      console.error(
-        "fetchAppointments: view appointments_public відсутній — застосуй supabase/rls-policies.sql"
+      logAppError(
+        "fetchAppointments",
+        "view appointments_public відсутній — застосуй supabase/rls-policies.sql"
       )
     } else {
-      console.error("fetchAppointments error:", error)
+      logAppError("fetchAppointments", error)
     }
     return []
   }
@@ -87,6 +89,7 @@ export async function createAppointment(
   payload: AppointmentPayload
 ): Promise<{ error: Error | null }> {
   const { error } = await supabase.from("appointments").insert(payload)
+  if (error) logAppError("createAppointment", error)
   return { error: error ? new Error(error.message) : null }
 }
 
@@ -95,6 +98,7 @@ export async function updateAppointment(
   payload: Partial<AppointmentPayload>
 ): Promise<{ error: Error | null }> {
   const { error } = await supabase.from("appointments").update(payload).eq("id", id)
+  if (error) logAppError("updateAppointment", error)
   return { error: error ? new Error(error.message) : null }
 }
 
@@ -108,5 +112,6 @@ export async function updateStatus(
 
 export async function deleteAppointment(id: string): Promise<{ error: Error | null }> {
   const { error } = await supabase.from("appointments").delete().eq("id", id)
+  if (error) logAppError("deleteAppointment", error)
   return { error: error ? new Error(error.message) : null }
 }

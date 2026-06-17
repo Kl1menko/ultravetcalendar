@@ -5,7 +5,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { User } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase"
-import { canSeeClients, canSeePrices, roleForEmail, roleLabel } from "@/lib/doctors"
+import { Shield } from "lucide-react"
+import { canSeeAdmin, canSeeClients, canSeePrices, roleForEmail, roleLabel } from "@/lib/doctors"
 
 type Props = {
   user: User
@@ -60,8 +61,9 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
   const pathname = usePathname()
   const router = useRouter()
   const role = roleForEmail(user.email)
-  const showClients = canSeeClients()
+  const showClients = canSeeClients(user.email)
   const showAnalytics = canSeePrices(user.email)
+  const showAdmin = canSeeAdmin(user.email)
   const metadata = user.user_metadata ?? {}
   const displayName =
     (typeof metadata.display_name === "string" && metadata.display_name.trim()) ||
@@ -79,6 +81,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
     ...(showClients ? [{ href: "/clients", label: "Клієнти", icon: <ClientsIcon /> }] : []),
     { href: "/alerts", label: "Сповіщення", icon: <AlertsIcon /> },
     ...(showAnalytics ? [{ href: "/analytics", label: "Аналітика", icon: <AnalyticsIcon /> }] : []),
+    ...(showAdmin ? [{ href: "/admin", label: "Адмін", icon: <Shield className="w-5 h-5" strokeWidth={1.8} /> }] : []),
     { href: "/profile",   label: "Профіль",     icon: <ProfileIcon /> },
   ]
 

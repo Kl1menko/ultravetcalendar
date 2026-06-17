@@ -176,7 +176,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           currentDoctor: doctorForEmail(user.email),
           canSeePrices: userCanSeePrices,
           canSeeAppointmentPrices: userCanSeeApptPrices,
-          canSeeClients: canSeeClientsFn(),
+          canSeeClients: canSeeClientsFn(user.email),
           reload,
           openDetailsAppt: setDetailsAppt,
           openNewAppointmentAtTime,
