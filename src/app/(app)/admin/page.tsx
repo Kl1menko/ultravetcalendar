@@ -1,7 +1,19 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { Shield, RefreshCw, Trash2, Copy, Download, Check } from "lucide-react"
+import {
+  Shield,
+  RefreshCw,
+  Trash2,
+  Copy,
+  Download,
+  Check,
+  AlertTriangle,
+  CalendarDays,
+  Users,
+  Wifi,
+  WifiOff,
+} from "lucide-react"
 import { useCalendarContext } from "@/context/calendar"
 import {
   canSeeAdmin,
@@ -24,16 +36,58 @@ import { isoDate } from "@/lib/utils-app"
 
 const APP_NAME = "UltraVet"
 
-// ─── Дрібні презентаційні примітиви ──────────────────────────────────────────
+// ─── Презентаційні примітиви ──────────────────────────────────────────────────
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  count,
+  accent,
+  children,
+}: {
+  title: string
+  count?: number
+  accent?: boolean
+  children: React.ReactNode
+}) {
   return (
-    <section className="rounded-2xl border border-[var(--line)] bg-white/80 p-4 shadow-sm md:p-5">
-      <h2 className="mb-3 text-[13px] font-black uppercase tracking-[0.08em] text-[var(--muted-col)]">
-        {title}
-      </h2>
+    <section
+      className={`rounded-2xl border p-4 shadow-sm md:p-5 ${
+        accent ? "border-red-200 bg-red-50/40" : "border-[var(--line)] bg-white/80"
+      }`}
+    >
+      <div className="mb-3 flex items-center gap-2">
+        <h2 className="text-[13px] font-black uppercase tracking-[0.08em] text-[var(--muted-col)]">
+          {title}
+        </h2>
+        {count !== undefined && count > 0 && (
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-black text-white">
+            {count}
+          </span>
+        )}
+      </div>
       {children}
     </section>
+  )
+}
+
+// Велика метрична картка для KPI-сітки зверху.
+function Stat({
+  label,
+  value,
+  icon,
+}: {
+  label: string
+  value: React.ReactNode
+  icon?: React.ReactNode
+}) {
+  return (
+    <div className="rounded-2xl border border-[var(--line)] bg-white/80 p-4 shadow-sm">
+      <div className="flex items-center gap-1.5 text-[var(--muted-col)]">
+        {icon}
+        <span className="text-[11px] font-bold uppercase tracking-[0.06em]">{label}</span>
+      </div>
+      <div className="mt-1 text-[26px] font-black leading-none text-[var(--ink)]">{value}</div>
+    </div>
   )
 }
 
@@ -48,14 +102,18 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
-function Bool({ value }: { value: boolean }) {
+// Чип доступу: компактна заміна рядкам так/ні.
+function AccessChip({ label, value }: { label: string; value: boolean }) {
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-[11px] font-black ${
-        value ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] font-bold ${
+        value
+          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+          : "border-[var(--line)] bg-[var(--paper)] text-[var(--muted-col)]"
       }`}
     >
-      {value ? "так" : "ні"}
+      <span className={`h-1.5 w-1.5 rounded-full ${value ? "bg-emerald-500" : "bg-slate-300"}`} />
+      {label}
     </span>
   )
 }
@@ -64,15 +122,21 @@ function ActionButton({
   onClick,
   icon,
   children,
+  danger,
 }: {
   onClick: () => void
   icon: React.ReactNode
   children: React.ReactNode
+  danger?: boolean
 }) {
   return (
     <button
       onClick={onClick}
-      className="flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--line)] bg-white px-3 text-[13px] font-bold text-[var(--ink)] shadow-sm transition-colors hover:border-[var(--teal-mid)] hover:bg-[var(--teal-light)]"
+      className={`flex h-10 items-center justify-center gap-2 rounded-xl border bg-white px-3 text-[13px] font-bold shadow-sm transition-colors ${
+        danger
+          ? "border-[var(--line)] text-red-600 hover:border-red-300 hover:bg-red-50"
+          : "border-[var(--line)] text-[var(--ink)] hover:border-[var(--teal-mid)] hover:bg-[var(--teal-light)]"
+      }`}
     >
       {icon}
       {children}
@@ -90,6 +154,7 @@ export default function AdminPage() {
   const [now, setNow] = useState<Date | null>(null)
   const [errors, setErrors] = useState<AppError[]>([])
   const [copied, setCopied] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
   const [client, setClient] = useState<{
     localStorage: boolean
     noticesLastSeen: string | null
@@ -125,6 +190,12 @@ export default function AdminPage() {
       online: navigator.onLine,
       route: window.location.pathname,
     })
+  }, [])
+
+  // Оновлюємо годинник раз на хвилину — щоб «Дата/час» не була застиглою.
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000)
+    return () => clearInterval(id)
   }, [])
 
   // Статистика записів.
@@ -163,6 +234,11 @@ export default function AdminPage() {
     }
   }, [appointments])
 
+  const flash = (msg: string) => {
+    setToast(msg)
+    setTimeout(() => setToast(null), 2000)
+  }
+
   // ── Access denied ──
   if (!isAdmin) {
     return (
@@ -184,12 +260,16 @@ export default function AdminPage() {
   }
 
   // ── Dev actions ──
-  const handleReload = () => reload()
+  const handleReload = () => {
+    reload()
+    flash("Записи оновлено")
+  }
 
   const handleClearNoticesLastSeen = () => {
     try {
       window.localStorage.removeItem("notices_last_seen")
       setClient((c) => (c ? { ...c, noticesLastSeen: null } : c))
+      flash("notices_last_seen очищено")
     } catch {
       /* no-op */
     }
@@ -198,11 +278,13 @@ export default function AdminPage() {
   const handleBackup = () => {
     const backup = buildAppointmentsBackup(appointments, canSeePrices(user.email))
     downloadJson(`backup_appointments_${isoDate(new Date())}.json`, backup)
+    flash("Бекап завантажується")
   }
 
   const handleClearErrors = () => {
     clearAppErrors()
     setErrors([])
+    flash("Лог помилок очищено")
   }
 
   const handleCopyErrors = async () => {
@@ -215,68 +297,42 @@ export default function AdminPage() {
     }
   }
 
+  const displayName = user.user_metadata?.display_name || user.email?.split("@")[0]
+
   return (
     <div className="flex flex-col gap-4 px-3.5 pt-3 pb-6 md:gap-5 md:px-0 md:pt-0">
+      {/* Header */}
       <header className="flex items-center justify-between gap-3 pb-1 md:desktop-page-header md:px-6 md:py-5">
         <div className="flex items-center gap-2.5">
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-[var(--teal-light)] text-[var(--teal-dark)]">
             <Shield className="h-5 w-5" strokeWidth={1.9} />
           </span>
-          <h1 className="text-[22px] font-black tracking-tight text-[var(--ink)] md:text-[28px]">
-            Адмін
-          </h1>
+          <div>
+            <h1 className="text-[22px] font-black leading-none tracking-tight text-[var(--ink)] md:text-[28px]">
+              Адмін
+            </h1>
+            <p className="mt-1 text-[12px] font-semibold text-[var(--muted-col)]">
+              {displayName} · {roleLabel(role)}
+            </p>
+          </div>
         </div>
         <ActionButton onClick={handleReload} icon={<RefreshCw className="h-4 w-4" />}>
           Оновити
         </ActionButton>
       </header>
 
-      {/* A. System Overview */}
-      <Section title="Система">
-        <Row label="Застосунок" value={APP_NAME} />
-        <Row label="Користувач" value={user.user_metadata?.display_name || user.email?.split("@")[0]} />
-        <Row label="Email" value={user.email} />
-        <Row label="Роль" value={roleLabel(role)} />
-        <Row label="Лікар" value={currentDoctor ? doctorShortName(currentDoctor) : "—"} />
-        <Row label="Дата/час" value={now ? now.toLocaleString("uk-UA") : "—"} />
-        <Row label="Усього записів" value={stats.total} />
-        <Row label="Записів сьогодні" value={stats.todayCount} />
-        <Row label="Майбутніх записів" value={stats.upcoming} />
-        <Row label="Завершено" value={stats.completed} />
-        <Row label="Скасовано" value={stats.cancelled} />
-        <Row label="Клієнтів (з записів)" value={stats.clients} />
-        <Row label="Потенційних дублів" value={stats.duplicates} />
-      </Section>
+      {/* KPI — головні цифри без скролу */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Stat label="Усього записів" value={stats.total} icon={<CalendarDays className="h-3.5 w-3.5" />} />
+        <Stat label="Сьогодні" value={stats.todayCount} icon={<CalendarDays className="h-3.5 w-3.5" />} />
+        <Stat label="Майбутніх" value={stats.upcoming} icon={<CalendarDays className="h-3.5 w-3.5" />} />
+        <Stat label="Клієнтів" value={stats.clients} icon={<Users className="h-3.5 w-3.5" />} />
+      </div>
 
-      {/* B. Access */}
-      <Section title="Доступи">
-        <Row label="canSeePrices" value={<Bool value={canSeePrices(user.email)} />} />
-        <Row label="canSeeAppointmentPrices" value={<Bool value={canSeeAppointmentPrices(user.email)} />} />
-        <Row label="canSeeClients" value={<Bool value={canSeeClients(user.email)} />} />
-        <Row label="canSeeAdmin" value={<Bool value={canSeeAdmin(user.email)} />} />
-        <Row label="canSeeDebug" value={<Bool value={canSeeDebug(user.email)} />} />
-      </Section>
-
-      {/* C. PWA / Client State */}
-      <Section title="Клієнт / PWA">
-        <Row label="localStorage" value={<Bool value={client?.localStorage ?? false} />} />
-        <Row label="notices_last_seen" value={client?.noticesLastSeen ?? "—"} />
-        <Row
-          label="online"
-          value={client ? <Bool value={client.online} /> : "—"}
-        />
-        <Row
-          label="viewport"
-          value={client ? `${client.width} × ${client.height}` : "—"}
-        />
-        <Row label="route" value={client?.route ?? "—"} />
-        <Row label="userAgent" value={client?.userAgent ?? "—"} />
-      </Section>
-
-      {/* D. Errors */}
-      <Section title="Помилки">
+      {/* Помилки — нагорі, бо найважливіше для адміна */}
+      <Section title="Помилки" count={errors.length} accent={errors.length > 0}>
         <div className="mb-3 flex flex-wrap gap-2">
-          <ActionButton onClick={handleClearErrors} icon={<Trash2 className="h-4 w-4" />}>
+          <ActionButton onClick={handleClearErrors} icon={<Trash2 className="h-4 w-4" />} danger>
             Очистити
           </ActionButton>
           <ActionButton
@@ -285,22 +341,31 @@ export default function AdminPage() {
           >
             {copied ? "Скопійовано" : "Копіювати JSON"}
           </ActionButton>
+          {errors.length > 0 && (
+            <ActionButton onClick={downloadAppErrorsJson} icon={<Download className="h-4 w-4" />}>
+              Завантажити JSON
+            </ActionButton>
+          )}
         </div>
 
         {errors.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[var(--line)] bg-[var(--paper)] px-4 py-8 text-center">
-            <p className="text-[13px] font-bold text-[var(--ink)]">Помилок немає</p>
-            <p className="mt-1 text-[12px] text-[var(--muted-col)]">Лог порожній — усе працює.</p>
+          <div className="flex items-center gap-3 rounded-xl border border-dashed border-emerald-200 bg-emerald-50/40 px-4 py-5">
+            <Check className="h-5 w-5 shrink-0 text-emerald-600" />
+            <div>
+              <p className="text-[13px] font-bold text-[var(--ink)]">Помилок немає</p>
+              <p className="text-[12px] text-[var(--muted-col)]">Лог порожній — усе працює.</p>
+            </div>
           </div>
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ul className="flex max-h-[320px] flex-col gap-2 overflow-y-auto">
             {errors.map((e) => (
               <li
                 key={e.id}
                 className="rounded-xl border border-[var(--line)] bg-white px-3 py-2 shadow-sm"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="rounded-md bg-red-50 px-1.5 py-0.5 text-[11px] font-black text-red-600">
+                  <span className="flex items-center gap-1 rounded-md bg-red-50 px-1.5 py-0.5 text-[11px] font-black text-red-600">
+                    <AlertTriangle className="h-3 w-3" />
                     {e.source}
                   </span>
                   <span className="text-[11px] font-semibold text-[var(--muted-col)]">
@@ -316,23 +381,108 @@ export default function AdminPage() {
         )}
       </Section>
 
-      {/* E. Dev actions */}
-      <Section title="Dev-дії">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <ActionButton onClick={handleReload} icon={<RefreshCw className="h-4 w-4" />}>
-            Перезавантажити записи
-          </ActionButton>
-          <ActionButton onClick={handleClearNoticesLastSeen} icon={<Trash2 className="h-4 w-4" />}>
-            Очистити notices_last_seen
-          </ActionButton>
-          <ActionButton onClick={handleBackup} icon={<Download className="h-4 w-4" />}>
-            Бекап записів JSON
-          </ActionButton>
-          <ActionButton onClick={downloadAppErrorsJson} icon={<Download className="h-4 w-4" />}>
-            Завантажити помилки JSON
-          </ActionButton>
+      {/* Двоколонкова сітка для решти — менше скролу на desktop */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
+        {/* Система */}
+        <Section title="Система">
+          <Row label="Застосунок" value={APP_NAME} />
+          <Row label="Email" value={user.email} />
+          <Row label="Роль" value={roleLabel(role)} />
+          <Row label="Лікар" value={currentDoctor ? doctorShortName(currentDoctor) : "—"} />
+          <Row label="Дата/час" value={now ? now.toLocaleString("uk-UA") : "—"} />
+          <Row
+            label="Статуси"
+            value={
+              <span className="flex flex-wrap justify-end gap-1.5">
+                <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[11px] font-black text-emerald-700">
+                  ✓ {stats.completed}
+                </span>
+                <span className="rounded-md bg-red-50 px-1.5 py-0.5 text-[11px] font-black text-red-600">
+                  ✕ {stats.cancelled}
+                </span>
+              </span>
+            }
+          />
+          <Row
+            label="Дублі клієнтів"
+            value={
+              stats.duplicates > 0 ? (
+                <span className="text-amber-600">{stats.duplicates}</span>
+              ) : (
+                "0"
+              )
+            }
+          />
+        </Section>
+
+        {/* Доступи */}
+        <Section title="Доступи">
+          <div className="flex flex-wrap gap-2">
+            <AccessChip label="Аналітика цін" value={canSeePrices(user.email)} />
+            <AccessChip label="Ціни записів" value={canSeeAppointmentPrices(user.email)} />
+            <AccessChip label="Клієнти" value={canSeeClients(user.email)} />
+            <AccessChip label="Адмінка" value={canSeeAdmin(user.email)} />
+            <AccessChip label="Debug" value={canSeeDebug(user.email)} />
+          </div>
+        </Section>
+
+        {/* Клієнт / PWA */}
+        <Section title="Клієнт / PWA">
+          <Row
+            label="Статус мережі"
+            value={
+              client ? (
+                client.online ? (
+                  <span className="inline-flex items-center gap-1 text-emerald-600">
+                    <Wifi className="h-3.5 w-3.5" /> online
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-red-600">
+                    <WifiOff className="h-3.5 w-3.5" /> offline
+                  </span>
+                )
+              ) : (
+                "—"
+              )
+            }
+          />
+          <Row
+            label="localStorage"
+            value={
+              <AccessChip label={client?.localStorage ? "доступно" : "недоступно"} value={client?.localStorage ?? false} />
+            }
+          />
+          <Row label="notices_last_seen" value={client?.noticesLastSeen ?? "—"} />
+          <Row label="viewport" value={client ? `${client.width} × ${client.height}` : "—"} />
+          <Row label="route" value={client?.route ?? "—"} />
+          <Row label="userAgent" value={client?.userAgent ?? "—"} />
+        </Section>
+
+        {/* Dev-дії */}
+        <Section title="Dev-дії">
+          <div className="grid grid-cols-1 gap-2">
+            <ActionButton onClick={handleReload} icon={<RefreshCw className="h-4 w-4" />}>
+              Перезавантажити записи
+            </ActionButton>
+            <ActionButton onClick={handleBackup} icon={<Download className="h-4 w-4" />}>
+              Бекап записів JSON
+            </ActionButton>
+            <ActionButton onClick={downloadAppErrorsJson} icon={<Download className="h-4 w-4" />}>
+              Завантажити помилки JSON
+            </ActionButton>
+            <ActionButton onClick={handleClearNoticesLastSeen} icon={<Trash2 className="h-4 w-4" />} danger>
+              Очистити notices_last_seen
+            </ActionButton>
+          </div>
+        </Section>
+      </div>
+
+      {/* Toast-фідбек на дії */}
+      {toast && (
+        <div className="fixed bottom-[calc(var(--bottom-nav-total)+16px)] left-1/2 z-50 -translate-x-1/2 rounded-xl bg-[var(--ink)] px-4 py-2.5 text-[13px] font-bold text-white shadow-lg md:bottom-6">
+          {toast}
         </div>
-      </Section>
+      )}
     </div>
   )
 }

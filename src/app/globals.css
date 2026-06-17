@@ -333,25 +333,48 @@
 }
 .fc .fc-event {
   border-radius: 8px !important;
-  border-width: 1.5px !important;
+  border-width: 1px !important;
   border-style: solid !important;
   font-size: 12px;
   cursor: pointer;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  /* Білий контур + помітна тінь, щоб накладені (overlap) картки чітко
+     відділялись одна від одної, навіть коли мають однаковий колір фону. */
+  box-shadow: 0 0 0 1.5px #fff, 0 3px 10px rgba(0,0,0,0.16);
   /* Прибираємо сірий «залиплий» оверлей після тапу на мобільному. */
   -webkit-tap-highlight-color: transparent;
 }
-/* Подію не підсвічуємо при тапі: на тач-пристроях :hover «залипає» після
-   відкриття sheet. Лишаємо hover-ефект лише там, де є справжній курсор. */
+/* Подію не підсвічуємо при тапі: на тач-пристроях :hover/:active «залипає»
+   після відкриття sheet. Лишаємо ефект лише там, де є справжній курсор. */
 .fc .fc-event:focus,
-.fc .fc-event:focus-visible {
+.fc .fc-event:focus-visible,
+.fc .fc-event:active {
   outline: none;
+  filter: none !important;
 }
 @media (hover: hover) and (pointer: fine) {
   .fc .fc-event:hover {
     filter: brightness(0.97);
   }
+}
+/* Тач-пристрої: жодного hover/active-затемнення, навіть якщо браузер хибно
+   рапортує hover: hover (типова поведінка деяких Android/iPadOS). */
+@media (hover: none), (pointer: coarse) {
+  .fc .fc-event:hover,
+  .fc .fc-event:active,
+  .fc .fc-event:focus {
+    filter: none !important;
+  }
+}
+/* Справжня причина «залипання» на мобільному: при тапі FullCalendar входить у
+   drag-готовність (editable) і затемнює оригінал події. Коли тап відкриває
+   sheet замість перетягування, цей стан застрягає. Прибираємо затемнення/
+   напівпрозорість для drag/resize-станів — звичайний тап лишається чистим. */
+.fc .fc-event.fc-event-dragging,
+.fc .fc-event.fc-event-resizing,
+.fc .fc-event.fc-event-selected {
+  opacity: 1 !important;
+  filter: none !important;
 }
 .fc .fc-event-main {
   padding: 4px 8px;

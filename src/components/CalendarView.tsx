@@ -472,12 +472,15 @@ export default function CalendarView({
       editable
       eventStartEditable
       eventDurationEditable
-      eventLongPressDelay={350}
+      eventLongPressDelay={700}
       events={appointmentsToEvents(appointments, doctorFilter)}
       eventDrop={persistEventTimes}
       eventResize={persistEventTimes}
-      eventClick={({ event }) => {
+      eventClick={({ event, el }) => {
         const appt = event.extendedProps.appointment as Appointment
+        // На мобільному після тапу :focus/:active може «залипнути» на події,
+        // лишаючи її затемненою після відкриття sheet. Знімаємо фокус явно.
+        ;(el as HTMLElement)?.blur?.()
         onEventClick(appt)
       }}
       dateClick={(arg: DateClickArg) => {
@@ -513,7 +516,7 @@ export default function CalendarView({
           onDateChange(nd)
         }
       }}
-      eventClassNames="!rounded-xl !border-0 overflow-hidden"
+      eventClassNames="!rounded-xl overflow-hidden"
       eventContent={(arg: EventContentArg) => {
         const appt = arg.event.extendedProps.appointment as Appointment
         const color = doctorColor(appt.doctor)
@@ -524,16 +527,16 @@ export default function CalendarView({
         if (isShort) {
           return (
             <div className="px-2 py-1 flex items-center gap-1.5 h-full overflow-hidden">
-              <span className="text-[11px] font-bold shrink-0" style={{ color: color.text }}>
+              <span className="text-[13px] font-extrabold shrink-0 text-[var(--ink)]">
                 {appt.start} {appt.pet}
               </span>
               {appt.service && (
-                <span className="text-[11px] truncate opacity-75" style={{ color: color.text }}>
+                <span className="text-[12px] font-medium truncate text-[var(--ink-2)]">
                   {appt.service}
                 </span>
               )}
               {price > 0 && (
-                <span className="ml-auto text-[10px] font-bold shrink-0" style={{ color: color.border }}>
+                <span className="ml-auto text-[12px] font-extrabold shrink-0" style={{ color: color.border }}>
                   {price.toLocaleString("uk-UA")} ₴
                 </span>
               )}
@@ -543,21 +546,21 @@ export default function CalendarView({
 
         return (
           <div className="flex flex-col h-full px-2 py-1.5 overflow-hidden">
-            <span className="text-[12px] font-bold leading-tight truncate" style={{ color: color.text }}>
+            <span className="text-[14px] font-extrabold leading-tight truncate text-[var(--ink)]">
               {appt.pet}
             </span>
-            <span className="text-[11px] leading-tight truncate opacity-75 mt-0.5" style={{ color: color.text }}>
+            <span className="text-[12px] font-semibold leading-tight truncate text-[var(--ink-2)] mt-0.5">
               {appt.service}
             </span>
-            <span className="text-[11px] leading-tight truncate opacity-75" style={{ color: color.text }}>
+            <span className="text-[12px] font-medium leading-tight truncate text-[var(--ink-2)]">
               {appt.client}
             </span>
             {price > 0 && (
-              <span className="text-[11px] font-bold leading-tight truncate mt-0.5" style={{ color: color.border }}>
+              <span className="text-[13px] font-extrabold leading-tight truncate mt-0.5" style={{ color: color.border }}>
                 {price.toLocaleString("uk-UA")} ₴
               </span>
             )}
-            <span className="text-[10px] font-semibold mt-auto" style={{ color: color.border }}>
+            <span className="text-[11px] font-bold mt-auto" style={{ color: color.border }}>
               {appt.start}–{appt.end}
             </span>
           </div>

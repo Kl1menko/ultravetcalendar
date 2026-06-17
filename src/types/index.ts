@@ -33,6 +33,23 @@ export type Notice = {
   created_at: string
 }
 
+// Зворотний зв'язок команда → admin (баги/покращення).
+// Синхронно з enum public.feedback_type / feedback_status у supabase/add-feedback.sql.
+export type FeedbackType = "bug" | "improvement"
+export type FeedbackStatus = "new" | "in_progress" | "done"
+
+export type Feedback = {
+  id: string
+  type: FeedbackType
+  status: FeedbackStatus
+  title: string
+  body: string | null
+  author_name: string | null
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
 export type AppointmentRow = {
   id: string
   date: string
