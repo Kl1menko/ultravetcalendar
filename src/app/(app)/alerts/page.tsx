@@ -15,7 +15,6 @@ import { Feedback, FeedbackStatus, FeedbackType, Notice } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -307,15 +306,11 @@ function FeedbackTab({
   const openCount = items.filter((i) => i.status !== "done").length
 
   return (
-    <div className="flex flex-col gap-3 px-4 pb-6 md:px-0">
+    <div className="flex flex-col gap-4 px-4 pb-6 md:px-0">
       {/* Форма створення тікета — доступна всім */}
-      <form onSubmit={handleSend} className="rounded-2xl border border-[var(--line)] bg-white p-4 shadow-sm md:rounded-[24px] md:p-5">
-        <span className="mb-3 block text-[12px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]">
-          Повідомити про баг або ідею
-        </span>
-
-        {/* Тип */}
-        <div className="mb-3 flex gap-2">
+      <form onSubmit={handleSend} className="flex flex-col gap-3">
+        {/* Сегментований перемикач типу */}
+        <div className="grid grid-cols-2 gap-1 rounded-2xl bg-[var(--paper)] p-1">
           {(Object.keys(TYPE_META) as FeedbackType[]).map((t) => {
             const M = TYPE_META[t]
             const active = type === t
@@ -324,62 +319,78 @@ function FeedbackTab({
                 key={t}
                 type="button"
                 onClick={() => setType(t)}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2 text-[13px] font-bold transition-colors ${
-                  active ? M.cls : "border-[var(--line)] bg-[var(--paper)] text-[var(--muted-col)]"
+                className={`flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-[13px] font-bold transition-all ${
+                  active
+                    ? t === "bug"
+                      ? "bg-white text-red-600 shadow-sm"
+                      : "bg-white text-violet-600 shadow-sm"
+                    : "text-[var(--muted-col)]"
                 }`}
               >
-                <M.icon className="h-3.5 w-3.5" />
+                <M.icon className="h-4 w-4" />
                 {M.label}
               </button>
             )
           })}
         </div>
 
-        <Input
+        <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Коротко: що сталося / що покращити"
+          placeholder={type === "bug" ? "Що зламалось?" : "Що варто покращити?"}
           required
-          className="mb-2.5"
+          className="h-12 rounded-2xl bg-white px-4 text-[15px] font-semibold text-[var(--ink)] shadow-sm outline-none ring-1 ring-[var(--line)] transition placeholder:font-normal placeholder:text-[var(--muted-col)] focus:ring-2 focus:ring-[var(--teal-mid)]"
         />
-        <Textarea
-          rows={3}
+        <textarea
+          rows={4}
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="Деталі (необов'язково): кроки, екран, що очікувалось…"
-          className="mb-3 resize-none"
+          placeholder="Деталі: на якому екрані, що очікували, кроки… (необов'язково)"
+          className="resize-none rounded-2xl bg-white px-4 py-3 text-[14px] leading-relaxed text-[var(--ink)] shadow-sm outline-none ring-1 ring-[var(--line)] transition placeholder:text-[var(--muted-col)] focus:ring-2 focus:ring-[var(--teal-mid)]"
         />
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] text-[var(--muted-col)]">Від: {authorName}</span>
-          <Button type="submit" disabled={sending || !title.trim()} className="h-9 gap-1.5 rounded-xl px-4 text-[13px] font-bold">
-            <Send className="h-3.5 w-3.5" />
-            {sending ? "Надсилаю…" : "Надіслати"}
-          </Button>
-        </div>
+
+        <button
+          type="submit"
+          disabled={sending || !title.trim()}
+          className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--teal)] text-[15px] font-black text-white shadow-lg shadow-[var(--teal)]/20 transition-all hover:bg-[var(--teal-dark)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+        >
+          <Send className="h-4 w-4" />
+          {sending ? "Надсилаємо…" : "Надіслати"}
+        </button>
+        <p className="text-center text-[11px] text-[var(--muted-col)]">
+          Надсилається від імені <span className="font-semibold text-[var(--ink-2)]">{authorName}</span>
+        </p>
       </form>
 
       {/* Фільтр статусів */}
       {!loading && items.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 border-t border-[var(--line)] pt-4">
           <button
             onClick={() => setFilter("all")}
-            className={`rounded-lg border px-2.5 py-1 text-[12px] font-bold ${
-              filter === "all" ? "border-[var(--teal-mid)] bg-[var(--teal-light)] text-[var(--teal-dark)]" : "border-[var(--line)] bg-white text-[var(--muted-col)]"
+            className={`rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors ${
+              filter === "all"
+                ? "bg-[var(--ink)] text-white"
+                : "bg-[var(--paper)] text-[var(--muted-col)] hover:text-[var(--ink)]"
             }`}
           >
-            Усі {openCount > 0 && <span className="opacity-70">· {openCount} відкр.</span>}
+            Усі{openCount > 0 ? ` · ${openCount}` : ""}
           </button>
-          {STATUS_ORDER.map((s) => (
-            <button
-              key={s}
-              onClick={() => setFilter(s)}
-              className={`rounded-lg border px-2.5 py-1 text-[12px] font-bold ${
-                filter === s ? STATUS_META[s].cls : "border-[var(--line)] bg-white text-[var(--muted-col)]"
-              }`}
-            >
-              {STATUS_META[s].label}
-            </button>
-          ))}
+          {STATUS_ORDER.map((s) => {
+            const active = filter === s
+            const count = items.filter((i) => i.status === s).length
+            return (
+              <button
+                key={s}
+                onClick={() => setFilter(s)}
+                className={`rounded-full border px-3 py-1.5 text-[12px] font-bold transition-colors ${
+                  active ? STATUS_META[s].cls : "border-transparent bg-[var(--paper)] text-[var(--muted-col)] hover:text-[var(--ink)]"
+                }`}
+              >
+                {STATUS_META[s].label}
+                {count > 0 ? ` · ${count}` : ""}
+              </button>
+            )
+          })}
         </div>
       )}
 
@@ -391,14 +402,15 @@ function FeedbackTab({
       )}
 
       {!loading && items.length === 0 && (
-        <div className="py-16 flex flex-col items-center gap-3 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-[var(--paper)] flex items-center justify-center">
-            <Bug className="w-6 h-6 text-[var(--muted-col)]" />
+        <div className="flex flex-col items-center gap-2 py-12 text-center">
+          <div className="mb-1 flex gap-2 text-[var(--muted-col)]">
+            <Bug className="h-5 w-5" />
+            <Lightbulb className="h-5 w-5" />
           </div>
-          <div>
-            <p className="text-[15px] font-bold text-[var(--ink)]">Поки порожньо</p>
-            <p className="text-[13px] text-[var(--muted-col)] mt-0.5">Напишіть перший баг або ідею вище</p>
-          </div>
+          <p className="text-[15px] font-bold text-[var(--ink)]">Тут поки тихо</p>
+          <p className="max-w-[260px] text-[13px] leading-relaxed text-[var(--muted-col)]">
+            Помітили помилку чи маєте ідею, як зробити краще? Напишіть у формі вище — побачу одразу.
+          </p>
         </div>
       )}
 

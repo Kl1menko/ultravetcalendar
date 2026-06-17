@@ -560,7 +560,7 @@ export default function CalendarView({
                 {price.toLocaleString("uk-UA")} ₴
               </span>
             )}
-            <span className="text-[11px] font-bold mt-auto" style={{ color: color.border }}>
+            <span className="text-[11px] font-bold mt-auto text-[var(--ink)]">
               {appt.start}–{appt.end}
             </span>
           </div>

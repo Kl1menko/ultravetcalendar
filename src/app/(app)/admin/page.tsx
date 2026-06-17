@@ -269,7 +269,7 @@ export default function AdminPage() {
     try {
       window.localStorage.removeItem("notices_last_seen")
       setClient((c) => (c ? { ...c, noticesLastSeen: null } : c))
-      flash("notices_last_seen очищено")
+      flash("Позначку прочитаних сповіщень скинуто")
     } catch {
       /* no-op */
     }
@@ -339,11 +339,11 @@ export default function AdminPage() {
             onClick={handleCopyErrors}
             icon={copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
           >
-            {copied ? "Скопійовано" : "Копіювати JSON"}
+            {copied ? "Скопійовано" : "Копіювати"}
           </ActionButton>
           {errors.length > 0 && (
             <ActionButton onClick={downloadAppErrorsJson} icon={<Download className="h-4 w-4" />}>
-              Завантажити JSON
+              Зберегти у файл
             </ActionButton>
           )}
         </div>
@@ -458,20 +458,20 @@ export default function AdminPage() {
           <Row label="userAgent" value={client?.userAgent ?? "—"} />
         </Section>
 
-        {/* Dev-дії */}
-        <Section title="Dev-дії">
+        {/* Службові дії */}
+        <Section title="Службові дії">
           <div className="grid grid-cols-1 gap-2">
             <ActionButton onClick={handleReload} icon={<RefreshCw className="h-4 w-4" />}>
               Перезавантажити записи
             </ActionButton>
             <ActionButton onClick={handleBackup} icon={<Download className="h-4 w-4" />}>
-              Бекап записів JSON
+              Зберегти копію записів
             </ActionButton>
             <ActionButton onClick={downloadAppErrorsJson} icon={<Download className="h-4 w-4" />}>
-              Завантажити помилки JSON
+              Зберегти журнал помилок
             </ActionButton>
             <ActionButton onClick={handleClearNoticesLastSeen} icon={<Trash2 className="h-4 w-4" />} danger>
-              Очистити notices_last_seen
+              Скинути позначку прочитаних сповіщень
             </ActionButton>
           </div>
         </Section>
