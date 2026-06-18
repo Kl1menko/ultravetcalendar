@@ -183,9 +183,8 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
 
       {/* ─── MOBILE BOTTOM NAV ───────────────────────────── */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-30 grid border-t border-[var(--lg-border)] bg-white/55 backdrop-blur-2xl backdrop-saturate-150 [transform:translateZ(0)] md:hidden"
+        className="mobile-tab-nav"
         style={{
-          paddingBottom: "var(--bottom-nav-safe)",
           gridTemplateColumns: `repeat(${navItems.length}, 1fr)`,
         }}
       >

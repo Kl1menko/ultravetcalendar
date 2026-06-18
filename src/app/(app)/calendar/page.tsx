@@ -89,7 +89,7 @@ export default function CalendarPage() {
   return (
     <div className="calendar-page flex w-full max-w-full flex-none flex-col overflow-hidden md:rounded-[28px] md:p-5 md:glass">
       {/* ─── CALENDAR HEADER ─── */}
-      <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-2 border-b border-white/35 bg-white/45 px-4 pb-3 pt-2 shadow-[0_10px_30px_rgba(17,24,39,0.04)] backdrop-blur-2xl backdrop-saturate-150 md:static md:border-b-0 md:bg-transparent md:px-0 md:pb-5 md:pt-0 md:shadow-none md:backdrop-blur-none md:backdrop-saturate-100">
+      <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-2 border-b border-[var(--line)] bg-white px-4 pb-3 pt-2 shadow-[0_1px_2px_rgba(0,0,0,0.03)] md:static md:border-b-0 md:bg-transparent md:px-0 md:pb-5 md:pt-0 md:shadow-none">
         <h2 className="text-[16px] font-bold tracking-tight text-[var(--ink)] md:text-2xl">
           {currentMonth}
         </h2>
@@ -197,7 +197,7 @@ export default function CalendarPage() {
       </div>
 
       {/* ─── FULLCALENDAR ─── */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 pb-2 md:px-0 md:pb-0 md:rounded-3xl md:border md:border-[var(--lg-border)] md:bg-white/30">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 pb-2 md:px-0 md:pb-0 md:rounded-3xl md:border md:border-[var(--lg-border)] md:bg-white">
         <CalendarView
           appointments={appointments}
           doctorFilter={doctorFilter}

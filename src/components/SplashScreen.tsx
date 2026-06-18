@@ -13,9 +13,6 @@ export default function SplashScreen({
 }: Props) {
   return (
     <div className="app-shell relative flex items-center justify-center overflow-hidden px-6">
-      <div className="absolute inset-0 bg-[var(--lg-bg-mesh)] bg-cover bg-center" />
-      <div className="absolute inset-0 bg-white/20" />
-
       <div className="relative flex w-full max-w-[280px] flex-col items-center text-center">
         <div className="grid h-24 w-24 place-items-center">
           <Image
@@ -36,7 +33,7 @@ export default function SplashScreen({
           {label}
         </p>
 
-        <div className="mt-7 h-1.5 w-full overflow-hidden rounded-full bg-white/45 shadow-inner">
+        <div className="mt-7 h-1.5 w-full overflow-hidden rounded-full border border-[var(--line)] bg-white">
           <span className="block h-full w-1/2 rounded-full bg-[var(--teal)] animate-splash-progress" />
         </div>
 
