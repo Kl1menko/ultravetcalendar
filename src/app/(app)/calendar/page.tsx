@@ -89,7 +89,7 @@ export default function CalendarPage() {
   return (
     <div className="calendar-page flex w-full max-w-full flex-none flex-col overflow-hidden md:rounded-[28px] md:p-5 md:glass">
       {/* ─── CALENDAR HEADER ─── */}
-      <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-2 border-b border-white/35 bg-white/45 px-4 pb-3 pt-[calc(var(--app-safe-top)+0.5rem)] shadow-[0_10px_30px_rgba(17,24,39,0.04)] backdrop-blur-2xl backdrop-saturate-150 md:static md:border-b-0 md:bg-transparent md:px-0 md:pb-5 md:pt-0 md:shadow-none md:backdrop-blur-none md:backdrop-saturate-100">
+      <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-2 border-b border-white/35 bg-white/45 px-4 pb-3 pt-2 shadow-[0_10px_30px_rgba(17,24,39,0.04)] backdrop-blur-2xl backdrop-saturate-150 md:static md:border-b-0 md:bg-transparent md:px-0 md:pb-5 md:pt-0 md:shadow-none md:backdrop-blur-none md:backdrop-saturate-100">
         <h2 className="text-[16px] font-bold tracking-tight text-[var(--ink)] md:text-2xl">
           {currentMonth}
         </h2>

@@ -172,7 +172,11 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
 
       {/* ─── MAIN CONTENT ────────────────────────────────── */}
       <main
-        className="app-main flex w-full flex-col overflow-y-auto px-0 md:mx-auto md:block md:max-w-[1440px] md:px-8 md:pb-10 md:pt-7 xl:px-10"
+        className={`app-main flex w-full flex-col px-0 md:mx-auto md:block md:max-w-[1440px] md:px-8 md:pb-10 md:pt-7 xl:px-10 ${
+          isCalendar
+            ? "overflow-hidden"
+            : "overflow-y-auto pb-[var(--bottom-nav-total)]"
+        }`}
       >
         {children}
       </main>

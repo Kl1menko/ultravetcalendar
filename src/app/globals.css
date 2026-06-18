@@ -234,10 +234,13 @@
     min-height: 100vh;
     min-height: -webkit-fill-available;
     min-height: var(--app-vh);
+    height: var(--app-vh);
+    padding-top: var(--app-safe-top);
+    overflow: hidden;
   }
   .app-main {
     min-height: 0;
-    height: var(--app-vh);
+    height: calc(var(--app-vh) - var(--app-safe-top));
     padding-top: 0;
     padding-bottom: 0;
     -webkit-overflow-scrolling: touch;
@@ -245,10 +248,10 @@
   }
   .app-sidebar {
     height: 100vh;
-    height: var(--app-vh);
+    height: calc(var(--app-vh) - var(--app-safe-top));
   }
   .calendar-page {
-    height: calc(var(--app-vh) - var(--bottom-nav-total));
+    height: calc(var(--app-vh) - var(--app-safe-top) - var(--bottom-nav-total));
     min-height: 0;
   }
   .sheet-viewport {
