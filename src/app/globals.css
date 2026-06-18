@@ -51,9 +51,11 @@
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
+  /* Скляні поверхні: card/popover напівпрозорі, blur додається у base-шарі
+     нижче (по data-slot), щоб усі shadcn-примітиви стали скляними разом. */
+  --card: oklch(1 0 0 / 0.62);
   --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
+  --popover: oklch(1 0 0 / 0.74);
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
@@ -128,11 +130,77 @@
     @apply bg-background text-foreground;
     font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     overflow-x: hidden;
-    background: var(--paper);
+    /* Liquid Glass: м'який кольоровий mesh-фон. Скляні панелі поверх нього
+       підхоплюють відтінки → ефект «рідкого скла» стає видимим. Тримаємо
+       пастельно й тихо, щоб не заважати робочому інтерфейсу. */
+    background-color: var(--lg-bg-base);
+    background-image: var(--lg-bg-mesh);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
   }
   html {
     @apply font-sans;
     font-size: 16px;
+  }
+
+  /* Скляний blur для всіх shadcn-примітивів — card, popover, dialog, sheet,
+     select. Колір/прозорість беруться з токенів --card/--popover вище. */
+  [data-slot="card"],
+  [data-slot="dialog-content"],
+  [data-slot="sheet-content"],
+  [data-slot="select-content"],
+  [data-slot="popover-content"] {
+    -webkit-backdrop-filter: var(--lg-blur);
+    backdrop-filter: var(--lg-blur);
+  }
+  [data-slot="dialog-content"],
+  [data-slot="sheet-content"] {
+    -webkit-backdrop-filter: var(--lg-blur-strong);
+    backdrop-filter: var(--lg-blur-strong);
+  }
+}
+
+/* ─── LIQUID GLASS UTILITIES ────────────────────────────────────────────
+   Рецепт скла з Figma (Apple Liquid Glass): напівпрозорий світлий фон,
+   backdrop-blur + saturate, біла підсвічена рамка, м'яка тінь і верхній
+   внутрішній блік. .glass — стандартна панель, .glass-strong — щільніша
+   (для модалок/шторок), .glass-hover — інтерактивний підйом. */
+@layer components {
+  .glass {
+    background: var(--lg-fill);
+    -webkit-backdrop-filter: var(--lg-blur);
+    backdrop-filter: var(--lg-blur);
+    border: 1px solid var(--lg-border);
+    box-shadow: var(--lg-shadow), var(--lg-inset);
+  }
+  .glass-strong {
+    background: var(--lg-fill-strong);
+    -webkit-backdrop-filter: var(--lg-blur-strong);
+    backdrop-filter: var(--lg-blur-strong);
+    border: 1px solid var(--lg-border);
+    box-shadow: var(--lg-shadow-strong), var(--lg-inset);
+  }
+  /* Компактне скло для дрібних контролів (чипи, кнопки в overflow-x рядах):
+     та сама поверхня, але ЩІЛЬНА тінь — велика м'яка тінь .glass обрізається
+     краями скрол-контейнера й виглядає «зламаною». */
+  .glass-chip {
+    background: var(--lg-fill);
+    -webkit-backdrop-filter: var(--lg-blur);
+    backdrop-filter: var(--lg-blur);
+    border: 1px solid var(--lg-border);
+    box-shadow: 0 1px 2px rgba(17, 24, 39, 0.08), var(--lg-inset);
+  }
+  .glass-hover {
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .glass-hover:hover {
+      transform: translateY(-2px);
+      background: var(--lg-fill-strong);
+      border-color: var(--lg-border-strong);
+      box-shadow: var(--lg-shadow-strong), var(--lg-inset);
+    }
   }
 }
 
@@ -168,6 +236,29 @@
   --uv-radius-lg: 24px;
   --uv-radius-xl: 32px;
 
+  /* ─── Liquid Glass tokens ────────────────────────────────────────────
+     Єдине джерело правди для скляного вигляду всього застосунку. */
+  --lg-bg-base: #e6ecf6;
+  --lg-bg-mesh:
+    radial-gradient(at 16% 18%, rgba(56, 189, 248, 0.34), transparent 48%),
+    radial-gradient(at 84% 10%, rgba(167, 139, 250, 0.30), transparent 46%),
+    radial-gradient(at 78% 84%, rgba(45, 212, 191, 0.30), transparent 48%),
+    radial-gradient(at 20% 90%, rgba(251, 146, 113, 0.24), transparent 48%);
+
+  /* Менш «біла», прозоріша заливка → крізь неї читається кольоровий фон,
+     тож скло помітне. Видимість дає КОНТРАСТ із фоном + blur, а не білизна. */
+  --lg-fill:         rgba(255, 255, 255, 0.46);
+  --lg-fill-strong:  rgba(255, 255, 255, 0.64);
+  --lg-fill-soft:    rgba(255, 255, 255, 0.30);
+  /* Рамки — м'якші, майже-волосяні, щоб не виглядали різко. */
+  --lg-border:        rgba(255, 255, 255, 0.40);
+  --lg-border-strong: rgba(255, 255, 255, 0.65);
+  --lg-blur:         blur(20px) saturate(1.7);
+  --lg-blur-strong:  blur(32px) saturate(1.8);
+  --lg-inset:        inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  --lg-shadow:        0 4px 30px rgba(17, 24, 39, 0.08);
+  --lg-shadow-strong: 0 24px 70px rgba(17, 24, 39, 0.16);
+
   /* ─── Legacy-bridge ──────────────────────────────────────────────────
      Решта коду масово використовує --teal/--ink/--line/--paper. Замість
      правок у кожному файлі перенаправляємо ці токени на нову палітру:
@@ -179,11 +270,15 @@
   --ink:        var(--uv-ink);
   --ink-2:      var(--uv-gray-700);
   --muted-col:  var(--uv-gray-500);
-  --line:       var(--uv-gray-200);
+  /* --line — внутрішні роздільники (рядки, списки, межі заголовків): тонка
+     темна лінія, як у Figma (rgba(0,0,0,0.08)). Краї панелей дає сам .glass
+     світлою рамкою (--lg-border). */
+  --line:       var(--uv-border);
   --paper:      var(--uv-bg);
-  --panel:      #ffffff;
-  --desktop-shadow: var(--uv-shadow);
-  --desktop-soft:   var(--uv-shadow-soft);
+  --panel:      var(--lg-fill);
+  --panel-strong: var(--lg-fill-strong);
+  --desktop-shadow: var(--lg-shadow-strong);
+  --desktop-soft:   var(--lg-shadow);
   --red:        #dc2626;
   --red-bg:     #fee2e2;
   --amber:      #d97706;
@@ -213,28 +308,32 @@
   }
 
   .desktop-panel {
-    border: 1px solid rgba(229, 231, 235, 0.9);
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: var(--desktop-soft);
-    backdrop-filter: blur(18px);
+    border: 1px solid var(--lg-border);
+    background: var(--lg-fill);
+    box-shadow: var(--lg-shadow), var(--lg-inset);
+    -webkit-backdrop-filter: var(--lg-blur);
+    backdrop-filter: var(--lg-blur);
   }
 
   .desktop-page-header {
-    border: 1px solid var(--uv-border);
+    border: 1px solid var(--lg-border);
     border-radius: var(--uv-radius-lg);
     background:
-      linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(244, 244, 242, 0.82));
-    box-shadow: var(--desktop-soft);
+      linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.42));
+    box-shadow: var(--lg-shadow), var(--lg-inset);
+    -webkit-backdrop-filter: var(--lg-blur);
+    backdrop-filter: var(--lg-blur);
   }
 
   .desktop-card-hover {
-    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
   }
 
   .desktop-card-hover:hover {
     transform: translateY(-2px);
-    border-color: var(--teal-mid);
-    box-shadow: var(--desktop-shadow);
+    border-color: var(--lg-border-strong);
+    background: var(--lg-fill-strong);
+    box-shadow: var(--lg-shadow-strong), var(--lg-inset);
   }
 }
 
@@ -263,7 +362,7 @@
 /* ─── FULLCALENDAR OVERRIDES ──────────────────────────────────────── */
 .fc {
   font-family: var(--font-inter), -apple-system, sans-serif;
-  background: var(--uv-bg);
+  background: transparent;
   width: 100%;
   max-width: 100%;
 }
@@ -283,12 +382,12 @@
   height: var(--fc-slot-height, 40px) !important;
 }
 
-/* Фон колонки з подіями — світло-сірий */
+/* Фон колонки з подіями — напівпрозоре скло поверх mesh-градієнта */
 .fc .fc-timegrid-col.fc-day,
 .fc .fc-timegrid-col,
 .fc-theme-standard .fc-timegrid-col,
 .fc .fc-scrollgrid-sync-inner {
-  background: var(--uv-bg) !important;
+  background: rgba(255, 255, 255, 0.18) !important;
 }
 
 /* Основні лінії годин — трохи темніші */
@@ -318,7 +417,7 @@
   border: none !important;
 }
 .fc .fc-col-header-cell {
-  background: var(--uv-bg);
+  background: transparent;
   font-size: 12px;
   font-weight: 700;
   color: var(--muted-col);
@@ -329,7 +428,7 @@
   font-size: 11px;
   font-weight: 600;
   color: #9ca3af;
-  background: var(--uv-bg);
+  background: transparent;
 }
 .fc .fc-event {
   border-radius: 8px !important;
@@ -397,10 +496,10 @@
 
 /* ─── MONTH GRID (dayGridMonth) ───────────────────────────────────── */
 .fc .fc-daygrid-day {
-  background: var(--uv-bg);
+  background: rgba(255, 255, 255, 0.16);
 }
 .fc .fc-daygrid-day.fc-day-today {
-  background: var(--uv-gray-100) !important;
+  background: rgba(255, 255, 255, 0.5) !important;
 }
 .fc .fc-daygrid-day-number {
   font-size: 12px;

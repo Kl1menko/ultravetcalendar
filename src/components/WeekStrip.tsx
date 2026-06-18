@@ -82,10 +82,10 @@ export default function WeekStrip({ selectedDate, appointments, onSelectDate }: 
               className={[
                 "flex flex-col items-center gap-[2px] min-w-[52px] py-2 px-2 rounded-2xl border cursor-pointer transition-all duration-150 active:scale-95 select-none md:min-w-0 md:flex-1 md:py-2.5",
                 isSelected
-                  ? "bg-[var(--teal)] border-[var(--teal)] shadow-md shadow-black/20"
+                  ? "bg-[var(--teal)] border-[var(--teal)] shadow-sm"
                   : isTodayDay
-                  ? "bg-[var(--teal-light)] border-[var(--teal)]"
-                  : "bg-white border-[var(--line)]",
+                  ? "glass-chip !border-[var(--teal)]"
+                  : "glass-chip",
               ].join(" ")}
             >
               <span
@@ -102,11 +102,11 @@ export default function WeekStrip({ selectedDate, appointments, onSelectDate }: 
               </span>
               <span
                 className={[
-                  "text-[18px] font-black leading-none",
+                  "text-[18px] font-bold leading-none",
                   isSelected
                     ? "text-white"
                     : isTodayDay
-                    ? "text-[var(--teal-dark)] font-black"
+                    ? "text-[var(--teal-dark)] font-bold"
                     : "text-[var(--ink)]",
                 ].join(" ")}
               >

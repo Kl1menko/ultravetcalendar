@@ -51,16 +51,16 @@ function Section({
 }) {
   return (
     <section
-      className={`rounded-2xl border p-4 shadow-sm md:p-5 ${
-        accent ? "border-red-200 bg-red-50/40" : "border-[var(--line)] bg-white/80"
+      className={`rounded-2xl p-4 md:p-5 ${
+        accent ? "border border-red-200 bg-red-50/40 shadow-sm" : "glass"
       }`}
     >
       <div className="mb-3 flex items-center gap-2">
-        <h2 className="text-[13px] font-black uppercase tracking-[0.08em] text-[var(--muted-col)]">
+        <h2 className="text-[13px] font-bold uppercase tracking-[0.08em] text-[var(--muted-col)]">
           {title}
         </h2>
         {count !== undefined && count > 0 && (
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-black text-white">
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-bold text-white">
             {count}
           </span>
         )}
@@ -81,12 +81,12 @@ function Stat({
   icon?: React.ReactNode
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--line)] bg-white/80 p-4 shadow-sm">
+    <div className="glass rounded-2xl p-4">
       <div className="flex items-center gap-1.5 text-[var(--muted-col)]">
         {icon}
         <span className="text-[11px] font-bold uppercase tracking-[0.06em]">{label}</span>
       </div>
-      <div className="mt-1 text-[26px] font-black leading-none text-[var(--ink)]">{value}</div>
+      <div className="mt-1 text-[26px] font-bold leading-none text-[var(--ink)]">{value}</div>
     </div>
   )
 }
@@ -132,10 +132,10 @@ function ActionButton({
   return (
     <button
       onClick={onClick}
-      className={`flex h-10 items-center justify-center gap-2 rounded-xl border bg-white px-3 text-[13px] font-bold shadow-sm transition-colors ${
+      className={`glass glass-hover flex h-10 items-center justify-center gap-2 rounded-xl px-3 text-[13px] font-bold transition-colors ${
         danger
-          ? "border-[var(--line)] text-red-600 hover:border-red-300 hover:bg-red-50"
-          : "border-[var(--line)] text-[var(--ink)] hover:border-[var(--teal-mid)] hover:bg-[var(--teal-light)]"
+          ? "text-red-600 hover:text-red-700"
+          : "text-[var(--ink)]"
       }`}
     >
       {icon}
@@ -244,13 +244,13 @@ export default function AdminPage() {
     return (
       <div className="px-4 pt-4 md:px-0 md:pt-0">
         <header className="pb-4 md:desktop-page-header md:px-6 md:py-5">
-          <h1 className="text-[22px] font-black text-[var(--ink)] md:text-[28px]">Адмін</h1>
+          <h1 className="text-[22px] font-bold text-[var(--ink)] md:text-[28px]">Адмін</h1>
         </header>
-        <div className="mx-auto mt-10 max-w-md rounded-2xl border border-dashed border-[var(--line)] bg-white/70 px-6 py-12 text-center">
+        <div className="glass mx-auto mt-10 max-w-md rounded-2xl px-6 py-12 text-center">
           <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[var(--teal-light)] text-[var(--teal-dark)]">
             <Shield className="h-7 w-7" strokeWidth={1.8} />
           </div>
-          <p className="text-[16px] font-black text-[var(--ink)]">Доступ обмежено</p>
+          <p className="text-[16px] font-bold text-[var(--ink)]">Доступ обмежено</p>
           <p className="mt-1.5 text-[13px] text-[var(--muted-col)]">
             Ця сторінка доступна лише адміністратору системи.
           </p>
@@ -308,7 +308,7 @@ export default function AdminPage() {
             <Shield className="h-5 w-5" strokeWidth={1.9} />
           </span>
           <div>
-            <h1 className="text-[22px] font-black leading-none tracking-tight text-[var(--ink)] md:text-[28px]">
+            <h1 className="text-[22px] font-bold leading-none tracking-tight text-[var(--ink)] md:text-[28px]">
               Адмін
             </h1>
             <p className="mt-1 text-[12px] font-semibold text-[var(--muted-col)]">
@@ -361,10 +361,10 @@ export default function AdminPage() {
             {errors.map((e) => (
               <li
                 key={e.id}
-                className="rounded-xl border border-[var(--line)] bg-white px-3 py-2 shadow-sm"
+                className="glass rounded-xl px-3 py-2"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-1 rounded-md bg-red-50 px-1.5 py-0.5 text-[11px] font-black text-red-600">
+                  <span className="flex items-center gap-1 rounded-md bg-red-50 px-1.5 py-0.5 text-[11px] font-bold text-red-600">
                     <AlertTriangle className="h-3 w-3" />
                     {e.source}
                   </span>
@@ -394,10 +394,10 @@ export default function AdminPage() {
             label="Статуси"
             value={
               <span className="flex flex-wrap justify-end gap-1.5">
-                <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[11px] font-black text-emerald-700">
+                <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[11px] font-bold text-emerald-700">
                   ✓ {stats.completed}
                 </span>
-                <span className="rounded-md bg-red-50 px-1.5 py-0.5 text-[11px] font-black text-red-600">
+                <span className="rounded-md bg-red-50 px-1.5 py-0.5 text-[11px] font-bold text-red-600">
                   ✕ {stats.cancelled}
                 </span>
               </span>

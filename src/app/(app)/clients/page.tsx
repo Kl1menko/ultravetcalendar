@@ -147,9 +147,9 @@ export default function ClientsPage() {
     return (
       <div className="px-4 pt-4 md:px-0 md:pt-0">
         <header className="pb-4 md:desktop-page-header md:px-6 md:py-5">
-          <h1 className="text-[22px] font-black text-[var(--ink)] md:text-[28px]">Клієнти</h1>
+          <h1 className="text-[22px] font-bold text-[var(--ink)] md:text-[28px]">Клієнти</h1>
         </header>
-        <div className="mx-auto mt-6 max-w-md rounded-2xl border border-dashed border-[var(--line)] bg-white/70 px-5 py-8 text-center">
+        <div className="glass mx-auto mt-6 max-w-md rounded-2xl px-5 py-8 text-center">
           <p className="text-[15px] font-bold text-[var(--ink)]">Доступ обмежено</p>
           <p className="mt-1.5 text-[13px] text-[var(--muted-col)]">
             База клієнтів доступна лише лікарям. Зверніться до головного лікаря.
@@ -165,7 +165,7 @@ export default function ClientsPage() {
       <header className="px-4 pt-4 pb-3 md:desktop-page-header md:px-6 md:py-5">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <h1 className="text-[24px] font-black leading-tight text-[var(--ink)] md:text-[28px]">
+            <h1 className="text-[24px] font-bold leading-tight text-[var(--ink)] md:text-[28px]">
               Клієнти
               {allClients.length > 0 && (
                 <span className="ml-2 text-[16px] font-semibold text-[var(--muted-col)]">{allClients.length}</span>
@@ -180,7 +180,7 @@ export default function ClientsPage() {
           {allClients.length > 0 && (
             <div className="hidden text-right md:block">
               <div className="text-[11px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]">Показано</div>
-              <div className="text-[18px] font-black text-[var(--ink)]">{filtered.length}</div>
+              <div className="text-[18px] font-bold text-[var(--ink)]">{filtered.length}</div>
             </div>
           )}
         </div>
@@ -198,7 +198,7 @@ export default function ClientsPage() {
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
-            className="h-11 rounded-lg border-[var(--line)] bg-white pl-10 pr-10 text-[14px] text-[var(--ink)] shadow-sm focus-visible:border-[var(--teal)] focus-visible:ring-0 md:h-12"
+            className="glass h-11 rounded-lg pl-10 pr-10 text-[14px] text-[var(--ink)] focus-visible:border-[var(--teal)] focus-visible:ring-0 md:h-12"
           />
           {query && (
             <button type="button" onClick={() => setQuery("")} className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-[var(--muted-col)] hover:bg-[var(--paper)] hover:text-[var(--ink)]">
@@ -223,7 +223,7 @@ export default function ClientsPage() {
               className={`flex h-9 items-center gap-2 rounded-lg border px-3 text-[13px] font-bold transition-colors ${
                 active
                   ? "border-[var(--teal)] bg-[var(--teal)] text-white shadow-sm"
-                  : "border-[var(--line)] bg-white text-[var(--ink-2)] hover:bg-[var(--paper)]"
+                  : "glass-chip border-transparent text-[var(--ink-2)]"
               }`}
             >
               <span>{item.label}</span>
@@ -237,7 +237,7 @@ export default function ClientsPage() {
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div className="mx-4 rounded-2xl border border-dashed border-[var(--line)] py-8 text-center text-[14px] text-[var(--muted-col)] md:mx-0 md:bg-white/70">
+        <div className="glass mx-4 rounded-2xl py-8 text-center text-[14px] text-[var(--muted-col)] md:mx-0">
           {query ? "Нічого не знайдено." : "Клієнтів поки немає."}
         </div>
       ) : (
@@ -255,8 +255,8 @@ export default function ClientsPage() {
             const pets = [...c.pets.entries()]
 
             return (
-              <motion.div key={key} variants={staggerItem} className={`desktop-card-hover overflow-hidden rounded-lg border bg-white shadow-sm transition-colors ${
-                c.duplicateCount > 1 ? "border-amber-200" : "border-[var(--line)]"
+              <motion.div key={key} variants={staggerItem} className={`glass glass-hover overflow-hidden rounded-lg transition-colors ${
+                c.duplicateCount > 1 ? "border-amber-200" : ""
               }`}>
 
                 {/* Main row */}
@@ -266,7 +266,7 @@ export default function ClientsPage() {
                   className="flex w-full items-center gap-3 p-3.5 text-left transition-colors active:bg-[var(--paper)] md:p-4"
                 >
                   {/* Avatar */}
-                  <div className="relative grid h-11 w-11 flex-shrink-0 place-items-center rounded-lg bg-[var(--paper)] text-[13px] font-black text-[var(--ink)]">
+                  <div className="relative grid h-11 w-11 flex-shrink-0 place-items-center rounded-lg bg-[var(--paper)] text-[13px] font-bold text-[var(--ink)]">
                     <span>{initials}</span>
                     {c.duplicateCount > 1 && (
                       <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-amber-500" />
@@ -276,7 +276,7 @@ export default function ClientsPage() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 pr-1">
-                      <span className="truncate text-[15px] font-black leading-tight text-[var(--ink)]">{c.client}</span>
+                      <span className="truncate text-[15px] font-bold leading-tight text-[var(--ink)]">{c.client}</span>
                       {/* Visits badge */}
                       <Badge className="h-6 flex-shrink-0 rounded-md bg-[var(--paper)] px-2 text-[11px] font-bold text-[var(--ink)]">
                         {c.visits} {c.visits === 1 ? "візит" : c.visits < 5 ? "візити" : "візитів"}

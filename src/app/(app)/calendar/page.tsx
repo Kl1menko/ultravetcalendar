@@ -87,10 +87,10 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="flex min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden md:h-[calc(100dvh-96px)] md:flex-none md:rounded-[28px] md:border md:border-white/80 md:bg-white/88 md:p-5 md:shadow-[var(--desktop-shadow)] md:backdrop-blur-xl">
+    <div className="flex min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden md:h-[calc(100dvh-96px)] md:flex-none md:rounded-[28px] md:p-5 md:glass">
       {/* ─── CALENDAR HEADER ─── */}
-      <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-2 bg-[var(--paper)]/95 px-4 pt-2 pb-1.5 backdrop-blur-sm md:static md:bg-transparent md:px-0 md:pb-5 md:backdrop-blur-none">
-        <h2 className="text-[16px] font-black tracking-tight text-[var(--ink)] md:text-2xl">
+      <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-2 bg-gradient-to-b from-white/60 via-white/35 to-transparent px-4 pt-2 pb-3 backdrop-blur-lg backdrop-saturate-150 md:static md:bg-transparent md:px-0 md:pb-5 md:backdrop-blur-none md:backdrop-saturate-100">
+        <h2 className="text-[16px] font-bold tracking-tight text-[var(--ink)] md:text-2xl">
           {currentMonth}
         </h2>
         <div className="flex items-center gap-2">
@@ -98,7 +98,7 @@ export default function CalendarPage() {
           <button
             onClick={goToToday}
             aria-label="Сьогодні"
-            className="grid h-10 place-items-center rounded-2xl border-2 border-[var(--teal)] px-3.5 text-[14px] font-black text-[var(--teal)] transition-colors hover:bg-[var(--teal-light)] md:px-4"
+            className="grid h-10 place-items-center rounded-2xl border-2 border-[var(--teal)] px-3.5 text-[14px] font-bold text-[var(--teal)] transition-colors hover:bg-[var(--teal-light)] md:px-4"
           >
             Сьогодні
           </button>
@@ -108,7 +108,7 @@ export default function CalendarPage() {
               навіть на iOS Safari, де showPicker() ненадійний. На десктопі
               клік по іконці додатково викликає showPicker(). */}
           <div
-            className="relative grid h-10 w-10 place-items-center rounded-2xl border border-[var(--line)] bg-white text-[var(--ink-2)] transition-colors hover:border-[var(--teal)] hover:text-[var(--teal)]"
+            className="glass glass-hover relative grid h-10 w-10 place-items-center rounded-2xl text-[var(--ink-2)] transition-colors hover:text-[var(--teal)]"
             onClick={openDatePicker}
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -126,7 +126,7 @@ export default function CalendarPage() {
           </div>
 
           {/* Doctor filter (desktop dropdown) */}
-          <div className="hidden h-10 items-center gap-2 rounded-2xl border border-[var(--line)] bg-[var(--paper)] px-3 md:flex">
+          <div className="glass hidden h-10 items-center gap-2 rounded-2xl px-3 md:flex">
             <select
               value={doctorFilter}
               onChange={(e) => setDoctorFilter(e.target.value)}
@@ -143,8 +143,8 @@ export default function CalendarPage() {
             aria-label="Фільтр лікаря"
             className={`relative grid h-10 w-10 place-items-center rounded-2xl border transition-colors md:hidden ${
               doctorActive
-                ? "border-[var(--teal)] bg-[var(--teal-light)] text-[var(--teal-dark)]"
-                : "border-[var(--line)] bg-white text-[var(--ink-2)]"
+                ? "border-[var(--teal)] bg-[var(--teal)] text-white"
+                : "glass text-[var(--ink-2)]"
             }`}
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -166,7 +166,7 @@ export default function CalendarPage() {
       />
 
       {/* ─── VIEW TABS: День / Тиждень / Місяць / Список ─── */}
-      <div className="mx-4 mb-1.5 shrink-0 rounded-2xl border border-[var(--line)] bg-white px-1 shadow-sm md:mx-0">
+      <div className="glass mx-4 mb-1.5 shrink-0 rounded-2xl px-1 md:mx-0">
         <div className="flex">
           {([
             { key: "day", label: "День" },
@@ -197,7 +197,7 @@ export default function CalendarPage() {
       </div>
 
       {/* ─── FULLCALENDAR ─── */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 pb-2 md:px-0 md:pb-0 md:rounded-3xl md:border md:border-[var(--line)] md:bg-white">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 pb-2 md:px-0 md:pb-0 md:rounded-3xl md:border md:border-[var(--lg-border)] md:bg-white/30">
         <CalendarView
           appointments={appointments}
           doctorFilter={doctorFilter}

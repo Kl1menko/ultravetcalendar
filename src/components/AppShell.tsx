@@ -88,23 +88,23 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
   const isCalendar = pathname === "/calendar"
 
   return (
-    <div className="min-h-svh bg-[var(--paper)] md:grid md:grid-cols-[280px_minmax(0,1fr)] md:bg-[linear-gradient(135deg,#fafafa_0%,#f4f4f2_50%,#f1f1ef_100%)]">
+    <div className="min-h-svh md:grid md:grid-cols-[280px_minmax(0,1fr)]">
       {/* ─── DESKTOP SIDEBAR ─────────────────────────────── */}
-      <aside className="hidden md:flex md:flex-col sticky top-0 h-dvh w-[280px] border-r border-white/70 bg-white/78 px-5 py-5 shadow-[12px_0_40px_rgba(0,0,0,0.05)] backdrop-blur-2xl">
+      <aside className="glass hidden md:flex md:flex-col sticky top-0 h-dvh w-[280px] border-y-0 border-l-0 px-5 py-5">
         {/* Brand */}
-        <div className="mb-8 flex items-center gap-3 rounded-2xl border border-[var(--line)] bg-white p-2 shadow-sm">
+        <div className="glass mb-8 flex items-center gap-3 rounded-2xl p-2">
           <div className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-2xl bg-white shadow-lg shadow-black/10 ring-1 ring-[var(--teal-mid)]">
             <Image src="/logo.svg" alt="UltraVet" width={32} height={32} unoptimized />
           </div>
           <div className="min-w-0">
-            <span className="block text-[17px] font-black tracking-tight text-[var(--ink)]">UltraVet</span>
+            <span className="block text-[17px] font-bold tracking-tight text-[var(--ink)]">UltraVet</span>
           </div>
         </div>
 
         {/* New appt button */}
         <button
           onClick={onNewAppointment}
-          className="mb-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--teal)] text-[14px] font-black text-white shadow-lg shadow-black/15 transition-all hover:-translate-y-0.5 hover:bg-[var(--teal-dark)] active:scale-[0.98]"
+          className="mb-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--teal)] text-[14px] font-bold text-white shadow-lg shadow-black/15 transition-all hover:-translate-y-0.5 hover:bg-[var(--teal-dark)] active:scale-[0.98]"
         >
           <span className="text-lg font-light leading-none">+</span>
           Новий запис
@@ -113,7 +113,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
         {/* Search button */}
         <button
           onClick={onSearch}
-          className="mb-7 flex h-11 w-full items-center gap-2 rounded-2xl border border-[var(--line)] bg-white px-3 text-[13px] font-semibold text-[var(--muted-col)] shadow-sm transition-colors hover:border-[var(--teal-mid)] hover:text-[var(--ink)]"
+          className="glass glass-hover mb-7 flex h-11 w-full items-center gap-2 rounded-2xl px-3 text-[13px] font-semibold text-[var(--muted-col)] transition-colors hover:text-[var(--ink)]"
         >
           <SearchIcon />
           Пошук…
@@ -129,16 +129,16 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
                 href={item.href}
                 className={`group relative flex h-11 items-center gap-3 rounded-2xl px-3 text-[13px] font-bold transition-all ${
                   active
-                    ? "bg-[var(--teal-light)] text-[var(--teal-dark)] shadow-sm ring-1 ring-[var(--teal-mid)]"
-                    : "text-[var(--muted-col)] hover:bg-white hover:text-[var(--ink)] hover:shadow-sm"
+                    ? "glass text-[var(--ink)] shadow-sm"
+                    : "text-[var(--muted-col)] hover:bg-white/40 hover:text-[var(--ink)]"
                 }`}
               >
-                <span className={`grid h-8 w-8 place-items-center rounded-xl transition-colors ${active ? "bg-white text-[var(--teal)]" : "bg-[var(--paper)] text-[var(--muted-col)] group-hover:bg-[var(--teal-light)] group-hover:text-[var(--teal)]"}`}>
+                <span className={`grid h-8 w-8 place-items-center rounded-xl transition-colors ${active ? "bg-white/80 text-[var(--teal)] shadow-sm" : "bg-white/30 text-[var(--muted-col)] group-hover:bg-white/60 group-hover:text-[var(--teal)]"}`}>
                   {item.icon}
                 </span>
                 {item.label}
                 {item.href === "/alerts" && alertsBadge > 0 && (
-                  <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">
+                  <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
                     {alertsBadge > 9 ? "9+" : alertsBadge}
                   </span>
                 )}
@@ -148,13 +148,13 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
         </nav>
 
         {/* Bottom user + logout */}
-        <div className="mt-auto rounded-2xl border border-[var(--line)] bg-white p-2 shadow-sm">
+        <div className="glass mt-auto rounded-2xl p-2">
           <div className="mb-2 flex items-center gap-2 px-1">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--teal-light)] text-[12px] font-black text-[var(--teal-dark)]">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/70 text-[12px] font-bold text-[var(--teal-dark)] shadow-sm">
               {displayName.slice(0, 2).toUpperCase()}
             </div>
             <div className="min-w-0">
-              <div className="truncate text-[12px] font-black text-[var(--ink)]">{displayName}</div>
+              <div className="truncate text-[12px] font-bold text-[var(--ink)]">{displayName}</div>
               <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--muted-col)]">
                 {roleLabel(role)}
               </div>
@@ -179,7 +179,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
 
       {/* ─── MOBILE BOTTOM NAV ───────────────────────────── */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-30 grid border-t border-[var(--line)] bg-white/95 backdrop-blur-xl md:hidden"
+        className="fixed bottom-0 left-0 right-0 z-30 grid border-t border-[var(--lg-border)] bg-white/55 backdrop-blur-2xl backdrop-saturate-150 md:hidden"
         style={{
           paddingBottom: "var(--bottom-nav-safe)",
           gridTemplateColumns: `repeat(${navItems.length}, 1fr)`,
@@ -199,7 +199,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
               <span className={`relative ${active ? "[&_svg]:stroke-[2.2]" : ""}`}>
                 <span className="w-5 h-5 block">{item.icon}</span>
                 {item.href === "/alerts" && alertsBadge > 0 && (
-                  <span className="absolute -top-1 -right-1.5 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-red-500 border-[1.5px] border-white px-0.5 text-[8px] font-black text-white leading-none">
+                  <span className="absolute -top-1 -right-1.5 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-red-500 border-[1.5px] border-white px-0.5 text-[8px] font-bold text-white leading-none">
                     {alertsBadge > 9 ? "9+" : alertsBadge}
                   </span>
                 )}

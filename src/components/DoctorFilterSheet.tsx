@@ -29,7 +29,7 @@ export default function DoctorFilterSheet({ open, onClose, selected, onSelect }:
                 "min-h-12 px-3.5 rounded-xl border-[1.5px] text-sm font-semibold text-left transition-colors",
                 doc === selected
                   ? "bg-[var(--teal-light)] border-[var(--teal-mid)] text-[var(--teal-dark)]"
-                  : "bg-white border-[var(--line)] text-[var(--ink)] hover:bg-[var(--paper)]",
+                  : "glass border-transparent text-[var(--ink)]",
               ].join(" ")}
             >
               {doctorShortName(doc)}

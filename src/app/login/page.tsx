@@ -42,9 +42,9 @@ export default function LoginPage() {
 
   if (checking) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-white">
+      <div className="flex min-h-dvh items-center justify-center">
         <div
-          className="grid h-14 w-14 place-items-center rounded-[16px] bg-white shadow-lg shadow-black/10 ring-1 ring-[var(--line)] animate-pulse-logo"
+          className="glass grid h-14 w-14 place-items-center rounded-[16px] animate-pulse-logo"
           aria-label="Завантаження"
         >
           <Image src="/logo.svg" alt="UltraVet" width={40} height={40} unoptimized />
@@ -54,14 +54,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-white p-4">
+    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden p-4">
       <div className="w-full max-w-[380px]">
         {/* Лого + назва над формою */}
         <div className="mb-6 flex flex-col items-center">
           <div className="grid h-16 w-16 place-items-center">
             <Image src="/logo.svg" alt="UltraVet" width={48} height={48} unoptimized />
           </div>
-          <h1 className="mt-4 text-[26px] font-black tracking-tight text-[var(--ink)]">
+          <h1 className="mt-4 text-[26px] font-bold tracking-tight text-[var(--ink)]">
             UltraVet
           </h1>
           <p className="mt-0.5 text-[13px] font-medium text-[var(--muted-col)]">
@@ -70,9 +70,9 @@ export default function LoginPage() {
         </div>
 
         {/* Форма */}
-        <div className="p-1">
+        <div className="glass-strong rounded-[28px] p-6">
           <div className="mb-6 text-center">
-            <h2 className="text-[18px] font-black text-[var(--ink)]">Вхід в систему</h2>
+            <h2 className="text-[18px] font-bold text-[var(--ink)]">Вхід в систему</h2>
             <p className="mt-0.5 text-[13px] text-[var(--muted-col)]">
               Увійдіть, щоб продовжити роботу
             </p>
@@ -97,7 +97,7 @@ export default function LoginPage() {
                   placeholder="doctor@clinic.com"
                   autoComplete="email"
                   required
-                  className="h-12 w-full rounded-xl border border-[var(--line)] bg-white pl-11 pr-4 text-[15px] text-[var(--ink)] outline-none transition focus:border-[var(--teal)] focus:ring-2 focus:ring-[var(--teal)]/15"
+                  className="h-12 w-full rounded-xl border border-[var(--lg-border)] bg-white/55 pl-11 pr-4 text-[15px] text-[var(--ink)] outline-none transition focus:border-[var(--teal)] focus:ring-2 focus:ring-[var(--teal)]/15"
                 />
               </div>
             </label>
@@ -120,7 +120,7 @@ export default function LoginPage() {
                   placeholder="Введіть пароль"
                   autoComplete="current-password"
                   required
-                  className="h-12 w-full rounded-xl border border-[var(--line)] bg-white pl-11 pr-11 text-[15px] text-[var(--ink)] outline-none transition focus:border-[var(--teal)] focus:ring-2 focus:ring-[var(--teal)]/15"
+                  className="h-12 w-full rounded-xl border border-[var(--lg-border)] bg-white/55 pl-11 pr-11 text-[15px] text-[var(--ink)] outline-none transition focus:border-[var(--teal)] focus:ring-2 focus:ring-[var(--teal)]/15"
                 />
                 <button
                   type="button"

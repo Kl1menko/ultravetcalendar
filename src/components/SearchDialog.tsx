@@ -47,7 +47,7 @@ export default function SearchDialog({ open, onClose, appointments, onSelectAppo
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="flex max-h-[80svh] max-w-[420px] flex-col gap-0 overflow-hidden rounded-[18px] border-white/80 p-0 shadow-[0_24px_80px_rgba(17,24,39,0.22)] md:max-h-[78dvh] md:max-w-[720px] md:rounded-[28px]">
         <DialogHeader className="border-b border-[var(--line)] bg-[linear-gradient(135deg,#fff,#fafafa)] px-4 pt-4 pb-3 text-left md:px-6 md:pt-5 md:pb-4">
-          <DialogTitle className="text-[22px] font-black tracking-tight text-[var(--ink)] md:text-[26px]">Пошук</DialogTitle>
+          <DialogTitle className="text-[22px] font-bold tracking-tight text-[var(--ink)] md:text-[26px]">Пошук</DialogTitle>
         </DialogHeader>
 
         {/* Search input */}
@@ -116,7 +116,7 @@ export default function SearchDialog({ open, onClose, appointments, onSelectAppo
                     className="grid min-h-16 w-full grid-cols-[44px_1fr] gap-2 rounded-lg border-[1.5px] border-[var(--line)] bg-white p-2.5 text-left shadow-sm transition-all active:scale-[0.985] md:rounded-2xl md:p-3 md:hover:-translate-y-0.5 md:hover:border-[var(--teal-mid)] md:hover:shadow-[var(--desktop-soft)]"
                     style={{ borderLeft: `4px solid ${color.border}`, background: color.bg }}
                   >
-                    <span className="text-sm font-black" style={{ color: color.border }}>{item.start}</span>
+                    <span className="text-sm font-bold" style={{ color: color.border }}>{item.start}</span>
                     <span className="min-w-0">
                       <strong className="block text-[13px] font-bold text-[var(--ink)] truncate">
                         {item.pet} — {item.service}

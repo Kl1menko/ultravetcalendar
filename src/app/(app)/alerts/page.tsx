@@ -55,10 +55,10 @@ export default function AlertsPage() {
     <div className="flex min-h-full flex-col md:gap-5">
       {/* Header + tabs */}
       <header className="px-4 pt-4 pb-3 md:desktop-page-header md:px-6 md:py-5">
-        <h1 className="text-[22px] font-black tracking-tight text-[var(--ink)] md:text-[28px]">
+        <h1 className="text-[22px] font-bold tracking-tight text-[var(--ink)] md:text-[28px]">
           Сповіщення
         </h1>
-        <div className="mt-3 flex gap-1 rounded-xl bg-[var(--paper)] p-1">
+        <div className="glass mt-3 flex gap-1 rounded-xl p-1">
           <button
             onClick={() => setTab("notices")}
             className={`flex-1 rounded-lg py-2 text-[13px] font-bold transition-colors ${
@@ -145,7 +145,7 @@ function NoticesTab({
               created_by: user.id,
               created_at: new Date().toISOString(),
             })}
-            className="h-8 gap-1.5 rounded-xl border-[var(--line)] bg-white px-3 text-[12px] font-semibold text-[var(--muted-col)] hover:bg-white hover:text-[var(--ink)]"
+            className="glass glass-hover h-8 gap-1.5 rounded-xl px-3 text-[12px] font-semibold text-[var(--muted-col)] hover:text-[var(--ink)]"
           >
             Тест-банер
           </Button>
@@ -209,7 +209,7 @@ function NoticesTab({
           {notices.map((notice, i) => (
             <Card
               key={notice.id}
-              className="desktop-card-hover gap-0 rounded-2xl border border-[var(--line)] bg-white py-0 ring-0"
+              className="glass-hover gap-0 rounded-2xl py-0"
               style={{ opacity: i > 0 ? Math.max(0.6, 1 - i * 0.08) : 1 }}
             >
               <div className="h-1 bg-[var(--teal)]" style={{ opacity: Math.max(0.3, 1 - i * 0.15) }} />
@@ -339,20 +339,20 @@ function FeedbackTab({
           onChange={(e) => setTitle(e.target.value)}
           placeholder={type === "bug" ? "Що зламалось?" : "Що варто покращити?"}
           required
-          className="h-12 rounded-2xl bg-white px-4 text-[15px] font-semibold text-[var(--ink)] shadow-sm outline-none ring-1 ring-[var(--line)] transition placeholder:font-normal placeholder:text-[var(--muted-col)] focus:ring-2 focus:ring-[var(--teal-mid)]"
+          className="glass h-12 rounded-2xl px-4 text-[15px] font-semibold text-[var(--ink)] outline-none ring-0 transition placeholder:font-normal placeholder:text-[var(--muted-col)] focus:ring-2 focus:ring-[var(--teal-mid)]"
         />
         <textarea
           rows={4}
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder="Деталі: на якому екрані, що очікували, кроки… (необов'язково)"
-          className="resize-none rounded-2xl bg-white px-4 py-3 text-[14px] leading-relaxed text-[var(--ink)] shadow-sm outline-none ring-1 ring-[var(--line)] transition placeholder:text-[var(--muted-col)] focus:ring-2 focus:ring-[var(--teal-mid)]"
+          className="glass resize-none rounded-2xl px-4 py-3 text-[14px] leading-relaxed text-[var(--ink)] outline-none ring-0 transition placeholder:text-[var(--muted-col)] focus:ring-2 focus:ring-[var(--teal-mid)]"
         />
 
         <button
           type="submit"
           disabled={sending || !title.trim()}
-          className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--teal)] text-[15px] font-black text-white shadow-lg shadow-[var(--teal)]/20 transition-all hover:bg-[var(--teal-dark)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+          className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--teal)] text-[15px] font-bold text-white shadow-lg shadow-[var(--teal)]/20 transition-all hover:bg-[var(--teal-dark)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
         >
           <Send className="h-4 w-4" />
           {sending ? "Надсилаємо…" : "Надіслати"}
@@ -420,15 +420,15 @@ function FeedbackTab({
             const T = TYPE_META[item.type]
             const canDelete = isAdmin || item.created_by === user.id
             return (
-              <Card key={item.id} className="gap-0 rounded-2xl border border-[var(--line)] bg-white py-0 ring-0">
+              <Card key={item.id} className="glass-hover gap-0 rounded-2xl py-0">
                 <div className="px-4 py-3.5">
                   {/* Бейджі типу + статусу */}
                   <div className="mb-2 flex items-center gap-2">
-                    <span className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-black ${T.cls}`}>
+                    <span className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-bold ${T.cls}`}>
                       <T.icon className="h-3 w-3" />
                       {T.label}
                     </span>
-                    <span className={`rounded-md border px-1.5 py-0.5 text-[11px] font-black ${STATUS_META[item.status].cls}`}>
+                    <span className={`rounded-md border px-1.5 py-0.5 text-[11px] font-bold ${STATUS_META[item.status].cls}`}>
                       {STATUS_META[item.status].label}
                     </span>
                   </div>
@@ -464,7 +464,7 @@ function FeedbackTab({
                           disabled={busyId === item.id || item.status === s}
                           onClick={() => handleStatus(item.id, s)}
                           className={`flex-1 rounded-lg border py-1.5 text-[11px] font-bold transition-colors disabled:opacity-50 ${
-                            item.status === s ? STATUS_META[s].cls : "border-[var(--line)] bg-white text-[var(--muted-col)] hover:bg-[var(--paper)]"
+                            item.status === s ? STATUS_META[s].cls : "glass border-transparent text-[var(--muted-col)]"
                           }`}
                         >
                           {STATUS_META[s].label}

@@ -107,7 +107,7 @@ export default function AppointmentDetails({
           </div>
 
           {/* Тварина + послуга */}
-          <h2 className="text-[22px] font-black leading-tight text-[var(--ink)] mb-0.5">
+          <h2 className="text-[22px] font-bold leading-tight text-[var(--ink)] mb-0.5">
             {appointment.pet}
           </h2>
           <div className="flex flex-wrap gap-1.5">
@@ -131,7 +131,7 @@ export default function AppointmentDetails({
               {durationLabel(durMins)}
             </span>
             {canSeePrices && appointment.price > 0 && (
-              <span className="ml-auto rounded-lg bg-white/70 px-2 py-0.5 text-[14px] font-black text-[var(--teal)] md:text-[15px]">
+              <span className="ml-auto rounded-lg bg-white/70 px-2 py-0.5 text-[14px] font-bold text-[var(--teal)] md:text-[15px]">
                 {Number(appointment.price).toLocaleString("uk-UA")} ₴
               </span>
             )}
@@ -222,7 +222,7 @@ export default function AppointmentDetails({
                   onClick={() => handleStatusChange(s)}
                   className={[
                     "rounded-full border px-3 py-1.5 text-[13px] font-semibold transition active:scale-[0.97] disabled:opacity-60",
-                    active ? "border-transparent" : "border-[var(--line)] bg-white text-[var(--ink-2)]",
+                    active ? "border-transparent" : "glass border-transparent text-[var(--ink-2)]",
                   ].join(" ")}
                   style={active ? { background: style.bg, color: style.text } : undefined}
                 >
