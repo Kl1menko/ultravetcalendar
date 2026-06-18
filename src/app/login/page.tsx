@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { supabase } from "@/lib/supabase"
+import SplashScreen from "@/components/SplashScreen"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -42,14 +43,13 @@ export default function LoginPage() {
 
   if (checking) {
     return (
-      <div className="app-shell flex items-center justify-center">
-        <div
-          className="glass grid h-14 w-14 place-items-center rounded-[16px] animate-pulse-logo"
-          aria-label="Завантаження"
-        >
-          <Image src="/logo.svg" alt="UltraVet" width={38} height={40} style={{ width: "auto", height: "auto" }} unoptimized />
-        </div>
-      </div>
+      <SplashScreen label="Перевіряємо доступ" sublabel="Мить, і відкриємо робочий простір" />
+    )
+  }
+
+  if (loading) {
+    return (
+      <SplashScreen label="Входимо…" sublabel="Підключаємо ваш профіль" />
     )
   }
 

@@ -176,6 +176,12 @@ export default function AppointmentForm({
   const dateFieldClass = `${fieldClass} inline-flex items-center`
   const labelClass =
     "flex min-w-0 w-full flex-col gap-1.5 text-[11px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]"
+  const sectionClass =
+    "rounded-2xl border border-[var(--lg-border)] bg-white/35 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] md:rounded-[22px] md:px-4 md:py-4"
+  const sectionTitleClass =
+    "mb-3 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-2)]"
+  const sectionGridClass =
+    "grid min-w-0 gap-3 md:grid-cols-2 md:gap-4"
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
@@ -196,7 +202,7 @@ export default function AppointmentForm({
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto overflow-x-hidden px-4 py-5 md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-5 md:px-6"
+          className="flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto overflow-x-hidden px-4 py-5 md:gap-4 md:px-6"
         >
           <AnimatePresence>
             {formError && (
@@ -212,122 +218,140 @@ export default function AppointmentForm({
             )}
           </AnimatePresence>
 
-          <motion.label variants={staggerItem} className={labelClass}>
-            Дата
-            <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className={dateFieldClass} />
-          </motion.label>
+          <motion.section variants={staggerItem} className={sectionClass}>
+            <h3 className={sectionTitleClass}>Клієнт</h3>
+            <div className={sectionGridClass}>
+              <label className={labelClass}>
+                Клієнт
+                <input type="text" required value={client} onChange={(e) => setClient(e.target.value)} placeholder="Олена" className={fieldClass} />
+              </label>
 
-          <motion.label variants={staggerItem} className={labelClass}>
-            Час початку
-            <input type="time" required value={start} onChange={(e) => setStart(e.target.value)} className={dateFieldClass} />
-          </motion.label>
+              <label className={labelClass}>
+                Телефон
+                <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+380671112233" className={fieldClass} />
+              </label>
 
-          <motion.label variants={staggerItem} className={labelClass}>
-            Тривалість
-            <select value={duration} onChange={(e) => setDuration(e.target.value)} required className={fieldClass}>
-              {DURATIONS.map((d) => (
-                <option key={d.value} value={d.value}>{d.label}</option>
-              ))}
-            </select>
-          </motion.label>
-
-          <motion.label variants={staggerItem} className={labelClass}>
-            Клієнт
-            <input type="text" required value={client} onChange={(e) => setClient(e.target.value)} placeholder="Олена" className={fieldClass} />
-          </motion.label>
-
-          <motion.label variants={staggerItem} className={labelClass}>
-            Телефон
-            <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+380671112233" className={fieldClass} />
-          </motion.label>
-
-          <motion.label variants={staggerItem} className={`${labelClass} md:col-span-2`}>
-            Адреса <span className="normal-case text-[10px] font-normal text-[var(--muted-col)]">— необов&apos;язково</span>
-            <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="вул. Шевченка, 12, кв. 5" className={fieldClass} />
-          </motion.label>
-
-          <motion.label variants={staggerItem} className={labelClass}>
-            Тварина
-            <input type="text" required value={pet} onChange={(e) => setPet(e.target.value)} placeholder="Рекс" className={fieldClass} />
-          </motion.label>
-
-          <motion.label variants={staggerItem} className={labelClass}>
-            Вид/порода
-            <input type="text" value={animal} onChange={(e) => setAnimal(e.target.value)} placeholder="собака, лабрадор" className={fieldClass} />
-          </motion.label>
-
-          <motion.label variants={staggerItem} className={labelClass}>
-            Вік
-            <input type="text" required value={age} onChange={(e) => setAge(e.target.value)} placeholder="3 роки" className={fieldClass} />
-          </motion.label>
-
-          <motion.label variants={staggerItem} className={labelClass}>
-            Вага <span className="normal-case text-[10px] font-normal text-[var(--muted-col)]">— необов&apos;язково</span>
-            <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="4.2 кг" className={fieldClass} />
-          </motion.label>
-
-          {/* key міняється при відкритті іншого запису (id) — ServicePicker
-              ремоунтиться й лінивий ініціалізатор operationsOpen перечитує вже
-              заповнений services (форма заповнює його після відкриття). */}
-          <motion.div variants={staggerItem} className="md:col-span-2">
-            <ServicePicker key={pickerKey} services={services} setServices={setServices} />
-          </motion.div>
-
-          {canEditPrice && (
-            <motion.label variants={staggerItem} className={labelClass}>
-              Ціна (₴) <span className="normal-case text-[10px] font-normal text-[var(--muted-col)]">— необов&apos;язково</span>
-              <input type="number" min={0} step={1} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" className={fieldClass} />
-            </motion.label>
-          )}
-
-          <motion.label variants={staggerItem} className={labelClass}>
-            Відповідальний лікар
-            <select value={doctor} onChange={(e) => setDoctor(e.target.value)} required className={fieldClass}>
-              {DOCTORS.map((d) => <option key={d} value={d}>{doctorShortName(d)}</option>)}
-            </select>
-          </motion.label>
-
-          <motion.div variants={staggerItem} className="flex min-w-0 w-full flex-col gap-2.5 md:col-span-2">
-            <span className="text-[11px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]">
-              Статус
-            </span>
-            {/* Усі статуси в один рядок: 4 рівні колонки. Текст центрований і не
-                переноситься; на вузьких екранах при потребі трохи стискається. */}
-            <div className="grid grid-cols-4 gap-1.5">
-              {STATUSES.map((s) => {
-                const active = status === s
-                const style = statusStyle(s)
-                return (
-                  <button
-                    key={s}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => setStatus(s)}
-                    className={[
-                      "min-w-0 truncate rounded-full border px-1.5 py-2 text-center text-[11px] font-semibold tracking-tight whitespace-nowrap transition active:scale-[0.97] sm:text-[12px]",
-                      active
-                        ? "border-transparent shadow-sm"
-                        : "glass border-transparent text-[var(--ink-2)]",
-                    ].join(" ")}
-                    style={active ? { background: style.bg, color: style.text } : undefined}
-                  >
-                    {s}
-                  </button>
-                )
-              })}
+              <label className={`${labelClass} md:col-span-2`}>
+                Адреса <span className="normal-case text-[10px] font-normal text-[var(--muted-col)]">— необов&apos;язково</span>
+                <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="вул. Шевченка, 12, кв. 5" className={fieldClass} />
+              </label>
             </div>
-          </motion.div>
+          </motion.section>
 
-          <motion.label variants={staggerItem} className={`${labelClass} md:col-span-2`}>
-            Коментар
-            <textarea
-              rows={3}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Коротка примітка"
-              className="h-auto min-h-[80px] w-full resize-y rounded-xl border border-[var(--lg-border)] bg-white/55 px-3 py-3 text-[15px] font-medium text-[var(--ink)] outline-none transition focus:border-[var(--teal)] focus:ring-2 focus:ring-[var(--teal)]/10 md:min-h-[96px]"
-            />
-          </motion.label>
+          <motion.section variants={staggerItem} className={sectionClass}>
+            <h3 className={sectionTitleClass}>Тварина</h3>
+            <div className={sectionGridClass}>
+              <label className={labelClass}>
+                Тварина
+                <input type="text" required value={pet} onChange={(e) => setPet(e.target.value)} placeholder="Рекс" className={fieldClass} />
+              </label>
+
+              <label className={labelClass}>
+                Вид/порода
+                <input type="text" value={animal} onChange={(e) => setAnimal(e.target.value)} placeholder="собака, лабрадор" className={fieldClass} />
+              </label>
+
+              <label className={labelClass}>
+                Вік
+                <input type="text" required value={age} onChange={(e) => setAge(e.target.value)} placeholder="3 роки" className={fieldClass} />
+              </label>
+
+              <label className={labelClass}>
+                Вага <span className="normal-case text-[10px] font-normal text-[var(--muted-col)]">— необов&apos;язково</span>
+                <input type="text" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="4.2 кг" className={fieldClass} />
+              </label>
+            </div>
+          </motion.section>
+
+          <motion.section variants={staggerItem} className={sectionClass}>
+            <h3 className={sectionTitleClass}>Прийом</h3>
+            <div className={sectionGridClass}>
+              <label className={labelClass}>
+                Дата
+                <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className={dateFieldClass} />
+              </label>
+
+              <label className={labelClass}>
+                Час початку
+                <input type="time" required value={start} onChange={(e) => setStart(e.target.value)} className={dateFieldClass} />
+              </label>
+
+              <label className={labelClass}>
+                Тривалість
+                <select value={duration} onChange={(e) => setDuration(e.target.value)} required className={fieldClass}>
+                  {DURATIONS.map((d) => (
+                    <option key={d.value} value={d.value}>{d.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className={labelClass}>
+                Відповідальний лікар
+                <select value={doctor} onChange={(e) => setDoctor(e.target.value)} required className={fieldClass}>
+                  {DOCTORS.map((d) => <option key={d} value={d}>{doctorShortName(d)}</option>)}
+                </select>
+              </label>
+
+              {/* key міняється при відкритті іншого запису (id) — ServicePicker
+                  ремоунтиться й лінивий ініціалізатор operationsOpen перечитує вже
+                  заповнений services (форма заповнює його після відкриття). */}
+              <div className="md:col-span-2">
+                <ServicePicker key={pickerKey} services={services} setServices={setServices} />
+              </div>
+
+              <div className="flex min-w-0 w-full flex-col gap-2.5 md:col-span-2">
+                <span className="text-[11px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]">
+                  Статус
+                </span>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {STATUSES.map((s) => {
+                    const active = status === s
+                    const style = statusStyle(s)
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => setStatus(s)}
+                        className={[
+                          "min-w-0 truncate rounded-full border px-1.5 py-2 text-center text-[11px] font-semibold tracking-tight whitespace-nowrap transition active:scale-[0.97] sm:text-[12px]",
+                          active
+                            ? "border-transparent shadow-sm"
+                            : "glass border-transparent text-[var(--ink-2)]",
+                        ].join(" ")}
+                        style={active ? { background: style.bg, color: style.text } : undefined}
+                      >
+                        {s}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          </motion.section>
+
+          <motion.section variants={staggerItem} className={sectionClass}>
+            <h3 className={sectionTitleClass}>Оплата і коментар</h3>
+            <div className={sectionGridClass}>
+              {canEditPrice && (
+                <label className={labelClass}>
+                  Ціна (₴) <span className="normal-case text-[10px] font-normal text-[var(--muted-col)]">— необов&apos;язково</span>
+                  <input type="number" min={0} step={1} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" className={fieldClass} />
+                </label>
+              )}
+
+              <label className={`${labelClass} md:col-span-2`}>
+                Коментар
+                <textarea
+                  rows={3}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Коротка примітка"
+                  className="h-auto min-h-[80px] w-full resize-y rounded-xl border border-[var(--lg-border)] bg-white/55 px-3 py-3 text-[15px] font-medium text-[var(--ink)] outline-none transition focus:border-[var(--teal)] focus:ring-2 focus:ring-[var(--teal)]/10 md:min-h-[96px]"
+                />
+              </label>
+            </div>
+          </motion.section>
         </motion.form>
 
         {/* Actions — фіксований футер поза скрол-областю форми */}

@@ -689,6 +689,16 @@
   animation: pulse 1.4s ease-in-out infinite;
 }
 
+@keyframes splash-progress {
+  0% { transform: translateX(-110%); }
+  55% { transform: translateX(70%); }
+  100% { transform: translateX(210%); }
+}
+
+.animate-splash-progress {
+  animation: splash-progress 1.35s ease-in-out infinite;
+}
+
 @keyframes notice-progress {
   from { transform: scaleX(1); }
   to   { transform: scaleX(0); }

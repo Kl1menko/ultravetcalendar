@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import Image from "next/image"
 import { User } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase"
 import { useAppointments } from "@/hooks/useAppointments"
@@ -19,6 +18,7 @@ import AppointmentForm from "@/components/AppointmentForm"
 import AppointmentDetails from "@/components/AppointmentDetails"
 import SearchDialog from "@/components/SearchDialog"
 import NoticeBanner from "@/components/NoticeBanner"
+import SplashScreen from "@/components/SplashScreen"
 import { Appointment, Notice } from "@/types"
 import { CalendarContext } from "@/context/calendar"
 
@@ -146,11 +146,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (authLoading || !user) {
     return (
-      <div className="app-shell flex items-center justify-center bg-[var(--teal-light)]">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-lg shadow-black/10 ring-1 ring-[var(--teal-mid)] animate-pulse-logo">
-          <Image src="/logo.svg" alt="UltraVet" width={38} height={40} style={{ width: "auto", height: "auto" }} unoptimized />
-        </div>
-      </div>
+      <SplashScreen label="Перевіряємо сесію" sublabel="Завантажуємо календар клініки" />
     )
   }
 
