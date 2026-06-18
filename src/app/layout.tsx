@@ -37,7 +37,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="uk" className={`${inter.variable} h-full`} suppressHydrationWarning>
-      <body className="min-h-dvh text-[var(--ink)] antialiased">
+      <body className="app-shell text-[var(--ink)] antialiased">
         {children}
       </body>
     </html>

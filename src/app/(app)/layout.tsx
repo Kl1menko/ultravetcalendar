@@ -146,9 +146,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (authLoading || !user) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-[var(--teal-light)]">
+      <div className="app-shell flex items-center justify-center bg-[var(--teal-light)]">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-lg shadow-black/10 ring-1 ring-[var(--teal-mid)] animate-pulse-logo">
-          <Image src="/logo.svg" alt="UltraVet" width={40} height={40} unoptimized />
+          <Image src="/logo.svg" alt="UltraVet" width={38} height={40} style={{ width: "auto", height: "auto" }} unoptimized />
         </div>
       </div>
     )
@@ -219,4 +219,3 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </>
   )
 }
-

@@ -88,13 +88,13 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
   const isCalendar = pathname === "/calendar"
 
   return (
-    <div className="min-h-svh md:grid md:grid-cols-[280px_minmax(0,1fr)]">
+    <div className="app-shell md:grid md:grid-cols-[280px_minmax(0,1fr)]">
       {/* ─── DESKTOP SIDEBAR ─────────────────────────────── */}
-      <aside className="glass hidden md:flex md:flex-col sticky top-0 h-dvh w-[280px] border-y-0 border-l-0 px-5 py-5">
+      <aside className="glass app-sidebar hidden md:flex md:flex-col sticky top-0 w-[280px] border-y-0 border-l-0 px-5 py-5">
         {/* Brand */}
         <div className="glass mb-8 flex items-center gap-3 rounded-2xl p-2">
           <div className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-2xl bg-white shadow-lg shadow-black/10 ring-1 ring-[var(--teal-mid)]">
-            <Image src="/logo.svg" alt="UltraVet" width={32} height={32} unoptimized />
+            <Image src="/logo.svg" alt="UltraVet" width={30} height={32} style={{ width: "auto", height: "auto" }} unoptimized />
           </div>
           <div className="min-w-0">
             <span className="block text-[17px] font-bold tracking-tight text-[var(--ink)]">UltraVet</span>
@@ -172,7 +172,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
 
       {/* ─── MAIN CONTENT ────────────────────────────────── */}
       <main
-        className="flex h-svh w-full flex-col overflow-y-auto px-0 pt-[env(safe-area-inset-top)] pb-[var(--bottom-nav-total)] md:mx-auto md:block md:h-auto md:overflow-visible md:max-w-[1440px] md:px-8 md:pb-10 md:pt-7 xl:px-10"
+        className="app-main flex w-full flex-col overflow-y-auto px-0 pt-[env(safe-area-inset-top)] pb-[var(--bottom-nav-total)] md:mx-auto md:block md:max-w-[1440px] md:px-8 md:pb-10 md:pt-7 xl:px-10"
       >
         {children}
       </main>

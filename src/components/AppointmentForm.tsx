@@ -182,7 +182,7 @@ export default function AppointmentForm({
       <SheetContent
         side="bottom"
         showCloseButton={false}
-        className="inset-0 h-[100dvh] max-h-[100dvh] w-full max-w-full rounded-none px-0 py-0 md:inset-auto md:left-1/2 md:top-1/2 md:h-auto md:max-h-[86dvh] md:w-[min(920px,calc(100vw-3rem))] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-[28px]"
+        className="sheet-viewport inset-0 w-full max-w-full rounded-none px-0 py-0 md:inset-auto md:left-1/2 md:top-1/2 md:w-[min(920px,calc(100vw-3rem))] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-[28px]"
       >
         <SheetHeader className="shrink-0 border-b border-[var(--line)] px-4 pb-4 pt-[max(env(safe-area-inset-top),1rem)] text-left md:px-6 md:pt-5">
           <SheetTitle className="text-[20px] font-bold text-[var(--ink)] md:text-[26px]">

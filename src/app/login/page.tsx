@@ -42,24 +42,24 @@ export default function LoginPage() {
 
   if (checking) {
     return (
-      <div className="flex min-h-dvh items-center justify-center">
+      <div className="app-shell flex items-center justify-center">
         <div
           className="glass grid h-14 w-14 place-items-center rounded-[16px] animate-pulse-logo"
           aria-label="Завантаження"
         >
-          <Image src="/logo.svg" alt="UltraVet" width={40} height={40} unoptimized />
+          <Image src="/logo.svg" alt="UltraVet" width={38} height={40} style={{ width: "auto", height: "auto" }} unoptimized />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden p-4">
+    <div className="app-shell relative flex items-center justify-center overflow-hidden p-4">
       <div className="w-full max-w-[380px]">
         {/* Лого + назва над формою */}
         <div className="mb-6 flex flex-col items-center">
           <div className="grid h-16 w-16 place-items-center">
-            <Image src="/logo.svg" alt="UltraVet" width={48} height={48} unoptimized />
+            <Image src="/logo.svg" alt="UltraVet" width={45} height={48} style={{ width: "auto", height: "auto" }} unoptimized />
           </div>
           <h1 className="mt-4 text-[26px] font-bold tracking-tight text-[var(--ink)]">
             UltraVet

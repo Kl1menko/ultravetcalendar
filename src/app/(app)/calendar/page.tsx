@@ -87,7 +87,7 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="flex min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden md:h-[calc(100dvh-96px)] md:flex-none md:rounded-[28px] md:p-5 md:glass">
+    <div className="calendar-page flex w-full max-w-full flex-none flex-col overflow-hidden md:rounded-[28px] md:p-5 md:glass">
       {/* ─── CALENDAR HEADER ─── */}
       <header className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-2 bg-gradient-to-b from-white/60 via-white/35 to-transparent px-4 pt-2 pb-3 backdrop-blur-lg backdrop-saturate-150 md:static md:bg-transparent md:px-0 md:pb-5 md:backdrop-blur-none md:backdrop-saturate-100">
         <h2 className="text-[16px] font-bold tracking-tight text-[var(--ink)] md:text-2xl">
