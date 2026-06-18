@@ -138,6 +138,9 @@
     min-height: 100vh;
     min-height: -webkit-fill-available;
     overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    touch-action: manipulation;
     /* Liquid Glass: м'який кольоровий mesh-фон. Скляні панелі поверх нього
        підхоплюють відтінки → ефект «рідкого скла» стає видимим. Тримаємо
        пастельно й тихо, щоб не заважати робочому інтерфейсу. */
@@ -206,6 +209,8 @@
   .app-main {
     min-height: 0;
     height: var(--app-vh);
+    padding-top: var(--app-safe-top);
+    padding-bottom: var(--bottom-nav-total);
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
   }
@@ -214,7 +219,7 @@
     height: var(--app-vh);
   }
   .calendar-page {
-    height: calc(var(--app-vh) - var(--bottom-nav-total));
+    height: calc(var(--app-vh) - var(--app-safe-top) - var(--bottom-nav-total));
     min-height: 0;
   }
   .sheet-viewport {
@@ -320,6 +325,7 @@
      --bottom-nav-safe  — нижній safe-area inset (мін. 8px).
      --bottom-nav-total — повна зайнята висота: меню + safe-area. */
   --bottom-nav-h:    56px;
+  --app-safe-top:    env(safe-area-inset-top, 0px);
   --bottom-nav-safe: max(env(safe-area-inset-bottom), 8px);
   --bottom-nav-total: calc(var(--bottom-nav-h) + var(--bottom-nav-safe));
   --app-vh: 100vh;
@@ -352,6 +358,8 @@
   .app-main {
     height: auto;
     min-height: var(--app-vh);
+    padding-top: 0;
+    padding-bottom: 2.5rem;
     overflow: visible;
     overscroll-behavior-y: auto;
   }
@@ -410,6 +418,23 @@
   [data-slot="select-content"],
   [data-slot="popover-content"] {
     background-color: rgba(255, 255, 255, 0.78);
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+@media (display-mode: standalone) {
+  :root {
+    --app-safe-top: max(env(safe-area-inset-top), 12px);
+    --bottom-nav-safe: max(env(safe-area-inset-bottom), 14px);
+  }
+
+  body {
+    overscroll-behavior: none;
   }
 }
 

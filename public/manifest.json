@@ -3,9 +3,10 @@
   "short_name": "UltraVet",
   "description": "Ветеринарна клініка — система запису",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#e6f5f5",
-  "theme_color": "#0d7377",
+  "background_color": "#e6ecf6",
+  "theme_color": "#0d0d0d",
   "orientation": "portrait",
   "icons": [
     {

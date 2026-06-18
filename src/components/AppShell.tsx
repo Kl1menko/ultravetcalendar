@@ -172,14 +172,14 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
 
       {/* ─── MAIN CONTENT ────────────────────────────────── */}
       <main
-        className="app-main flex w-full flex-col overflow-y-auto px-0 pt-[env(safe-area-inset-top)] pb-[var(--bottom-nav-total)] md:mx-auto md:block md:max-w-[1440px] md:px-8 md:pb-10 md:pt-7 xl:px-10"
+        className="app-main flex w-full flex-col overflow-y-auto px-0 pt-[var(--app-safe-top)] pb-[var(--bottom-nav-total)] md:mx-auto md:block md:max-w-[1440px] md:px-8 md:pb-10 md:pt-7 xl:px-10"
       >
         {children}
       </main>
 
       {/* ─── MOBILE BOTTOM NAV ───────────────────────────── */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-30 grid border-t border-[var(--lg-border)] bg-white/55 backdrop-blur-2xl backdrop-saturate-150 md:hidden"
+        className="fixed bottom-0 left-0 right-0 z-30 grid border-t border-[var(--lg-border)] bg-white/55 backdrop-blur-2xl backdrop-saturate-150 [transform:translateZ(0)] md:hidden"
         style={{
           paddingBottom: "var(--bottom-nav-safe)",
           gridTemplateColumns: `repeat(${navItems.length}, 1fr)`,
