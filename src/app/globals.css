@@ -238,8 +238,8 @@
   .app-main {
     min-height: 0;
     height: var(--app-vh);
-    padding-top: var(--app-safe-top);
-    padding-bottom: var(--bottom-nav-total);
+    padding-top: 0;
+    padding-bottom: 0;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
   }
@@ -248,7 +248,7 @@
     height: var(--app-vh);
   }
   .calendar-page {
-    height: calc(var(--app-vh) - var(--app-safe-top) - var(--bottom-nav-total));
+    height: calc(var(--app-vh) - var(--bottom-nav-total));
     min-height: 0;
   }
   .sheet-viewport {
@@ -353,9 +353,9 @@
      --bottom-nav-h     — висота самих кнопок (без safe-area).
      --bottom-nav-safe  — нижній safe-area inset (мін. 8px).
      --bottom-nav-total — повна зайнята висота: меню + safe-area. */
-  --bottom-nav-h:    56px;
+  --bottom-nav-h:    52px;
   --app-safe-top:    env(safe-area-inset-top, 0px);
-  --bottom-nav-safe: max(env(safe-area-inset-bottom), 8px);
+  --bottom-nav-safe: max(env(safe-area-inset-bottom), 4px);
   --bottom-nav-total: calc(var(--bottom-nav-h) + var(--bottom-nav-safe));
   --app-vh: 100vh;
 }
@@ -459,7 +459,7 @@
 @media (display-mode: standalone) {
   :root {
     --app-safe-top: max(env(safe-area-inset-top), 12px);
-    --bottom-nav-safe: max(env(safe-area-inset-bottom), 14px);
+    --bottom-nav-safe: max(env(safe-area-inset-bottom), 4px);
   }
 
   body {
