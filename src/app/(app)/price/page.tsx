@@ -89,10 +89,10 @@ export default function PricePage() {
               key={cat.title}
               className="glass-hover gap-0 rounded-2xl py-0"
             >
-              <CardHeader className="border-b border-[var(--lg-border)] bg-white/30 px-4 py-3">
-                <CardTitle className="text-[14px] font-bold text-[var(--ink)]">{cat.title}</CardTitle>
+              <CardHeader className="border-b border-[var(--lg-border)] bg-[#fafafa] px-4 py-3">
+                <CardTitle className="text-[14px] font-semibold text-[var(--ink)]">{cat.title}</CardTitle>
                 {cat.subtitle && (
-                  <p className="mt-0.5 text-[11px] font-semibold text-[var(--muted-col)]">{cat.subtitle}</p>
+                  <p className="mt-0.5 text-[12px] font-normal text-[var(--muted-col)]">{cat.subtitle}</p>
                 )}
               </CardHeader>
 
@@ -101,12 +101,12 @@ export default function PricePage() {
                 {cat.items.map((item) => (
                   <li
                     key={item.name}
-                    className="border-b border-[var(--line)] px-4 py-3 last:border-b-0"
+                    className="border-b border-[var(--line)] px-4 py-3.5 last:border-b-0"
                   >
                     <div className="flex items-baseline justify-between gap-3">
-                      <span className="text-[14px] font-semibold text-[var(--ink)]">{item.name}</span>
+                      <span className="min-w-0 text-[15px] font-medium leading-snug text-[var(--ink-2)]">{item.name}</span>
                       {item.price && (
-                        <span className="shrink-0 text-[14px] font-bold text-[var(--teal-dark)]">{item.price}</span>
+                        <span className="shrink-0 text-[15px] font-semibold tabular-nums text-[var(--ink)]">{item.price}</span>
                       )}
                     </div>
 
@@ -115,7 +115,7 @@ export default function PricePage() {
                         {item.tiers.map((t) => (
                           <div key={t.label} className="flex items-baseline justify-between gap-2">
                             <span className="text-[12px] text-[var(--muted-col)]">{t.label}</span>
-                            <span className="shrink-0 text-[12px] font-bold text-[var(--teal-dark)]">{t.price}</span>
+                            <span className="shrink-0 text-[12px] font-semibold tabular-nums text-[var(--ink)]">{t.price}</span>
                           </div>
                         ))}
                       </div>

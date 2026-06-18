@@ -161,7 +161,6 @@ export default function CalendarPage() {
       {/* ─── WEEK STRIP ─── */}
       <WeekStrip
         selectedDate={selectedDate}
-        appointments={appointments}
         onSelectDate={setSelectedDate}
       />
 
@@ -180,16 +179,13 @@ export default function CalendarPage() {
                 key={v.key}
                 onClick={() => setView(v.key)}
                 className={[
-                  "relative flex-1 py-2.5 text-center text-[14px] font-semibold transition-colors",
+                  "my-1 flex-1 rounded-xl py-2 text-center text-[14px] font-semibold transition-all active:scale-[0.97]",
                   active
-                    ? "text-[var(--ink)]"
+                    ? "bg-[var(--uv-black)] text-white shadow-sm"
                     : "text-[var(--muted-col)] hover:text-[var(--ink-2)]",
                 ].join(" ")}
               >
                 {v.label}
-                {active && (
-                  <span className="absolute inset-x-3 bottom-0 h-[2.5px] rounded-full bg-[var(--uv-black)]" />
-                )}
               </button>
             )
           })}

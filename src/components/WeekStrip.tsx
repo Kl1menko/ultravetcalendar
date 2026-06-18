@@ -1,19 +1,16 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { Appointment } from "@/types"
-import { isoDate, formatTitle, minutesFromTime } from "@/lib/utils-app"
-import { HOUR_START, HOUR_END } from "@/lib/constants"
+import { isoDate, formatTitle } from "@/lib/utils-app"
 
 type Props = {
   selectedDate: Date
-  appointments: Appointment[]
   onSelectDate: (date: Date) => void
 }
 
 const DAY_NAMES = ["НД", "ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ"]
 
-export default function WeekStrip({ selectedDate, appointments, onSelectDate }: Props) {
+export default function WeekStrip({ selectedDate, onSelectDate }: Props) {
   const stripRef = useRef<HTMLDivElement>(null)
 
   const today = new Date()
@@ -29,25 +26,6 @@ export default function WeekStrip({ selectedDate, appointments, onSelectDate }: 
     d.setDate(start.getDate() + i)
     return d
   })
-
-  // % завантаженості = зайняті хвилини ÷ повний робочий день (HOUR_START–HOUR_END,
-  // ті самі години, що й сітка календаря). Час за межами дня обрізаємо.
-  function pctForDate(dateStr: string) {
-    const dayStart = HOUR_START * 60
-    const dayEnd = HOUR_END * 60
-    const dayMins = dayEnd - dayStart
-    if (dayMins <= 0) return 0
-
-    const bookedMins = appointments
-      .filter((a) => a.date === dateStr)
-      .reduce((sum, a) => {
-        const start = Math.max(minutesFromTime(a.start), dayStart)
-        const end = Math.min(minutesFromTime(a.end), dayEnd)
-        return sum + Math.max(0, end - start)
-      }, 0)
-
-    return Math.min(100, Math.round((bookedMins / dayMins) * 100))
-  }
 
   // Scroll selected card into view (лише на мобільному — на десктопі смужка
   // не скролиться, картки розтягнуті на всю ширину, тож центрувати нічого).
@@ -66,7 +44,6 @@ export default function WeekStrip({ selectedDate, appointments, onSelectDate }: 
           const iso = isoDate(d)
           const isSelected = iso === isoDate(selectedDate)
           const isTodayDay = iso === isoDate(today)
-          const pct = pctForDate(iso)
 
           return (
             <button
@@ -111,34 +88,6 @@ export default function WeekStrip({ selectedDate, appointments, onSelectDate }: 
                 ].join(" ")}
               >
                 {d.getDate()}
-              </span>
-              {/* Індикатор завантаженості: тонка смужка + дрібний відсоток.
-                  Ширина смужки = pct, колір контрастний до фону картки. */}
-              <span
-                className={[
-                  "text-[10px] font-semibold leading-none",
-                  isSelected
-                    ? "text-white/80"
-                    : isTodayDay
-                    ? "text-[var(--teal)]"
-                    : "text-[var(--muted-col)]",
-                ].join(" ")}
-              >
-                {pct}%
-              </span>
-              <span
-                className={[
-                  "mt-0.5 h-1 w-full overflow-hidden rounded-full",
-                  isSelected ? "bg-white/25" : "bg-[var(--line)]",
-                ].join(" ")}
-              >
-                <span
-                  className={[
-                    "block h-full rounded-full transition-[width] duration-300",
-                    isSelected ? "bg-white" : isTodayDay ? "bg-[var(--teal)]" : "bg-[var(--teal-mid)]",
-                  ].join(" ")}
-                  style={{ width: `${pct}%` }}
-                />
               </span>
             </button>
           )

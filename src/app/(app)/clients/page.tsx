@@ -168,19 +168,14 @@ export default function ClientsPage() {
             <h1 className="text-[24px] font-bold leading-tight text-[var(--ink)] md:text-[28px]">
               Клієнти
               {allClients.length > 0 && (
-                <span className="ml-2 text-[16px] font-semibold text-[var(--muted-col)]">{allClients.length}</span>
+                <span className="ml-2 text-[16px] font-medium text-[var(--muted-col)]">{allClients.length}</span>
               )}
             </h1>
-            {duplicatesCount > 0 && (
-              <p className="mt-1 text-[13px] font-semibold text-amber-700">
-                {duplicatesCount} потенційних {clientsCountLabel(duplicatesCount)} для перевірки
-              </p>
-            )}
           </div>
           {allClients.length > 0 && (
             <div className="hidden text-right md:block">
-              <div className="text-[11px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]">Показано</div>
-              <div className="text-[18px] font-bold text-[var(--ink)]">{filtered.length}</div>
+              <div className="text-[11px] font-medium uppercase tracking-[0.4px] text-[var(--muted-col)]">Показано</div>
+              <div className="text-[18px] font-semibold text-[var(--ink)]">{filtered.length}</div>
             </div>
           )}
         </div>
@@ -220,7 +215,7 @@ export default function ClientsPage() {
               key={item.key}
               type="button"
               onClick={() => setScope(item.key)}
-              className={`flex h-9 items-center gap-2 rounded-lg border px-3 text-[13px] font-bold transition-colors ${
+              className={`flex h-9 items-center gap-2 rounded-lg border px-3 text-[13px] font-semibold transition-colors ${
                 active
                   ? "border-[var(--teal)] bg-[var(--teal)] text-white shadow-sm"
                   : "glass-chip border-transparent text-[var(--ink-2)]"
@@ -269,7 +264,7 @@ export default function ClientsPage() {
                   className="flex w-full items-center gap-2.5 p-2.5 text-left transition-colors active:bg-[var(--paper)] md:gap-3 md:p-4"
                 >
                   {/* Avatar */}
-                  <div className="relative grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-[var(--paper)] text-[12px] font-bold text-[var(--ink)] md:h-11 md:w-11 md:rounded-lg md:text-[13px]">
+                  <div className="relative grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-[var(--paper)] text-[12px] font-semibold text-[var(--ink-2)] md:h-11 md:w-11 md:rounded-lg md:text-[13px]">
                     <span>{initials}</span>
                     {c.duplicateCount > 1 && (
                       <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-amber-500" />
@@ -279,22 +274,22 @@ export default function ClientsPage() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 pr-1">
-                      <span className="truncate text-[15px] font-bold leading-tight text-[var(--ink)]">{c.client}</span>
+                      <span className="truncate text-[15px] font-semibold leading-tight text-[var(--ink)]">{c.client}</span>
                       {/* Visits badge */}
-                      <Badge className="h-5 flex-shrink-0 rounded-md bg-[var(--paper)] px-1.5 text-[10px] font-bold text-[var(--ink)] md:h-6 md:px-2 md:text-[11px]">
+                      <Badge className="h-5 flex-shrink-0 rounded-md bg-[var(--paper)] px-1.5 text-[10px] font-medium text-[var(--ink-2)] md:h-6 md:px-2 md:text-[11px]">
                         <span className="md:hidden">{c.visits}</span>
                         <span className="hidden md:inline">
                           {c.visits} {c.visits === 1 ? "візит" : c.visits < 5 ? "візити" : "візитів"}
                         </span>
                       </Badge>
                       {c.duplicateCount > 1 && (
-                        <Badge className="h-5 flex-shrink-0 rounded-md bg-amber-100 px-1.5 text-[10px] font-bold text-amber-700 md:h-6 md:px-2 md:text-[11px]">
+                        <Badge className="h-5 flex-shrink-0 rounded-md bg-amber-100 px-1.5 text-[10px] font-semibold text-amber-700 md:h-6 md:px-2 md:text-[11px]">
                           дубль
                         </Badge>
                       )}
                     </div>
                     {/* Pets */}
-                    <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[12px] font-bold leading-snug text-[var(--ink)] md:text-[13px]">
+                    <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[12px] font-medium leading-snug text-[var(--ink-2)] md:text-[13px]">
                       <PawPrint className="h-3.5 w-3.5 flex-shrink-0 text-[var(--muted-col)]" />
                       <span className="truncate">
                         {pets.map(([name, animal]) => animal && animal !== name ? `${name} (${animal})` : name).join(", ")}
@@ -315,10 +310,10 @@ export default function ClientsPage() {
                     {/* Phone + call */}
                     <div className="flex items-center justify-between border-b border-[var(--line)] px-4 py-3">
                       <div>
-                        <div className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]">Телефон</div>
-                      <a href={`tel:${c.phone}`} className="text-[14px] font-bold text-[var(--teal)]">{c.phone}</a>
+                        <div className="mb-0.5 text-[10px] font-medium uppercase tracking-[0.4px] text-[var(--muted-col)]">Телефон</div>
+                      <a href={`tel:${c.phone}`} className="text-[14px] font-semibold tabular-nums text-[var(--ink)]">{c.phone}</a>
                         {c.duplicateCount > 1 && (
-                          <div className="mt-1 text-[11px] font-semibold text-amber-700">
+                          <div className="mt-1 text-[11px] font-medium text-amber-700">
                             Можливий дубль: {c.duplicateReason}, {c.duplicateCount} {clientsCountLabel(c.duplicateCount)}
                           </div>
                         )}
@@ -335,12 +330,12 @@ export default function ClientsPage() {
                     {/* Pets list */}
                     {pets.length > 0 && (
                       <div className="border-b border-[var(--line)] px-4 py-3">
-                        <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]">Тварини</div>
+                        <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.4px] text-[var(--muted-col)]">Тварини</div>
                         <div className="flex flex-col gap-1.5">
                           {pets.map(([name, animal]) => (
                             <div key={name} className="flex items-center gap-2">
                               <PawPrint className="h-3.5 w-3.5 text-[var(--teal)]" />
-                              <span className="text-[13px] font-semibold text-[var(--ink)]">{name}</span>
+                              <span className="text-[13px] font-medium text-[var(--ink)]">{name}</span>
                               {animal && animal !== name && (
                                 <span className="text-[11px] text-[var(--muted-col)]">{animal}</span>
                               )}
@@ -352,7 +347,7 @@ export default function ClientsPage() {
 
                     {/* Visit history */}
                     <div className="border-b border-[var(--line)] px-4 py-3">
-                      <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]">
+                      <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.4px] text-[var(--muted-col)]">
                         Історія візитів ({c.visits})
                       </div>
                       <div className="relative space-y-2 pl-4 before:absolute before:bottom-2 before:left-[5px] before:top-2 before:w-px before:bg-[var(--line)]">
@@ -362,15 +357,15 @@ export default function ClientsPage() {
                               index === 0 ? "bg-[var(--teal)]" : "bg-[var(--uv-gray-300)]"
                             }`} />
                             <div className="pt-0.5 text-right">
-                              <div className="text-[10px] font-bold text-[var(--ink-2)]">
+                              <div className="text-[10px] font-semibold tabular-nums text-[var(--ink-2)]">
                                 {formatShortDate(new Date(a.date + "T12:00:00"))}
                               </div>
-                              <div className="text-[10px] font-semibold text-[var(--muted-col)]">{a.start}</div>
+                              <div className="text-[10px] font-medium tabular-nums text-[var(--muted-col)]">{a.start}</div>
                             </div>
                             <div className="min-w-0 rounded-xl border border-[var(--line)] bg-white/35 px-3 py-2">
-                              <div className="truncate text-[12px] font-bold text-[var(--ink)]">{a.service}</div>
+                              <div className="truncate text-[12px] font-medium text-[var(--ink)]">{a.service}</div>
                               <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px] text-[var(--muted-col)]">
-                                <span className="truncate font-semibold text-[var(--ink-2)]">{a.pet}</span>
+                                <span className="truncate font-medium text-[var(--ink-2)]">{a.pet}</span>
                                 <span>·</span>
                                 <span className="truncate">{a.doctor.split(" ")[0]}</span>
                                 {a.status && (

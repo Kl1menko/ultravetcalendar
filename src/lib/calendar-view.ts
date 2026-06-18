@@ -1,7 +1,7 @@
 // Чисті helpers для CalendarView — без React, тож тестуються окремо.
 import { Appointment } from "@/types"
-import { doctorColor } from "./doctors"
 import { timeFromMinutes } from "./utils-app"
+import { doctorColor } from "./doctors"
 
 // Час події FullCalendar → "HH:MM" (локальний, без UTC-зсуву).
 export function fcTime(d: Date): string {
@@ -41,15 +41,17 @@ export function appointmentsToEvents(
   return appointments
     .filter((a) => doctorFilter === "Всі лікарі" || a.doctor === doctorFilter)
     .map((a) => {
-      const color = doctorColor(a.doctor)
+      // Колір лікаря → кольорова смужка ліворуч (через borderColor, який CSS
+      // підхоплює як current accent). Решта картки лишається нейтрально-білою.
+      const accent = doctorColor(a.doctor).border
       return {
         id: a.id,
         title: a.client,
         start: `${a.date}T${a.start}`,
         end: `${a.date}T${a.end}`,
-        backgroundColor: color.bg,
-        borderColor: color.border,
-        textColor: color.text,
+        backgroundColor: "rgba(255, 255, 255, 0.72)",
+        borderColor: accent,
+        textColor: "#171717",
         extendedProps: { appointment: a },
       }
     })

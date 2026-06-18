@@ -2,11 +2,13 @@
 
 import { motion } from "motion/react"
 import { Appointment } from "@/types"
-import { doctorColor } from "@/lib/doctors"
 import { statusStyle } from "@/lib/status"
 import { staggerItem } from "@/lib/motion"
+import { doctorColor, doctorShortName } from "@/lib/doctors"
+import { durationLabel, minutesFromTime } from "@/lib/utils-app"
 
-// Картка запису для списку та мобільного тижня — єдиний вигляд.
+// Картка запису для списку та мобільного тижня — єдиний легкий вигляд:
+// біла поверхня, м'яка тінь, кольорова смужка лікаря ліворуч.
 export function ApptCard({
   appt,
   showPrice,
@@ -16,41 +18,45 @@ export function ApptCard({
   showPrice: boolean
   onClick: () => void
 }) {
-  const color = doctorColor(appt.doctor)
   const st = statusStyle(appt.status)
   const price = showPrice && appt.price ? Number(appt.price) : 0
+  const durMins = minutesFromTime(appt.end) - minutesFromTime(appt.start)
+  const accent = doctorColor(appt.doctor).border
   return (
     <motion.button
       variants={staggerItem}
       type="button"
       onClick={onClick}
-      className="appt-card glass glass-hover flex w-full items-stretch gap-3 rounded-2xl p-3 text-left transition active:scale-[0.99]"
+      className="appt-card appt-card-light glass-hover relative flex w-full flex-col rounded-[16px] py-3 pl-4 pr-3 text-left transition active:scale-[0.99]"
     >
-      <span className="w-1 shrink-0 rounded-full" style={{ background: color.border }} />
-      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="flex items-center gap-2">
-          <span className="text-[13px] font-black text-[var(--ink)]">
-            {appt.start}–{appt.end}
-          </span>
-          <span
-            className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.3px]"
-            style={{ background: st.bg, color: st.text }}
-          >
-            {appt.status}
-          </span>
-        </span>
-        <span className="truncate text-[14px] font-bold text-[var(--ink)]">
-          {appt.pet}{appt.service ? ` · ${appt.service}` : ""}
-        </span>
-        <span className="truncate text-[12px] text-[var(--muted-col)]">
-          {appt.client}
-        </span>
+      <span
+        className="absolute inset-y-2 left-2 w-[3px] rounded-full"
+        style={{ background: accent }}
+      />
+      <span className="truncate text-[15px] font-extrabold leading-tight text-[var(--ink)]">
+        {appt.pet}
       </span>
-      {price > 0 && (
-        <span className="ml-auto self-center text-[13px] font-black" style={{ color: color.border }}>
-          {price.toLocaleString("uk-UA")} ₴
+      <span className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-[var(--ink-2)]">
+        {appt.service || "Прийом"} · {appt.client}
+      </span>
+
+      <span className="mt-2.5 flex flex-wrap items-center gap-1.5">
+        <span className="appt-chip appt-chip-neutral">
+          {appt.start}–{appt.end}
         </span>
-      )}
+        <span className="appt-chip" style={{ background: st.bg, color: st.text }}>
+          {appt.status}
+        </span>
+        <span className="appt-chip appt-chip-neutral">
+          {doctorShortName(appt.doctor)}
+        </span>
+        <span className="appt-chip appt-chip-time">{durationLabel(durMins)}</span>
+        {price > 0 && (
+          <span className="appt-chip appt-chip-price">
+            {price.toLocaleString("uk-UA")} ₴
+          </span>
+        )}
+      </span>
     </motion.button>
   )
 }

@@ -8,18 +8,26 @@ import interactionPlugin from "@fullcalendar/interaction"
 import type { EventContentArg, EventDropArg } from "@fullcalendar/core"
 import type { DateClickArg, EventResizeDoneArg } from "@fullcalendar/interaction"
 import { Appointment } from "@/types"
-import { doctorColor } from "@/lib/doctors"
 import { useCalendarContext } from "@/context/calendar"
 import { updateAppointment } from "@/lib/appointments"
 import { HOUR_START, HOUR_END } from "@/lib/constants"
 import { isoDate, minutesFromTime, timeFromMinutes } from "@/lib/utils-app"
 import { fcTime, appointmentsToEvents } from "@/lib/calendar-view"
+import { doctorColor } from "@/lib/doctors"
 import { useIsDesktop } from "@/hooks/useIsDesktop"
 import { ListView } from "@/components/calendar/ListView"
 import { MobileWeekView } from "@/components/calendar/MobileWeekView"
 import { MobileMonthView } from "@/components/calendar/MobileMonthView"
 
 export type CalendarViewMode = "day" | "week" | "month" | "list"
+
+const runAfterReactCommit = (fn: () => void) => {
+  if (typeof queueMicrotask === "function") {
+    queueMicrotask(fn)
+    return
+  }
+  window.setTimeout(fn, 0)
+}
 
 type Props = {
   appointments: Appointment[]
@@ -77,10 +85,17 @@ export default function CalendarView({
   // ремоунту календаря, тож стан зуму/позиції зберігається.
   useEffect(() => {
     if (view === "list" || !calendarRef.current) return
-    const api = calendarRef.current.getApi()
+    let cancelled = false
     const target =
       view === "week" ? "timeGridWeek" : view === "month" ? "dayGridMonth" : "timeGridDay"
-    if (api.view.type !== target) api.changeView(target)
+    runAfterReactCommit(() => {
+      if (cancelled || !calendarRef.current) return
+      const api = calendarRef.current.getApi()
+      if (api.view.type !== target) api.changeView(target)
+    })
+    return () => {
+      cancelled = true
+    }
   }, [view, calendarRef])
 
   // Висота 15-хвилинного слота в px. Масштабується pinch-жестом (як у Google
@@ -105,10 +120,17 @@ export default function CalendarView({
   // Sync FullCalendar when selectedDate changes externally
   useEffect(() => {
     if (!calendarRef.current) return
-    const api = calendarRef.current.getApi()
-    const calDate = api.getDate()
-    if (isoDate(calDate) !== isoDate(selectedDate)) {
-      api.gotoDate(selectedDate)
+    let cancelled = false
+    runAfterReactCommit(() => {
+      if (cancelled || !calendarRef.current) return
+      const api = calendarRef.current.getApi()
+      const calDate = api.getDate()
+      if (isoDate(calDate) !== isoDate(selectedDate)) {
+        api.gotoDate(selectedDate)
+      }
+    })
+    return () => {
+      cancelled = true
     }
   }, [selectedDate, calendarRef])
 
@@ -277,30 +299,41 @@ export default function CalendarView({
         // Лейбл місяця — за серединою діапазону (для тижня currentStart може бути
         // в попередньому місяці), щоб заголовок відповідав видимому тижню.
         const mid = new Date((fcView.currentStart.getTime() + fcView.currentEnd.getTime()) / 2)
-        onMonthChange(
-          mid.toLocaleDateString("uk-UA", { month: "long", year: "numeric" })
-            .replace(/^./, (c) => c.toUpperCase())
-        )
+        const monthLabel = mid
+          .toLocaleDateString("uk-UA", { month: "long", year: "numeric" })
+          .replace(/^./, (c) => c.toUpperCase())
         // selectedDate синхронізуємо лише в денному виді: там currentStart і є
         // показаним днем. У тижневому currentStart — понеділок, тож не чіпаємо
         // обрану дату (інакше вибір дня «стрибав» би на початок тижня).
-        if (view === "day") {
-          const nd = new Date(d)
-          nd.setHours(0, 0, 0, 0)
-          onDateChange(nd)
-        }
+        const nextDate = new Date(d)
+        nextDate.setHours(0, 0, 0, 0)
+        runAfterReactCommit(() => {
+          onMonthChange(monthLabel)
+          if (view === "day") {
+            onDateChange(nextDate)
+          }
+        })
       }}
-      eventClassNames="!rounded-xl overflow-hidden"
+      eventClassNames="matte-appt-event !rounded-xl overflow-hidden"
       eventContent={(arg: EventContentArg) => {
         const appt = arg.event.extendedProps.appointment as Appointment
-        const color = doctorColor(appt.doctor)
         const price = canSeeAppointmentPrices && appt.price ? Number(appt.price) : 0
         const durMins = minutesFromTime(appt.end) - minutesFromTime(appt.start)
         const isShort = durMins < 45
+        // Колір лікаря → кольорова смужка-акцент ліворуч (реальний елемент,
+        // щоб надійно взяти колір незалежно від внутрішньої розмітки FC).
+        const accent = doctorColor(appt.doctor).border
+        const stripe = (
+          <span
+            className="absolute inset-y-[7px] left-0 w-[3px] rounded-full"
+            style={{ background: accent }}
+          />
+        )
 
         if (isShort) {
           return (
-            <div className="px-2 py-1 flex items-center gap-1.5 h-full overflow-hidden">
+            <div className="relative px-2 py-1 flex items-center gap-1.5 h-full overflow-hidden">
+              {stripe}
               <span className="text-[13px] font-extrabold shrink-0 text-[var(--ink)]">
                 {appt.start} {appt.pet}
               </span>
@@ -310,7 +343,7 @@ export default function CalendarView({
                 </span>
               )}
               {price > 0 && (
-                <span className="ml-auto text-[12px] font-extrabold shrink-0" style={{ color: color.border }}>
+                <span className="ml-auto text-[12px] font-extrabold shrink-0 text-[var(--ink)]">
                   {price.toLocaleString("uk-UA")} ₴
                 </span>
               )}
@@ -319,7 +352,8 @@ export default function CalendarView({
         }
 
         return (
-          <div className="flex flex-col h-full px-2 py-1.5 overflow-hidden">
+          <div className="relative flex flex-col h-full px-2 py-1.5 overflow-hidden">
+            {stripe}
             <span className="text-[14px] font-extrabold leading-tight truncate text-[var(--ink)]">
               {appt.pet}
             </span>
@@ -330,7 +364,7 @@ export default function CalendarView({
               {appt.client}
             </span>
             {price > 0 && (
-              <span className="text-[13px] font-extrabold leading-tight truncate mt-0.5" style={{ color: color.border }}>
+              <span className="text-[13px] font-extrabold leading-tight truncate mt-0.5 text-[var(--ink)]">
                 {price.toLocaleString("uk-UA")} ₴
               </span>
             )}

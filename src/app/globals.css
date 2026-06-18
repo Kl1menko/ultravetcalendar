@@ -187,6 +187,53 @@
   .glass-hover {
     transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
   }
+  .matte-appt-card {
+    background: rgba(238, 238, 237, 0.92);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.72),
+      0 1px 2px rgba(0, 0, 0, 0.06),
+      0 10px 24px rgba(0, 0, 0, 0.08);
+    -webkit-backdrop-filter: blur(12px) saturate(1.02);
+    backdrop-filter: blur(12px) saturate(1.02);
+  }
+  /* Легка картка запису — у тон подіям календаря: один шар, м'яка тінь. */
+  .appt-card-light {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 1px rgba(0, 0, 0, 0.04);
+  }
+  .matte-appt-card__panel {
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(0, 0, 0, 0.09);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      0 1px 2px rgba(0, 0, 0, 0.055);
+  }
+  .appt-chip {
+    display: inline-flex;
+    min-height: 24px;
+    align-items: center;
+    border-radius: 8px;
+    padding: 0 9px;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+  .appt-chip-neutral {
+    background: rgba(244, 244, 245, 0.96);
+    color: var(--ink-2);
+  }
+  .appt-chip-time {
+    background: rgba(124, 58, 237, 0.1);
+    color: #6d28d9;
+  }
+  .appt-chip-price {
+    background: rgba(13, 13, 13, 0.08);
+    color: var(--ink);
+  }
   .search-field {
     background: #ffffff;
     border: 1px solid var(--lg-border);
@@ -538,7 +585,7 @@
   height: var(--fc-slot-height, 40px) !important;
 }
 
-/* Фон колонки з подіями — напівпрозоре скло поверх mesh-градієнта */
+/* Фон колонки з подіями — тихий білий шар без кольорового шуму */
 .fc .fc-timegrid-col.fc-day,
 .fc .fc-timegrid-col,
 .fc-theme-standard .fc-timegrid-col,
@@ -548,11 +595,11 @@
 
 /* Основні лінії годин — трохи темніші */
 .fc .fc-timegrid-slot-lane {
-  border-bottom: 1px solid #d1d5db !important;
+  border-bottom: 1px solid #e3e5e8 !important;
 }
 /* Пунктирні лінії półгодин — тонші й світліші */
 .fc .fc-timegrid-slot-lane.fc-timegrid-slot-minor {
-  border-bottom: 1px dashed #e5e7eb !important;
+  border-bottom: 1px dashed #eef0f2 !important;
 }
 
 .fc .fc-scrollgrid {
@@ -560,14 +607,14 @@
 }
 .fc .fc-scrollgrid td,
 .fc .fc-scrollgrid th {
-  border-color: #dde1e7;
+  border-color: #edf0f2;
 }
 .fc-theme-standard .fc-scrollgrid {
   border: none !important;
 }
 .fc-theme-standard td,
 .fc-theme-standard th {
-  border-color: #dde1e7;
+  border-color: #edf0f2;
 }
 .fc .fc-scrollgrid-section > td {
   border: none !important;
@@ -586,16 +633,17 @@
   color: #9ca3af;
   background: transparent;
 }
+/* Легка картка події: один шар, біла поверхня, м'яка тінь. Без backdrop-blur
+   (на щільному списку він мутнить і гальмує) і без подвійної рамки. */
 .fc .fc-event {
-  border-radius: 8px !important;
-  border-width: 1px !important;
-  border-style: solid !important;
+  border-radius: 12px !important;
+  border: none !important;
+  background: #ffffff !important;
+  color: var(--ink) !important;
   font-size: 12px;
   cursor: pointer;
   overflow: hidden;
-  /* Білий контур + помітна тінь, щоб накладені (overlap) картки чітко
-     відділялись одна від одної, навіть коли мають однаковий колір фону. */
-  box-shadow: 0 0 0 1.5px #fff, 0 3px 10px rgba(0,0,0,0.16);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 1px rgba(0, 0, 0, 0.04);
   /* Прибираємо сірий «залиплий» оверлей після тапу на мобільному. */
   -webkit-tap-highlight-color: transparent;
 }
@@ -631,8 +679,14 @@
   opacity: 1 !important;
   filter: none !important;
 }
+/* Єдиний контент-шар: жодних власних рамок/тіней. Лівий відступ — під
+   кольорову смужку лікаря, яку рендерить eventContent реальним елементом. */
 .fc .fc-event-main {
-  padding: 4px 8px;
+  position: relative;
+  height: 100%;
+  background: transparent;
+  padding: 2px 8px 2px 10px;
+  color: var(--ink) !important;
 }
 .fc .fc-event-title {
   font-weight: 700;
@@ -669,7 +723,7 @@
 .fc .fc-daygrid-event {
   border-radius: 6px !important;
   font-size: 11px;
-  padding: 1px 4px;
+  padding: 1px 4px 1px 10px;
   margin: 1px 2px;
 }
 .fc .fc-daygrid-more-link {

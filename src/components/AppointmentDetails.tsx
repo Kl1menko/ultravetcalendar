@@ -5,7 +5,7 @@ import { motion } from "motion/react"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Appointment, AppointmentStatus } from "@/types"
 import { minutesFromTime, durationLabel, formatShortDate } from "@/lib/utils-app"
-import { doctorColor, doctorShortName } from "@/lib/doctors"
+import { doctorShortName } from "@/lib/doctors"
 import { STATUSES, statusStyle } from "@/lib/status"
 import { springPop } from "@/lib/motion"
 import { parseServices } from "@/lib/services"
@@ -48,7 +48,6 @@ export default function AppointmentDetails({
   if (!appointment) return null
 
   const durMins = minutesFromTime(appointment.end) - minutesFromTime(appointment.start)
-  const color = doctorColor(appointment.doctor)
   const status = statusOverride ?? appointment.status
 
   const handleStatusChange = async (next: AppointmentStatus) => {
@@ -84,11 +83,8 @@ export default function AppointmentDetails({
         {/* Прокручувана частина — герой + інфо-рядки */}
         <div className="min-h-0 flex-1 overflow-y-auto">
 
-        {/* Hero block — кольоровий акцент лікаря */}
-        <div
-          className="mx-4 mb-4 rounded-2xl px-4 py-3.5 md:mx-6 md:mt-6 md:rounded-[24px] md:px-6 md:py-5"
-          style={{ background: color.bg }}
-        >
+        {/* Hero block */}
+        <div className="matte-appt-card mx-4 mb-4 rounded-2xl px-4 py-3.5 md:mx-6 md:mt-6 md:rounded-[24px] md:px-6 md:py-5">
           {/* Статус + дата */}
           <div className="flex items-center justify-between mb-2">
             <motion.span
@@ -101,7 +97,7 @@ export default function AppointmentDetails({
             >
               {status}
             </motion.span>
-            <span className="text-[12px] font-semibold" style={{ color: color.border }}>
+            <span className="text-[12px] font-semibold text-[var(--muted-col)]">
               {formatShortDate(new Date(appointment.date + "T12:00:00"))}
             </span>
           </div>
@@ -114,8 +110,7 @@ export default function AppointmentDetails({
             {parseServices(appointment.service).map((s) => (
               <span
                 key={s}
-                className="rounded-md bg-white/60 px-2 py-0.5 text-[13px] font-semibold"
-                style={{ color: color.text }}
+                className="rounded-md border border-[var(--line)] bg-white/70 px-2 py-0.5 text-[13px] font-semibold text-[var(--ink-2)]"
               >
                 {s}
               </span>
