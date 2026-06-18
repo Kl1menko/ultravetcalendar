@@ -481,11 +481,16 @@
   .desktop-panel,
   .desktop-page-header,
   [data-slot="card"],
-  [data-slot="dialog-content"],
-  [data-slot="sheet-content"],
   [data-slot="select-content"],
   [data-slot="popover-content"] {
     background-color: rgba(255, 255, 255, 0.78);
+  }
+
+  /* Повноекранні поверхні (модалки/шторки) на iOS мають бути непрозорими —
+     інакше крізь вікно перегляду запису видно календар. */
+  [data-slot="dialog-content"],
+  [data-slot="sheet-content"] {
+    background-color: #ffffff;
   }
 
   input,
@@ -521,11 +526,14 @@
   .desktop-panel,
   .desktop-page-header,
   [data-slot="card"],
-  [data-slot="dialog-content"],
-  [data-slot="sheet-content"],
   [data-slot="select-content"],
   [data-slot="popover-content"] {
     background: rgba(255, 255, 255, 0.9);
+  }
+
+  [data-slot="dialog-content"],
+  [data-slot="sheet-content"] {
+    background: #ffffff;
   }
 }
 
