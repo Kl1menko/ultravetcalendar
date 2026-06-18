@@ -67,7 +67,7 @@ export default function SearchDialog({ open, onClose, appointments, onSelectAppo
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
-            className="w-full rounded-xl border-[1.5px] border-[var(--line)] bg-[var(--paper)] py-2.5 pl-9 pr-8 text-base text-[var(--ink)] outline-none transition-colors focus:border-[var(--teal)] md:h-14 md:rounded-2xl md:border-2 md:pl-12 md:pr-12 md:text-[18px] md:shadow-inner"
+            className="search-field w-full rounded-xl py-2.5 pl-9 pr-8 text-base text-[var(--ink)] outline-none transition-colors md:h-14 md:rounded-2xl md:pl-12 md:pr-12 md:text-[18px]"
           />
           {query && (
             <button

@@ -24,7 +24,7 @@ export function ApptCard({
       variants={staggerItem}
       type="button"
       onClick={onClick}
-      className="glass glass-hover flex w-full items-stretch gap-3 rounded-2xl p-3 text-left transition active:scale-[0.99]"
+      className="appt-card glass glass-hover flex w-full items-stretch gap-3 rounded-2xl p-3 text-left transition active:scale-[0.99]"
     >
       <span className="w-1 shrink-0 rounded-full" style={{ background: color.border }} />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">

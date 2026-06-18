@@ -67,7 +67,7 @@ export default function PricePage() {
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
-            className="glass h-11 rounded-xl pl-10 pr-10 text-[14px] text-[var(--ink)] focus-visible:border-[var(--teal)] focus-visible:ring-0 md:h-12 md:rounded-2xl"
+            className="search-field h-11 rounded-xl pl-10 pr-10 text-[14px] text-[var(--ink)] focus-visible:ring-0 md:h-12 md:rounded-2xl"
           />
           {query && (
             <button type="button" aria-label="Очистити" onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-[var(--muted-col)] text-white flex items-center justify-center">

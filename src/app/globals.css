@@ -201,6 +201,35 @@
   .glass-hover {
     transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
   }
+  .search-field {
+    background: rgba(244, 244, 242, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.78);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62), 0 1px 2px rgba(17, 24, 39, 0.04);
+    -webkit-backdrop-filter: blur(16px) saturate(1.25);
+    backdrop-filter: blur(16px) saturate(1.25);
+  }
+  .search-field::placeholder {
+    color: rgba(82, 82, 82, 0.78);
+  }
+  .search-field:focus,
+  .search-field:focus-visible {
+    background: rgba(250, 250, 250, 0.86);
+    border-color: var(--lg-border-strong);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 0 0 3px rgba(13, 13, 13, 0.06);
+  }
+  body :is(.font-semibold):not(.fc-event *):not(.appt-card *) {
+    font-weight: 500;
+  }
+  body :is(.font-bold):not(.fc-event *):not(.appt-card *) {
+    font-weight: 600;
+  }
+  body :is(.font-extrabold, .font-black):not(.fc-event *):not(.appt-card *) {
+    font-weight: 700;
+  }
+  .fc-event :is(.font-bold, .font-extrabold, .font-black),
+  .appt-card :is(.font-bold, .font-extrabold, .font-black) {
+    font-weight: 800;
+  }
   .app-shell {
     min-height: 100vh;
     min-height: -webkit-fill-available;

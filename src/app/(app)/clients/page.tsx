@@ -198,7 +198,7 @@ export default function ClientsPage() {
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
-            className="glass h-11 rounded-lg pl-10 pr-10 text-[14px] text-[var(--ink)] focus-visible:border-[var(--teal)] focus-visible:ring-0 md:h-12"
+            className="search-field h-11 rounded-xl pl-10 pr-10 text-[14px] text-[var(--ink)] focus-visible:ring-0 md:h-12 md:rounded-2xl"
           />
           {query && (
             <button type="button" onClick={() => setQuery("")} className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-[var(--muted-col)] hover:bg-[var(--paper)] hover:text-[var(--ink)]">
@@ -246,16 +246,19 @@ export default function ClientsPage() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="flex flex-col gap-2.5 px-4 md:grid md:grid-cols-2 md:px-0 xl:grid-cols-3"
+          className="flex flex-col gap-2 px-3 md:grid md:grid-cols-2 md:gap-2.5 md:px-0 xl:grid-cols-3"
         >
           {filtered.map((c) => {
             const key = `${c.client}-${c.phone}`
             const isOpen = expanded === key
             const initials = c.client.trim().split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
             const pets = [...c.pets.entries()]
+            const sortedHistory = [...c.history].sort((a, b) =>
+              `${b.date} ${b.start}`.localeCompare(`${a.date} ${a.start}`)
+            )
 
             return (
-              <motion.div key={key} variants={staggerItem} className={`glass glass-hover overflow-hidden rounded-lg transition-colors ${
+              <motion.div key={key} variants={staggerItem} className={`glass glass-hover overflow-hidden rounded-xl transition-colors md:rounded-lg ${
                 c.duplicateCount > 1 ? "border-amber-200" : ""
               }`}>
 
@@ -263,10 +266,10 @@ export default function ClientsPage() {
                 <button
                   type="button"
                   onClick={() => toggle(key)}
-                  className="flex w-full items-center gap-3 p-3.5 text-left transition-colors active:bg-[var(--paper)] md:p-4"
+                  className="flex w-full items-center gap-2.5 p-2.5 text-left transition-colors active:bg-[var(--paper)] md:gap-3 md:p-4"
                 >
                   {/* Avatar */}
-                  <div className="relative grid h-11 w-11 flex-shrink-0 place-items-center rounded-lg bg-[var(--paper)] text-[13px] font-bold text-[var(--ink)]">
+                  <div className="relative grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-[var(--paper)] text-[12px] font-bold text-[var(--ink)] md:h-11 md:w-11 md:rounded-lg md:text-[13px]">
                     <span>{initials}</span>
                     {c.duplicateCount > 1 && (
                       <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-amber-500" />
@@ -278,22 +281,28 @@ export default function ClientsPage() {
                     <div className="flex items-center gap-2 pr-1">
                       <span className="truncate text-[15px] font-bold leading-tight text-[var(--ink)]">{c.client}</span>
                       {/* Visits badge */}
-                      <Badge className="h-6 flex-shrink-0 rounded-md bg-[var(--paper)] px-2 text-[11px] font-bold text-[var(--ink)]">
-                        {c.visits} {c.visits === 1 ? "візит" : c.visits < 5 ? "візити" : "візитів"}
+                      <Badge className="h-5 flex-shrink-0 rounded-md bg-[var(--paper)] px-1.5 text-[10px] font-bold text-[var(--ink)] md:h-6 md:px-2 md:text-[11px]">
+                        <span className="md:hidden">{c.visits}</span>
+                        <span className="hidden md:inline">
+                          {c.visits} {c.visits === 1 ? "візит" : c.visits < 5 ? "візити" : "візитів"}
+                        </span>
                       </Badge>
                       {c.duplicateCount > 1 && (
-                        <Badge className="h-6 flex-shrink-0 rounded-md bg-amber-100 px-2 text-[11px] font-bold text-amber-700">
+                        <Badge className="h-5 flex-shrink-0 rounded-md bg-amber-100 px-1.5 text-[10px] font-bold text-amber-700 md:h-6 md:px-2 md:text-[11px]">
                           дубль
                         </Badge>
                       )}
                     </div>
                     {/* Pets */}
-                    <div className="mt-0.5 truncate text-[13px] font-bold leading-snug text-[var(--ink)]">
-                      {pets.map(([name, animal]) => animal && animal !== name ? `${name} (${animal})` : name).join(", ")}
+                    <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[12px] font-bold leading-snug text-[var(--ink)] md:text-[13px]">
+                      <PawPrint className="h-3.5 w-3.5 flex-shrink-0 text-[var(--muted-col)]" />
+                      <span className="truncate">
+                        {pets.map(([name, animal]) => animal && animal !== name ? `${name} (${animal})` : name).join(", ")}
+                      </span>
                     </div>
                     {/* Last visit */}
-                    <div className="mt-0.5 truncate text-[12px] text-[var(--muted-col)]">
-                      {c.last.service} · {formatShortDate(new Date(c.last.date + "T12:00:00"))}
+                    <div className="mt-0.5 truncate text-[11px] text-[var(--muted-col)] md:text-[12px]">
+                      {formatShortDate(new Date(c.last.date + "T12:00:00"))} · {c.last.service}
                     </div>
                   </div>
 
@@ -346,23 +355,34 @@ export default function ClientsPage() {
                       <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.4px] text-[var(--muted-col)]">
                         Історія візитів ({c.visits})
                       </div>
-                      <div className="flex flex-col gap-2">
-                        {c.history
-                          .sort((a, b) => `${b.date} ${b.start}`.localeCompare(`${a.date} ${a.start}`))
-                          .map((a) => (
-                            <div key={a.id} className="flex items-start justify-between gap-2">
-                              <div className="min-w-0">
-                                <div className="text-[12px] font-semibold text-[var(--ink)] truncate">{a.service}</div>
-                                <div className="text-[11px] text-[var(--muted-col)]">{a.pet} · {a.doctor.split(" ")[0]}</div>
+                      <div className="relative space-y-2 pl-4 before:absolute before:bottom-2 before:left-[5px] before:top-2 before:w-px before:bg-[var(--line)]">
+                        {sortedHistory.map((a, index) => (
+                          <div key={a.id} className="relative grid grid-cols-[54px_minmax(0,1fr)] gap-2">
+                            <span className={`absolute -left-[15px] top-2 h-2.5 w-2.5 rounded-full border-2 border-white ${
+                              index === 0 ? "bg-[var(--teal)]" : "bg-[var(--uv-gray-300)]"
+                            }`} />
+                            <div className="pt-0.5 text-right">
+                              <div className="text-[10px] font-bold text-[var(--ink-2)]">
+                                {formatShortDate(new Date(a.date + "T12:00:00"))}
                               </div>
-                              <div className="text-right flex-shrink-0">
-                                <div className="text-[11px] font-semibold text-[var(--ink-2)]">
-                                  {formatShortDate(new Date(a.date + "T12:00:00"))}
-                                </div>
-                                <div className="text-[10px] text-[var(--muted-col)]">{a.start}</div>
+                              <div className="text-[10px] font-semibold text-[var(--muted-col)]">{a.start}</div>
+                            </div>
+                            <div className="min-w-0 rounded-xl border border-[var(--line)] bg-white/35 px-3 py-2">
+                              <div className="truncate text-[12px] font-bold text-[var(--ink)]">{a.service}</div>
+                              <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px] text-[var(--muted-col)]">
+                                <span className="truncate font-semibold text-[var(--ink-2)]">{a.pet}</span>
+                                <span>·</span>
+                                <span className="truncate">{a.doctor.split(" ")[0]}</span>
+                                {a.status && (
+                                  <>
+                                    <span>·</span>
+                                    <span className="truncate">{a.status}</span>
+                                  </>
+                                )}
                               </div>
                             </div>
-                          ))}
+                          </div>
+                        ))}
                       </div>
                     </div>
 
