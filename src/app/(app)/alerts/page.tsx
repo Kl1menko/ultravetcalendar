@@ -57,7 +57,7 @@ export default function AlertsPage() {
   const isAdmin = role === "admin"
 
   return (
-    <div className="flex min-h-full flex-col md:gap-5">
+    <div className="flex flex-col md:gap-5">
       {/* Header + tabs */}
       <header className="px-4 pt-4 pb-3 md:desktop-page-header md:px-6 md:py-5">
         <h1 className="text-[22px] font-bold tracking-tight text-[var(--ink)] md:text-[28px]">

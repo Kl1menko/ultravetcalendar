@@ -1,4 +1,4 @@
-const CACHE = "ultravet-v4";
+const CACHE = "ultravet-v5";
 const STATIC = [
   "/manifest.json"
 ];
@@ -74,10 +74,15 @@ self.addEventListener("push", (e) => {
   const title = data.title || "UltraVet";
   const options = {
     body: data.body || "",
-    icon: "/logo.svg",
-    badge: "/logo.svg",
-    // tag групує сповіщення (нова відповідь у тому ж треді замінює попередню).
+    // iOS Safari не показує SVG в нотифікаціях — лише PNG.
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    lang: "uk",
+    // tag групує сповіщення (нова відповідь у тому ж треді замінює попередню);
+    // renotify — щоб повторна нотифікація з тим самим tag усе одно сповістила.
     tag: data.tag || undefined,
+    renotify: Boolean(data.tag),
+    requireInteraction: true,
     data: { url: data.url || "/alerts" },
   };
 
