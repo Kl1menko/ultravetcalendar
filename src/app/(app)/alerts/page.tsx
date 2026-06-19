@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Bug, Lightbulb, Send, Trash2 } from "lucide-react"
+import { Bug, CornerDownRight, Lightbulb, MessageSquare, Send, Trash2 } from "lucide-react"
 import { useCalendarContext } from "@/context/calendar"
 import { fetchNotices, createNotice, deleteNotice } from "@/lib/notices"
 import {
@@ -9,9 +9,12 @@ import {
   createFeedback,
   updateFeedbackStatus,
   deleteFeedback,
+  fetchReplies,
+  createReply,
+  deleteReply,
 } from "@/lib/feedback"
 import { doctorShortName } from "@/lib/doctors"
-import { Feedback, FeedbackStatus, FeedbackType, Notice } from "@/types"
+import { Feedback, FeedbackReply, FeedbackStatus, FeedbackType, Notice } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
@@ -45,10 +48,12 @@ const TYPE_META: Record<FeedbackType, { label: string; icon: typeof Bug; cls: st
 // ─── Сторінка ─────────────────────────────────────────────────────────────────
 
 export default function AlertsPage() {
-  const { user, triggerBanner, role } = useCalendarContext()
+  const { user, role } = useCalendarContext()
   const [tab, setTab] = useState<"notices" | "feedback">("notices")
 
-  const isHead = role === "head"
+  // Admin прирівняний до головного лікаря (БД: is_head_doctor() = head|admin),
+  // тож оголошення створюють обидві ролі.
+  const isHead = role === "head" || role === "admin"
   const isAdmin = role === "admin"
 
   return (
@@ -79,7 +84,7 @@ export default function AlertsPage() {
       </header>
 
       {tab === "notices" ? (
-        <NoticesTab user={user} isHead={isHead} triggerBanner={triggerBanner} />
+        <NoticesTab user={user} isHead={isHead} />
       ) : (
         <FeedbackTab user={user} isAdmin={isAdmin} />
       )}
@@ -92,11 +97,9 @@ export default function AlertsPage() {
 function NoticesTab({
   user,
   isHead,
-  triggerBanner,
 }: {
   user: ReturnType<typeof useCalendarContext>["user"]
   isHead: boolean
-  triggerBanner: ReturnType<typeof useCalendarContext>["triggerBanner"]
 }) {
   const [notices, setNotices] = useState<Notice[]>([])
   const [loading, setLoading] = useState(true)
@@ -136,46 +139,20 @@ function NoticesTab({
   return (
     <div className="flex flex-col gap-3 px-4 pb-6 md:px-0">
       {isHead && (
-        <div className="flex justify-end">
-          <Button
-            variant="outline"
-            onClick={() => triggerBanner({
-              id: "test",
-              text: "Увага! Завтра о 9:00 нарада всього персоналу клініки.",
-              created_by: user.id,
-              created_at: new Date().toISOString(),
-            })}
-            className="glass glass-hover h-8 gap-1.5 rounded-xl px-3 text-[12px] font-semibold text-[var(--muted-col)] hover:text-[var(--ink)]"
-          >
-            Тест-банер
-          </Button>
-        </div>
-      )}
-
-      {isHead && (
-        <form onSubmit={handlePublish} className="rounded-2xl bg-[var(--teal)] p-4 shadow-lg shadow-black/15 md:rounded-[24px] md:p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center">
-              <Send className="w-3.5 h-3.5 text-white" />
-            </div>
-            <span className="text-[12px] font-bold text-white/90 uppercase tracking-[0.4px]">
-              Нове оголошення
-            </span>
-          </div>
+        <form onSubmit={handlePublish} className="glass flex flex-col gap-3 rounded-2xl p-4 md:p-5">
           <Textarea
             rows={3}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Введіть текст для всіх лікарів…"
+            placeholder="Текст оголошення для всіх лікарів…"
             required
-            className="mb-3 resize-none rounded-xl border-white/20 bg-white/15 px-3 py-2.5 text-[14px] text-white placeholder:text-white/50 focus-visible:border-white/30 focus-visible:bg-white/20 focus-visible:ring-0"
+            className="resize-none rounded-xl border-[var(--line)] bg-[var(--paper)] px-3.5 py-3 text-[15px] text-[var(--ink)] placeholder:text-[var(--muted-col)] focus-visible:ring-2 focus-visible:ring-[var(--teal-mid)]"
           />
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] text-white/60">Побачать усі при відкритті</span>
+          <div className="flex items-center justify-end">
             <Button
               type="submit"
               disabled={publishing || !text.trim()}
-              className="h-8 gap-1.5 rounded-xl bg-white px-4 text-[13px] font-bold text-[var(--teal)] hover:bg-white/90"
+              className="h-10 rounded-xl bg-[var(--teal)] px-5 text-[14px] font-semibold text-white transition-colors hover:bg-[var(--teal-dark)] disabled:opacity-40"
             >
               {publishing ? "Надсилаю…" : "Надіслати"}
             </Button>
@@ -206,13 +183,11 @@ function NoticesTab({
 
       {!loading && notices.length > 0 && (
         <div className="flex flex-col gap-2.5 md:grid md:grid-cols-2 md:gap-4 xl:grid-cols-3">
-          {notices.map((notice, i) => (
+          {notices.map((notice) => (
             <Card
               key={notice.id}
               className="glass-hover gap-0 rounded-2xl py-0"
-              style={{ opacity: i > 0 ? Math.max(0.6, 1 - i * 0.08) : 1 }}
             >
-              <div className="h-1 bg-[var(--teal)]" style={{ opacity: Math.max(0.3, 1 - i * 0.15) }} />
               <div className="px-4 py-3.5">
                 <p className="text-[14px] text-[var(--ink)] leading-relaxed whitespace-pre-wrap mb-3">
                   {notice.text}
@@ -271,6 +246,10 @@ function FeedbackTab({
     setLoading(true)
     setItems(await fetchFeedback())
     setLoading(false)
+    // Відкрили вкладку фідбеку → позначаємо активність переглянутою й
+    // повідомляємо layout перерахувати бейдж.
+    localStorage.setItem("feedback_last_seen", new Date().toISOString())
+    document.dispatchEvent(new CustomEvent("feedback-seen"))
   }, [])
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -307,7 +286,9 @@ function FeedbackTab({
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-6 md:px-0">
-      {/* Форма створення тікета — доступна всім */}
+      {/* Форма створення тікета — для команди. Адмін тікети приймає, а не
+          створює, тож йому форму не показуємо. */}
+      {!isAdmin && (
       <form onSubmit={handleSend} className="flex flex-col gap-3">
         {/* Сегментований перемикач типу */}
         <div className="grid grid-cols-2 gap-1 rounded-2xl bg-[var(--paper)] p-1">
@@ -361,6 +342,7 @@ function FeedbackTab({
           Надсилається від імені <span className="font-semibold text-[var(--ink-2)]">{authorName}</span>
         </p>
       </form>
+      )}
 
       {/* Фільтр статусів */}
       {!loading && items.length > 0 && (
@@ -472,10 +454,150 @@ function FeedbackTab({
                       ))}
                     </div>
                   )}
+
+                  {/* Тред відповідей — пишуть admin та автор тікета */}
+                  <FeedbackReplies
+                    feedbackId={item.id}
+                    replyCount={item.reply_count ?? 0}
+                    canReply={isAdmin || item.created_by === user.id}
+                    isAdmin={isAdmin}
+                    currentUserId={user.id}
+                    authorName={authorName}
+                  />
                 </div>
               </Card>
             )
           })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Тред відповідей на тікет ────────────────────────────────────────────────
+
+function FeedbackReplies({
+  feedbackId,
+  replyCount,
+  canReply,
+  isAdmin,
+  currentUserId,
+  authorName,
+}: {
+  feedbackId: string
+  replyCount: number
+  canReply: boolean
+  isAdmin: boolean
+  currentUserId: string
+  authorName: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [replies, setReplies] = useState<FeedbackReply[]>([])
+  const [loading, setLoading] = useState(false)
+  const [text, setText] = useState("")
+  const [sending, setSending] = useState(false)
+  const [busyId, setBusyId] = useState<string | null>(null)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setReplies(await fetchReplies(feedbackId))
+    setLoading(false)
+  }, [feedbackId])
+
+  const toggle = () => {
+    const next = !open
+    setOpen(next)
+    if (next && replies.length === 0) load()
+  }
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!text.trim()) return
+    setSending(true)
+    await createReply({ feedbackId, body: text.trim(), authorName })
+    setText("")
+    setSending(false)
+    load()
+  }
+
+  const handleDelete = async (id: string) => {
+    setBusyId(id)
+    await deleteReply(id)
+    setBusyId(null)
+    load()
+  }
+
+  // Лічильник у згорнутому стані бере серверний replyCount; коли відкрито —
+  // фактичну довжину завантаженого треду (актуальніше після додавання/видалення).
+  const count = open ? replies.length : replyCount
+
+  return (
+    <div className="mt-2.5 border-t border-[var(--line)] pt-2.5">
+      <button
+        type="button"
+        onClick={toggle}
+        className="flex items-center gap-1.5 text-[12px] font-semibold text-[var(--muted-col)] transition-colors hover:text-[var(--ink)]"
+      >
+        <MessageSquare className="h-3.5 w-3.5" />
+        {count > 0 ? `Відповіді · ${count}` : "Відповісти"}
+      </button>
+
+      {open && (
+        <div className="mt-2.5 flex flex-col gap-2">
+          {loading && replies.length === 0 && (
+            <span className="text-[12px] text-[var(--muted-col)]">Завантаження…</span>
+          )}
+
+          {replies.map((r) => {
+            const mine = r.created_by === currentUserId
+            return (
+              <div key={r.id} className="flex gap-2 rounded-xl bg-[var(--paper)] px-3 py-2">
+                <CornerDownRight className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-[var(--muted-col)]" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] leading-relaxed text-[var(--ink)] whitespace-pre-wrap">{r.body}</p>
+                  <div className="mt-1 flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-medium text-[var(--muted-col)]">
+                      {r.author_name ? doctorShortName(r.author_name) : "—"} · {timeAgo(r.created_at)}
+                    </span>
+                    {(isAdmin || mine) && (
+                      <button
+                        type="button"
+                        disabled={busyId === r.id}
+                        onClick={() => handleDelete(r.id)}
+                        className="text-[var(--muted-col)] transition-colors hover:text-red-500 disabled:opacity-50"
+                        aria-label="Видалити відповідь"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+
+          {!loading && replies.length === 0 && (
+            <span className="text-[12px] text-[var(--muted-col)]">Відповідей поки немає.</span>
+          )}
+
+          {canReply && (
+            <form onSubmit={handleSend} className="mt-1 flex items-end gap-2">
+              <textarea
+                rows={1}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Написати відповідь…"
+                className="min-h-9 flex-1 resize-none rounded-xl border border-[var(--line)] bg-white/55 px-3 py-2 text-[13px] text-[var(--ink)] outline-none placeholder:text-[var(--muted-col)] focus:ring-2 focus:ring-[var(--teal-mid)]"
+              />
+              <Button
+                type="submit"
+                disabled={sending || !text.trim()}
+                className="h-9 rounded-xl bg-[var(--teal)] px-3 text-[13px] font-semibold text-white hover:bg-[var(--teal-dark)] disabled:opacity-40"
+              >
+                <Send className="h-3.5 w-3.5" />
+              </Button>
+            </form>
+          )}
         </div>
       )}
     </div>

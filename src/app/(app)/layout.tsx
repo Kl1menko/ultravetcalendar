@@ -6,6 +6,8 @@ import { User } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase"
 import { useAppointments } from "@/hooks/useAppointments"
 import { fetchNotices } from "@/lib/notices"
+import { fetchFeedback } from "@/lib/feedback"
+import { registerServiceWorker } from "@/lib/push"
 import {
   canSeeClients as canSeeClientsFn,
   canSeePrices as canSeePricesFn,
@@ -48,34 +50,62 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [alertsBadge, setAlertsBadge] = useState(0)
   const [bannerNotice, setBannerNotice] = useState<Notice | null>(null)
 
+  // Двосторонній лічильник непрочитаного на вкладці «Сповіщення»:
+  //   • Оголошення (notices) — нові від head/admin, бачать лікарі та асистенти.
+  //   • Фідбек (тікети + відповіді) — нова активність від інших членів команди:
+  //       admin бачить нові тікети/відповіді команди, автор тікета — відповіді
+  //       на свій тікет. Власні дописи не рахуємо (created_by === user.id).
+  // Маркери «бачив» — окремі в localStorage, оновлюються при відкритті кожної
+  // вкладки (події notices-seen / feedback-seen зі сторінки /alerts).
+  const EPOCH = "1970-01-01T00:00:00Z"
+
   const loadBadge = useCallback(async () => {
     if (!user) return
-    const notices = await fetchNotices()
-    const lastSeen = localStorage.getItem("notices_last_seen") || "1970-01-01T00:00:00Z"
-    const unseen = notices.filter((n) => n.created_at > lastSeen).length
-    setAlertsBadge(unseen)
+    const noticesSeen = localStorage.getItem("notices_last_seen") || EPOCH
+    const feedbackSeen = localStorage.getItem("feedback_last_seen") || EPOCH
+
+    const [notices, feedback] = await Promise.all([fetchNotices(), fetchFeedback()])
+
+    const unseenNotices = notices.filter((n) => n.created_at > noticesSeen).length
+
+    // Нові тікети від інших + тікети з оновленням (updated_at = остання відповідь
+    // або зміна статусу). Власні дописи виключаємо.
+    const unseenFeedback = feedback.filter(
+      (f) =>
+        f.created_by !== user.id &&
+        (f.created_at > feedbackSeen || f.updated_at > feedbackSeen)
+    ).length
+
+    setAlertsBadge(unseenNotices + unseenFeedback)
   }, [user])
 
   useEffect(() => {
-    // loadBadge() — async: setAlertsBadge лише після await fetchNotices,
-    // тож синхронних каскадних ре-рендерів немає (правило хибно-позитивне тут).
+    // loadBadge() — async: setAlertsBadge лише після await, тож синхронних
+    // каскадних ре-рендерів немає (правило хибно-позитивне тут).
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadBadge()
   }, [loadBadge])
 
   useEffect(() => {
-    const handler = () => setAlertsBadge(0)
+    // Сторінка /alerts повідомляє, що вкладку відкрито → перераховуємо бейдж
+    // (маркер last_seen вже оновлено в localStorage перед подією).
+    const handler = () => loadBadge()
     document.addEventListener("notices-seen", handler)
-    return () => document.removeEventListener("notices-seen", handler)
-  }, [])
+    document.addEventListener("feedback-seen", handler)
+    return () => {
+      document.removeEventListener("notices-seen", handler)
+      document.removeEventListener("feedback-seen", handler)
+    }
+  }, [loadBadge])
 
-  // Realtime: показуємо банер коли head публікує нове сповіщення
+  // Realtime: банер на нове оголошення + живий перерахунок бейджа на нову
+  // активність у фідбеку (тікети/відповіді від інших).
   useEffect(() => {
     if (!user) return
     const isHead = roleForEmail(user.email) === "head"
 
     const channel = supabase
-      .channel("notices-realtime")
+      .channel("alerts-realtime")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notices" },
@@ -88,10 +118,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           }
         }
       )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "feedback" },
+        (payload) => {
+          if ((payload.new as { created_by?: string }).created_by !== user.id) {
+            setAlertsBadge((n) => n + 1)
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "feedback_replies" },
+        (payload) => {
+          if ((payload.new as { created_by?: string }).created_by !== user.id) {
+            setAlertsBadge((n) => n + 1)
+          }
+        }
+      )
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
   }, [user])
+
+  // Реєструємо service worker (потрібен для Web Push + офлайн-кешу).
+  useEffect(() => {
+    registerServiceWorker()
+  }, [])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

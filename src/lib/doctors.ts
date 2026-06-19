@@ -89,13 +89,14 @@ export function canSeePrices(email: string | null | undefined): boolean {
 }
 
 /**
- * Бачить суми (price) на тікетах та в деталях записів — усі, КРІМ асистентів.
+ * Бачить суми (price) на тікетах та в деталях записів — усі залогінені.
  * Асистенти (Іван, Устим, Аня) вписують ціну при створенні запису
- * (див. canEditPrice у формі), але переглядати суми згодом не можуть.
- * Доступ до сторінки аналітики при цьому ще вужчий — лише head (canSeePrices).
+ * (див. canEditPrice у формі) і мають бачити її назад: інакше введена сума
+ * обнуляється на читанні (fetchAppointments) і виглядає так, ніби «не зберігається».
+ * Доступ до сторінки аналітики коштів при цьому вужчий — лише head (canSeePrices).
  */
 export function canSeeAppointmentPrices(email: string | null | undefined): boolean {
-  return roleForEmail(email) !== "assistant"
+  return accountForEmail(email) !== null
 }
 
 /** Має доступ до бази клієнтів — admin, головний лікар та звичайні лікарі.

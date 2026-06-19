@@ -5,13 +5,14 @@ import { motion } from "motion/react"
 import { useCalendarContext } from "@/context/calendar"
 import { staggerContainer, staggerItem } from "@/lib/motion"
 import { formatShortDate } from "@/lib/utils-app"
-import { phoneMatches, hasDigits } from "@/lib/phone"
+import { phoneMatches, hasDigits, digitsOnly } from "@/lib/phone"
 import { deleteAppointment } from "@/lib/appointments"
+import { isoDate } from "@/lib/utils-app"
 import { Appointment } from "@/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ChevronDown, Phone, PawPrint, Search, X } from "lucide-react"
+import { CalendarClock, ChevronDown, Check, Copy, MessageCircle, Phone, PawPrint, Search, X } from "lucide-react"
 
 type ClientEntry = {
   client: string
@@ -24,7 +25,7 @@ type ClientEntry = {
   duplicateReason: string
 }
 
-function normalizePetName(value: string) {
+function normalizeClientName(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ")
 }
 
@@ -36,6 +37,18 @@ function normalizePhone(value: string) {
   }
 
   return digits
+}
+
+/** Посилання на WhatsApp у міжнародному форматі (укр. номери). */
+function whatsappLink(phone: string) {
+  const d = digitsOnly(phone)
+  const intl = d.length === 10 && d.startsWith("0") ? "38" + d : d
+  return `https://wa.me/${intl}`
+}
+
+/** Майбутній/активний візит — дата ≥ сьогодні і не скасований/завершений. */
+function isUpcoming(a: Appointment, today: string) {
+  return a.date >= today && a.status !== "Скасовано" && a.status !== "Завершено"
 }
 
 function clientsCountLabel(count: number) {
@@ -69,10 +82,10 @@ function buildClients(appointments: Appointment[]): ClientEntry[] {
 
   clients.forEach((client) => {
     const phoneKey = normalizePhone(client.phone)
-    const petKeys = [...new Set([...client.pets.keys()].map(normalizePetName).filter(Boolean))]
+    const nameKey = normalizeClientName(client.client)
     const keys = [
       phoneKey.length >= 9 ? `phone:${phoneKey}` : "",
-      ...petKeys.map((petKey) => `pet:${petKey}`),
+      nameKey ? `name:${nameKey}` : "",
     ].filter(Boolean)
 
     keys.forEach((key) => {
@@ -84,13 +97,10 @@ function buildClients(appointments: Appointment[]): ClientEntry[] {
 
   clients.forEach((client) => {
     const phoneKey = normalizePhone(client.phone)
-    const petKeys = [...new Set([...client.pets.keys()].map(normalizePetName).filter(Boolean))]
+    const nameKey = normalizeClientName(client.client)
     const groups = [
       phoneKey.length >= 9 ? { reason: "однаковий телефон", group: duplicateGroups.get(`phone:${phoneKey}`) ?? [] } : null,
-      ...petKeys.map((petKey) => ({
-        reason: "однакова кличка тварини",
-        group: duplicateGroups.get(`pet:${petKey}`) ?? [],
-      })),
+      nameKey ? { reason: "однакове ім'я клієнта", group: duplicateGroups.get(`name:${nameKey}`) ?? [] } : null,
     ].filter((item): item is { reason: string; group: ClientEntry[] } => Boolean(item))
     const duplicate = groups.find((item) => item.group.length > 1)
 
@@ -111,6 +121,18 @@ export default function ClientsPage() {
   const [expanded, setExpanded] = useState<string | null>(null)
   const [confirmDeleteKey, setConfirmDeleteKey] = useState<string | null>(null)
   const [deletingKey, setDeletingKey] = useState<string | null>(null)
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
+  const today = useMemo(() => isoDate(new Date()), [])
+
+  const handleCopyPhone = async (key: string, phone: string) => {
+    try {
+      await navigator.clipboard.writeText(phone)
+      setCopiedKey(key)
+      setTimeout(() => setCopiedKey((k) => (k === key ? null : k)), 1500)
+    } catch {
+      /* clipboard недоступний — мовчки ігноруємо */
+    }
+  }
 
   const handleDeleteClient = async (key: string, history: Appointment[]) => {
     setDeletingKey(key)
@@ -251,6 +273,10 @@ export default function ClientsPage() {
             const sortedHistory = [...c.history].sort((a, b) =>
               `${b.date} ${b.start}`.localeCompare(`${a.date} ${a.start}`)
             )
+            // Майбутні візити — окремим блоком зверху (від найближчого).
+            const upcoming = sortedHistory
+              .filter((a) => isUpcoming(a, today))
+              .sort((a, b) => `${a.date} ${a.start}`.localeCompare(`${b.date} ${b.start}`))
 
             return (
               <motion.div key={key} variants={staggerItem} className={`glass glass-hover overflow-hidden rounded-xl transition-colors md:rounded-lg ${
@@ -287,6 +313,12 @@ export default function ClientsPage() {
                           дубль
                         </Badge>
                       )}
+                      {upcoming.length > 0 && (
+                        <Badge className="flex h-5 flex-shrink-0 items-center gap-1 rounded-md bg-[var(--teal)]/12 px-1.5 text-[10px] font-semibold text-[var(--teal-dark)] md:h-6 md:px-2 md:text-[11px]">
+                          <CalendarClock className="h-3 w-3" />
+                          <span>{upcoming.length}</span>
+                        </Badge>
+                      )}
                     </div>
                     {/* Pets */}
                     <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[12px] font-medium leading-snug text-[var(--ink-2)] md:text-[13px]">
@@ -307,25 +339,84 @@ export default function ClientsPage() {
                 {/* Expanded details */}
                 {isOpen && (
                   <div className="border-t border-[var(--line)]">
-                    {/* Phone + call */}
-                    <div className="flex items-center justify-between border-b border-[var(--line)] px-4 py-3">
-                      <div>
-                        <div className="mb-0.5 text-[10px] font-medium uppercase tracking-[0.4px] text-[var(--muted-col)]">Телефон</div>
+                    {/* Phone */}
+                    <div className="border-b border-[var(--line)] px-4 py-3">
+                      <div className="mb-0.5 text-[10px] font-medium uppercase tracking-[0.4px] text-[var(--muted-col)]">Телефон</div>
                       <a href={`tel:${c.phone}`} className="text-[14px] font-semibold tabular-nums text-[var(--ink)]">{c.phone}</a>
-                        {c.duplicateCount > 1 && (
-                          <div className="mt-1 text-[11px] font-medium text-amber-700">
-                            Можливий дубль: {c.duplicateReason}, {c.duplicateCount} {clientsCountLabel(c.duplicateCount)}
-                          </div>
-                        )}
+                      {c.duplicateCount > 1 && (
+                        <div className="mt-1 text-[11px] font-medium text-amber-700">
+                          Можливий дубль: {c.duplicateReason}, {c.duplicateCount} {clientsCountLabel(c.duplicateCount)}
+                        </div>
+                      )}
+                      {/* Quick actions */}
+                      <div className="mt-3 grid grid-cols-4 gap-2">
+                        <a
+                          href={`tel:${c.phone}`}
+                          aria-label={`Подзвонити ${c.client}`}
+                          className="flex h-10 flex-col items-center justify-center gap-0.5 rounded-lg bg-[var(--teal)] text-white transition-all hover:bg-[var(--teal-dark)] active:scale-95"
+                        >
+                          <Phone className="h-[18px] w-[18px]" />
+                        </a>
+                        <a
+                          href={whatsappLink(c.phone)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Написати ${c.client} у WhatsApp`}
+                          className="flex h-10 items-center justify-center rounded-lg bg-[var(--paper)] text-[var(--ink-2)] transition-all hover:bg-[var(--line)] active:scale-95"
+                        >
+                          <MessageCircle className="h-[18px] w-[18px]" />
+                        </a>
+                        <a
+                          href={`sms:${c.phone}`}
+                          aria-label={`SMS ${c.client}`}
+                          className="flex h-10 items-center justify-center rounded-lg bg-[var(--paper)] text-[var(--ink-2)] transition-all hover:bg-[var(--line)] active:scale-95"
+                        >
+                          <span className="text-[12px] font-semibold">SMS</span>
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyPhone(key, c.phone)}
+                          aria-label="Скопіювати телефон"
+                          className="flex h-10 items-center justify-center rounded-lg bg-[var(--paper)] text-[var(--ink-2)] transition-all hover:bg-[var(--line)] active:scale-95"
+                        >
+                          {copiedKey === key ? (
+                            <Check className="h-[18px] w-[18px] text-[var(--teal)]" />
+                          ) : (
+                            <Copy className="h-[18px] w-[18px]" />
+                          )}
+                        </button>
                       </div>
-                      <a
-                        href={`tel:${c.phone}`}
-                        aria-label={`Подзвонити ${c.client}`}
-                        className="grid h-10 w-10 place-items-center rounded-lg bg-[var(--teal)] text-white transition-all hover:bg-[var(--teal-dark)] active:scale-95"
-                      >
-                        <Phone className="h-[18px] w-[18px]" />
-                      </a>
                     </div>
+
+                    {/* Upcoming visits */}
+                    {upcoming.length > 0 && (
+                      <div className="border-b border-[var(--line)] bg-[var(--teal)]/[0.04] px-4 py-3">
+                        <div className="mb-2 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.4px] text-[var(--teal-dark)]">
+                          <CalendarClock className="h-3 w-3" />
+                          Заплановані візити ({upcoming.length})
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          {upcoming.map((a) => (
+                            <div key={a.id} className="flex items-center gap-2.5 rounded-xl border border-[var(--teal)]/20 bg-white/50 px-3 py-2">
+                              <div className="flex flex-col items-center justify-center rounded-lg bg-[var(--teal)]/10 px-2 py-1 text-center">
+                                <span className="text-[11px] font-semibold tabular-nums leading-none text-[var(--teal-dark)]">
+                                  {formatShortDate(new Date(a.date + "T12:00:00"))}
+                                </span>
+                                <span className="mt-0.5 text-[10px] font-medium tabular-nums leading-none text-[var(--muted-col)]">{a.start}</span>
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="truncate text-[12px] font-medium text-[var(--ink)]">{a.service}</div>
+                                <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px] text-[var(--muted-col)]">
+                                  <span className="truncate font-medium text-[var(--ink-2)]">{a.pet}</span>
+                                  <span>·</span>
+                                  <span className="truncate">{a.status}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Pets list */}
                     {pets.length > 0 && (

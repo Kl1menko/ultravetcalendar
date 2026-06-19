@@ -1,4 +1,4 @@
-const CACHE = "ultravet-v3";
+const CACHE = "ultravet-v4";
 const STATIC = [
   "/manifest.json"
 ];
@@ -55,5 +55,53 @@ self.addEventListener("fetch", (e) => {
       caches.open(CACHE).then((cache) => cache.put(e.request, clone));
       return res;
     }).catch(() => caches.match(e.request))
+  );
+});
+
+// ─── Web Push ────────────────────────────────────────────────────────────────
+// Edge Function шле payload виду:
+//   { title, body, url?, tag? }
+// Якщо payload не JSON — показуємо як простий текст.
+
+self.addEventListener("push", (e) => {
+  let data = {};
+  try {
+    data = e.data ? e.data.json() : {};
+  } catch {
+    data = { title: "UltraVet", body: e.data ? e.data.text() : "" };
+  }
+
+  const title = data.title || "UltraVet";
+  const options = {
+    body: data.body || "",
+    icon: "/logo.svg",
+    badge: "/logo.svg",
+    // tag групує сповіщення (нова відповідь у тому ж треді замінює попередню).
+    tag: data.tag || undefined,
+    data: { url: data.url || "/alerts" },
+  };
+
+  e.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const target = (e.notification.data && e.notification.data.url) || "/alerts";
+
+  e.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clients) => {
+        // Якщо застосунок уже відкрито — фокусуємо й переходимо.
+        for (const client of clients) {
+          if ("focus" in client) {
+            client.focus();
+            if ("navigate" in client) client.navigate(target);
+            return;
+          }
+        }
+        // Інакше відкриваємо нове вікно.
+        if (self.clients.openWindow) return self.clients.openWindow(target);
+      })
   );
 });

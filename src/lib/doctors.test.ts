@@ -62,11 +62,15 @@ describe("права доступу за роллю", () => {
     expect(canSeePrices(assistant)).toBe(false)
   })
 
-  it("canSeeAppointmentPrices — усі, крім асистентів", () => {
+  it("canSeeAppointmentPrices — усі з ростера, включно з асистентами", () => {
+    // Асистенти вписують ціну (canEditPrice) і мають бачити її назад —
+    // інакше сума обнуляється на читанні й виглядає так, ніби «не зберігається».
     expect(canSeeAppointmentPrices(admin)).toBe(true)
     expect(canSeeAppointmentPrices(head)).toBe(true)
     expect(canSeeAppointmentPrices(doctor)).toBe(true)
-    expect(canSeeAppointmentPrices(assistant)).toBe(false)
+    expect(canSeeAppointmentPrices(assistant)).toBe(true)
+    expect(canSeeAppointmentPrices("stranger@example.com")).toBe(false)
+    expect(canSeeAppointmentPrices(null)).toBe(false)
   })
 
   it("canSeeClients — усі, крім асистентів", () => {

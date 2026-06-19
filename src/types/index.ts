@@ -48,6 +48,17 @@ export type Feedback = {
   created_by: string
   created_at: string
   updated_at: string
+  reply_count?: number
+}
+
+// Відповідь у треді тікета. Пишуть admin та автор тікета (RLS).
+export type FeedbackReply = {
+  id: string
+  feedback_id: string
+  body: string
+  author_name: string | null
+  created_by: string
+  created_at: string
 }
 
 export type AppointmentRow = {
