@@ -20,13 +20,37 @@ import webpush from "npm:web-push@3.6.7"
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-const VAPID_PUBLIC = Deno.env.get("VAPID_PUBLIC_KEY")!
-const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE_KEY")!
-const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:admin@ultravet.app"
 
-webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE)
+// web-push вимагає VAPID-ключі як URL-safe Base64 БЕЗ padding "=".
+// Якщо в секрет потрапив стандартний Base64 (з "=", "+", "/") або зайві пробіли/
+// переноси — нормалізуємо, інакше setVapidDetails кидає "must be a URL safe Base 64".
+function normalizeKey(raw: string): string {
+  return (raw ?? "")
+    .replace(/\s+/g, "")           // прибираємо пробіли/переноси рядка
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "")
+}
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE)
+
+// Ініціалізацію web-push робимо ЛІНИВО (в хендлері), а не на топ-рівні модуля —
+// щоб помилка в ключах поверталась 500-кою з логом, а не валила завантаження
+// модуля непрозоро. vapidReady кешує, що ключі провалідовані.
+let vapidReady = false
+
+function ensureVapid() {
+  if (vapidReady) return
+  const pub = normalizeKey(Deno.env.get("VAPID_PUBLIC_KEY") ?? "")
+  const priv = normalizeKey(Deno.env.get("VAPID_PRIVATE_KEY") ?? "")
+  let subject = (Deno.env.get("VAPID_SUBJECT") ?? "").trim()
+  if (!/^(mailto:|https:\/\/)/.test(subject) || subject.includes("...")) {
+    subject = "mailto:admin@ultravet.app"
+  }
+  console.log("VAPID lengths", { pub: pub.length, priv: priv.length, subject })
+  webpush.setVapidDetails(subject, pub, priv)
+  vapidReady = true
+}
 
 // Адмінські user_id визначаємо за email (синхронно з src/lib/doctors.ts).
 const ADMIN_EMAILS = new Set([
@@ -81,6 +105,8 @@ async function subscriptionsFor(filter: {
 }
 
 async function sendTo(rows: PushRow[], note: Notification) {
+  if (rows.length === 0) return
+  ensureVapid()
   const payload = JSON.stringify(note)
 
   await Promise.all(

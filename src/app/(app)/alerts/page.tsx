@@ -51,6 +51,18 @@ export default function AlertsPage() {
   const { user, role } = useCalendarContext()
   const [tab, setTab] = useState<"notices" | "feedback">("notices")
 
+  // Бейдж єдиний на іконці «Сповіщення» й охоплює обидва канали (оголошення +
+  // фідбек). Тож відкриття сторінки = переглянуто все: позначаємо обидва
+  // last_seen і просимо layout перерахувати бейдж у нуль. Інакше непрочитане
+  // в невідкритій вкладці тримало б бейдж нескінченно.
+  useEffect(() => {
+    const now = new Date().toISOString()
+    localStorage.setItem("notices_last_seen", now)
+    localStorage.setItem("feedback_last_seen", now)
+    document.dispatchEvent(new CustomEvent("notices-seen"))
+    document.dispatchEvent(new CustomEvent("feedback-seen"))
+  }, [])
+
   // Admin прирівняний до головного лікаря (БД: is_head_doctor() = head|admin),
   // тож оголошення створюють обидві ролі.
   const isHead = role === "head" || role === "admin"
