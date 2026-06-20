@@ -12,13 +12,11 @@ export function ListView({
   appointments,
   selectedDate,
   filtered,
-  showPrice,
   onEventClick,
 }: {
   appointments: Appointment[]
   selectedDate: Date
   filtered: (a: Appointment) => boolean
-  showPrice: boolean
   onEventClick: (appt: Appointment) => void
 }) {
   const dayAppts = appointments
@@ -35,7 +33,7 @@ export function ListView({
       className="flex h-full flex-col gap-2 overflow-y-auto px-1 py-2 md:px-2"
     >
       {dayAppts.map((appt) => (
-        <ApptCard key={appt.id} appt={appt} showPrice={showPrice} onClick={() => onEventClick(appt)} />
+        <ApptCard key={appt.id} appt={appt} onClick={() => onEventClick(appt)} />
       ))}
     </motion.div>
   )

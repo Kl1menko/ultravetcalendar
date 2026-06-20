@@ -17,7 +17,6 @@ import {
 import { useCalendarContext } from "@/context/calendar"
 import {
   canSeeAdmin,
-  canSeeAppointmentPrices,
   canSeeClients,
   canSeeDebug,
   canSeePrices,
@@ -149,7 +148,7 @@ function ActionButton({
 export default function AdminPage() {
   const { appointments, user, role, currentDoctor, reload } = useCalendarContext()
 
-  const isAdmin = canSeeAdmin(user.email)
+  const isAdmin = canSeeAdmin(role)
 
   const [now, setNow] = useState<Date | null>(null)
   const [errors, setErrors] = useState<AppError[]>([])
@@ -276,7 +275,7 @@ export default function AdminPage() {
   }
 
   const handleBackup = () => {
-    const backup = buildAppointmentsBackup(appointments, canSeePrices(user.email))
+    const backup = buildAppointmentsBackup(appointments, canSeePrices(role))
     downloadJson(`backup_appointments_${isoDate(new Date())}.json`, backup)
     flash("Бекап завантажується")
   }
@@ -418,11 +417,10 @@ export default function AdminPage() {
         {/* Доступи */}
         <Section title="Доступи">
           <div className="flex flex-wrap gap-2">
-            <AccessChip label="Аналітика цін" value={canSeePrices(user.email)} />
-            <AccessChip label="Ціни записів" value={canSeeAppointmentPrices(user.email)} />
-            <AccessChip label="Клієнти" value={canSeeClients(user.email)} />
-            <AccessChip label="Адмінка" value={canSeeAdmin(user.email)} />
-            <AccessChip label="Debug" value={canSeeDebug(user.email)} />
+            <AccessChip label="Аналітика цін" value={canSeePrices(role)} />
+            <AccessChip label="Клієнти" value={canSeeClients(role)} />
+            <AccessChip label="Адмінка" value={canSeeAdmin(role)} />
+            <AccessChip label="Debug" value={canSeeDebug(role)} />
           </div>
         </Section>
 

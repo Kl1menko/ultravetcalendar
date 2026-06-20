@@ -11,15 +11,13 @@ import { durationLabel, minutesFromTime } from "@/lib/utils-app"
 // біла поверхня, м'яка тінь, кольорова смужка лікаря ліворуч.
 export function ApptCard({
   appt,
-  showPrice,
   onClick,
 }: {
   appt: Appointment
-  showPrice: boolean
   onClick: () => void
 }) {
   const st = statusStyle(appt.status)
-  const price = showPrice && appt.price ? Number(appt.price) : 0
+  const price = appt.price ? Number(appt.price) : 0
   const durMins = minutesFromTime(appt.end) - minutesFromTime(appt.start)
   const accent = doctorColor(appt.doctor).border
   return (

@@ -12,14 +12,12 @@ export function MobileWeekView({
   appointments,
   selectedDate,
   filtered,
-  showPrice,
   onEventClick,
   onDayNavigate,
 }: {
   appointments: Appointment[]
   selectedDate: Date
   filtered: (a: Appointment) => boolean
-  showPrice: boolean
   onEventClick: (appt: Appointment) => void
   onDayNavigate: (date: Date) => void
 }) {
@@ -62,7 +60,7 @@ export function MobileWeekView({
             ) : (
               <div className="flex flex-col gap-2">
                 {dayAppts.map((appt) => (
-                  <ApptCard key={appt.id} appt={appt} showPrice={showPrice} onClick={() => onEventClick(appt)} />
+                  <ApptCard key={appt.id} appt={appt} onClick={() => onEventClick(appt)} />
                 ))}
               </div>
             )}

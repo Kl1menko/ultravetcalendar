@@ -8,36 +8,12 @@ import { formatShortDate } from "@/lib/utils-app"
 import { phoneMatches, hasDigits, digitsOnly } from "@/lib/phone"
 import { deleteAppointment } from "@/lib/appointments"
 import { isoDate } from "@/lib/utils-app"
+import { buildClients } from "@/lib/clients"
 import { Appointment } from "@/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CalendarClock, ChevronDown, Check, Copy, MessageCircle, Phone, PawPrint, Search, X } from "lucide-react"
-
-type ClientEntry = {
-  client: string
-  phone: string
-  pets: Map<string, string>   // pet name → animal (вид/порода)
-  visits: number
-  last: Appointment
-  history: Appointment[]
-  duplicateCount: number
-  duplicateReason: string
-}
-
-function normalizeClientName(value: string) {
-  return value.trim().toLowerCase().replace(/\s+/g, " ")
-}
-
-function normalizePhone(value: string) {
-  const digits = value.replace(/\D/g, "")
-
-  if (digits.length >= 9) {
-    return digits.slice(-9)
-  }
-
-  return digits
-}
 
 /** Посилання на WhatsApp у міжнародному форматі (укр. номери). */
 function whatsappLink(phone: string) {
@@ -57,65 +33,10 @@ function clientsCountLabel(count: number) {
   return "клієнтів"
 }
 
-function buildClients(appointments: Appointment[]): ClientEntry[] {
-  const map = new Map<string, ClientEntry>()
-  // сортуємо по даті щоб last завжди був найновішим
-  const sorted = [...appointments].sort((a, b) =>
-    `${b.date} ${b.start}`.localeCompare(`${a.date} ${a.start}`)
-  )
-  sorted.forEach((a) => {
-    const key = `${a.client}-${a.phone}`
-    if (!map.has(key)) {
-      map.set(key, { client: a.client, phone: a.phone, pets: new Map(), visits: 0, last: a, history: [], duplicateCount: 0, duplicateReason: "" })
-    }
-    const entry = map.get(key)!
-    entry.pets.set(a.pet, a.animal || a.pet)
-    entry.visits += 1
-    entry.history.push(a)
-    // last — найновіший запис (sorted DESC)
-    if (`${a.date} ${a.start}` > `${entry.last.date} ${entry.last.start}`) {
-      entry.last = a
-    }
-  })
-  const clients = [...map.values()]
-  const duplicateGroups = new Map<string, ClientEntry[]>()
-
-  clients.forEach((client) => {
-    const phoneKey = normalizePhone(client.phone)
-    const nameKey = normalizeClientName(client.client)
-    const keys = [
-      phoneKey.length >= 9 ? `phone:${phoneKey}` : "",
-      nameKey ? `name:${nameKey}` : "",
-    ].filter(Boolean)
-
-    keys.forEach((key) => {
-      const group = duplicateGroups.get(key) ?? []
-      group.push(client)
-      duplicateGroups.set(key, group)
-    })
-  })
-
-  clients.forEach((client) => {
-    const phoneKey = normalizePhone(client.phone)
-    const nameKey = normalizeClientName(client.client)
-    const groups = [
-      phoneKey.length >= 9 ? { reason: "однаковий телефон", group: duplicateGroups.get(`phone:${phoneKey}`) ?? [] } : null,
-      nameKey ? { reason: "однакове ім'я клієнта", group: duplicateGroups.get(`name:${nameKey}`) ?? [] } : null,
-    ].filter((item): item is { reason: string; group: ClientEntry[] } => Boolean(item))
-    const duplicate = groups.find((item) => item.group.length > 1)
-
-    if (duplicate) {
-      client.duplicateCount = duplicate.group.length
-      client.duplicateReason = duplicate.reason
-    }
-  })
-
-  // сортуємо клієнтів по кількості візитів
-  return clients.sort((a, b) => b.visits - a.visits)
-}
-
 export default function ClientsPage() {
-  const { appointments, reload, canSeeClients } = useCalendarContext()
+  const { appointments, reload, canSeeClients, role } = useCalendarContext()
+  // Видалення картки клієнта (масове видалення історії) — лише head/admin.
+  const canDeleteClient = role === "head" || role === "admin"
   const [query, setQuery] = useState("")
   const [scope, setScope] = useState<"all" | "duplicates">("all")
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -472,7 +393,8 @@ export default function ClientsPage() {
                       </div>
                     </div>
 
-                    {/* Delete client */}
+                    {/* Delete client — лише head/admin */}
+                    {canDeleteClient && (
                     <div className="px-4 py-3">
                       {confirmDeleteKey === key ? (
                         <div className="flex gap-2">
@@ -501,6 +423,7 @@ export default function ClientsPage() {
                         </Button>
                       )}
                     </div>
+                    )}
                   </div>
                 )}
               </motion.div>

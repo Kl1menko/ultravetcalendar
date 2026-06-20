@@ -55,7 +55,7 @@ export default function CalendarView({
   onDayNavigate,
   calendarRef,
 }: Props) {
-  const { canSeeAppointmentPrices, reload } = useCalendarContext()
+  const { reload } = useCalendarContext()
   const isDesktop = useIsDesktop()
   const filtered = (a: Appointment) =>
     doctorFilter === "Всі лікарі" || a.doctor === doctorFilter
@@ -214,7 +214,6 @@ export default function CalendarView({
         appointments={appointments}
         selectedDate={selectedDate}
         filtered={filtered}
-        showPrice={canSeeAppointmentPrices}
         onEventClick={onEventClick}
       />
     )
@@ -226,7 +225,6 @@ export default function CalendarView({
         appointments={appointments}
         selectedDate={selectedDate}
         filtered={filtered}
-        showPrice={canSeeAppointmentPrices}
         onEventClick={onEventClick}
         onDayNavigate={onDayNavigate}
       />
@@ -317,7 +315,7 @@ export default function CalendarView({
       eventClassNames="matte-appt-event !rounded-xl overflow-hidden"
       eventContent={(arg: EventContentArg) => {
         const appt = arg.event.extendedProps.appointment as Appointment
-        const price = canSeeAppointmentPrices && appt.price ? Number(appt.price) : 0
+        const price = appt.price ? Number(appt.price) : 0
         const durMins = minutesFromTime(appt.end) - minutesFromTime(appt.start)
         const isShort = durMins < 45
         // Колір лікаря → кольорова смужка-акцент ліворуч (реальний елемент,

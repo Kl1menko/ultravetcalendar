@@ -1,11 +1,17 @@
 "use client"
 
-import { createContext, useContext } from "react"
 import { User } from "@supabase/supabase-js"
 import { Appointment } from "@/types"
 import { Notice } from "@/types"
 import { DoctorRole, DoctorName } from "@/lib/doctors"
+import { useAuth } from "@/context/auth"
+import { useAppointmentsContext } from "@/context/appointments"
+import { useNoticesContext } from "@/context/notices"
+import { useModalsContext } from "@/context/modals"
 
+// Публічний фасад для сторінок. Логіка розбита по провайдерах (auth/appointments/
+// notices/modals), але споживачі бачать єдиний стабільний контракт через
+// useCalendarContext() — щоб не переписувати їх при розбитті god-component.
 export type CalendarContextType = {
   appointments: Appointment[]
   selectedDate: Date
@@ -15,10 +21,8 @@ export type CalendarContextType = {
   role: DoctorRole
   /** Ім'я лікаря, прив'язане до користувача (для персональної аналітики). */
   currentDoctor: DoctorName | null
-  /** Доступ до аналітики коштів (сторінка «Аналітика») — лише head. */
+  /** Доступ до аналітики коштів (сторінка «Аналітика») — лише head/admin. */
   canSeePrices: boolean
-  /** Бачить суми на тікетах/у деталях записів — усі користувачі. */
-  canSeeAppointmentPrices: boolean
   /** Має доступ до бази клієнтів. */
   canSeeClients: boolean
   reload: () => void
@@ -28,10 +32,25 @@ export type CalendarContextType = {
   triggerBanner: (notice: Notice) => void
 }
 
-export const CalendarContext = createContext<CalendarContextType | null>(null)
+export function useCalendarContext(): CalendarContextType {
+  const { user, role, currentDoctor, canSeePrices, canSeeClients } = useAuth()
+  const { appointments, reload, selectedDate, setSelectedDate } = useAppointmentsContext()
+  const { triggerBanner } = useNoticesContext()
+  const { openDetailsAppt, openNewAppointmentAtTime, openEditAppointment } = useModalsContext()
 
-export function useCalendarContext() {
-  const ctx = useContext(CalendarContext)
-  if (!ctx) throw new Error("useCalendarContext must be used within AppLayout")
-  return ctx
+  return {
+    appointments,
+    selectedDate,
+    setSelectedDate,
+    user,
+    role,
+    currentDoctor,
+    canSeePrices,
+    canSeeClients,
+    reload,
+    openDetailsAppt,
+    openNewAppointmentAtTime,
+    openEditAppointment,
+    triggerBanner,
+  }
 }

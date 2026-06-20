@@ -3,17 +3,15 @@
 import { usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { User } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase"
 import { Shield } from "lucide-react"
-import { canSeeAdmin, canSeeClients, canSeePrices, roleForEmail, roleLabel } from "@/lib/doctors"
+import { canSeeAdmin, canSeeClients, canSeePrices, roleLabel } from "@/lib/doctors"
+import { useAuth } from "@/context/auth"
+import { useNoticesContext } from "@/context/notices"
+import { useModalsContext } from "@/context/modals"
 
 type Props = {
-  user: User
   children: React.ReactNode
-  alertsBadge?: number
-  onNewAppointment: () => void
-  onSearch: () => void
 }
 
 const CalendarIcon = () => (
@@ -57,13 +55,15 @@ const LogoutIcon = () => (
   </svg>
 )
 
-export default function AppShell({ user, children, alertsBadge = 0, onNewAppointment, onSearch }: Props) {
+export default function AppShell({ children }: Props) {
   const pathname = usePathname()
   const router = useRouter()
-  const role = roleForEmail(user.email)
-  const showClients = canSeeClients(user.email)
-  const showAnalytics = canSeePrices(user.email)
-  const showAdmin = canSeeAdmin(user.email)
+  const { user, role } = useAuth()
+  const { alertsBadge } = useNoticesContext()
+  const { openNewAppointment, openSearch } = useModalsContext()
+  const showClients = canSeeClients(role)
+  const showAnalytics = canSeePrices(role)
+  const showAdmin = canSeeAdmin(role)
   const metadata = user.user_metadata ?? {}
   const displayName =
     (typeof metadata.display_name === "string" && metadata.display_name.trim()) ||
@@ -103,7 +103,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
 
         {/* New appt button */}
         <button
-          onClick={onNewAppointment}
+          onClick={openNewAppointment}
           className="mb-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--teal)] text-[14px] font-bold text-white shadow-lg shadow-black/15 transition-all hover:-translate-y-0.5 hover:bg-[var(--teal-dark)] active:scale-[0.98]"
         >
           <span className="text-lg font-light leading-none">+</span>
@@ -112,7 +112,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
 
         {/* Search button */}
         <button
-          onClick={onSearch}
+          onClick={openSearch}
           className="glass glass-hover mb-7 flex h-11 w-full items-center gap-2 rounded-2xl px-3 text-[13px] font-semibold text-[var(--muted-col)] transition-colors hover:text-[var(--ink)]"
         >
           <SearchIcon />
@@ -216,7 +216,7 @@ export default function AppShell({ user, children, alertsBadge = 0, onNewAppoint
       {/* ─── MOBILE CALENDAR FAB ─────────────────────────── */}
       {isCalendar && (
         <button
-          onClick={onNewAppointment}
+          onClick={openNewAppointment}
           aria-label="Новий запис"
           className="md:hidden fixed right-4 z-20 w-14 h-14 rounded-full bg-[var(--teal)] text-white text-2xl font-light leading-none shadow-lg shadow-black/20 flex items-center justify-center active:scale-[0.92] transition-transform"
           style={{ bottom: "calc(var(--bottom-nav-total) + 12px)" }}

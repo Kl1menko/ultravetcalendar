@@ -63,35 +63,29 @@ function Bar({ value, max, label, sublabel, valueText, colorIdx = 0 }: {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
   const color = BAR_COLORS[colorIdx % BAR_COLORS.length]
   const text = String(valueText ?? value)
-  // Якщо бар надто вузький, щоб текст гарантовано вмістився — показуємо число
-  // поза баром (праворуч), інакше воно обріжеться на overflow-hidden.
-  const labelFitsInside = pct >= 22 && text.length <= 12
   return (
     <div className="flex items-center gap-3 md:gap-3.5">
       {label !== "" && (
         <span className="w-8 text-right text-[11px] font-bold text-[var(--muted-col)] shrink-0 md:w-10 md:text-[13px]">{label}</span>
       )}
-      <div className="flex min-w-0 flex-1 items-center gap-2">
-        <div className="h-7 flex-1 overflow-hidden rounded-lg bg-[var(--paper)] md:h-8">
-          <div
-            className="flex h-full items-center rounded-lg px-2 transition-all duration-500 md:px-2.5"
-            style={{
-              width: `${Math.max(pct, value > 0 ? 4 : 0)}%`,
-              backgroundColor: color.bg,
-            }}
-          >
-            {value > 0 && labelFitsInside && (
-              <span className="text-[11px] font-bold leading-none whitespace-nowrap md:text-[13px]" style={{ color: color.text }}>
-                {text}
-              </span>
-            )}
-          </div>
+      <div className="h-7 min-w-0 flex-1 overflow-hidden rounded-lg bg-[var(--paper)] md:h-8">
+        <div
+          className="flex h-full items-center rounded-lg px-2 transition-all duration-500 md:px-2.5"
+          style={{
+            width: `${pct}%`,
+            // Бар завжди достатньо широкий, щоб число вмістилось усередині
+            // (навіть для дуже малих значень). Довший текст («1 200 ₴») —
+            // ширший мінімум. Так число ніколи не висить поруч із баром.
+            minWidth: value > 0 ? `${Math.max(text.length * 8 + 20, 36)}px` : 0,
+            backgroundColor: color.bg,
+          }}
+        >
+          {value > 0 && (
+            <span className="text-[11px] font-bold leading-none whitespace-nowrap md:text-[13px]" style={{ color: color.text }}>
+              {text}
+            </span>
+          )}
         </div>
-        {value > 0 && !labelFitsInside && (
-          <span className="shrink-0 whitespace-nowrap text-[11px] font-bold leading-none text-[var(--ink)] md:text-[13px]">
-            {text}
-          </span>
-        )}
       </div>
       {sublabel && (
         <span className="w-28 text-[11px] text-[var(--muted-col)] shrink-0 truncate md:w-40 md:text-[13px]">{sublabel}</span>

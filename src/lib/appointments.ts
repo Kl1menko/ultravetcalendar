@@ -21,6 +21,8 @@ function normalizeRow(row: AppointmentRow): Appointment {
     comment: row.comment || "",
     price: row.price || 0,
     status: normalizeStatus(row.status) ?? "Заплановано",
+    created_by: row.created_by,
+    remind: row.remind ?? false,
   }
 }
 
@@ -30,17 +32,13 @@ function isMissingObject(code?: string) {
   return code === "PGRST205" || code === "42P01"
 }
 
-// Усі читають записи з view appointments_public. Суми (price) тепер відкриті
-// для всіх authenticated прямо у view (див. supabase/appointment-prices-for-all.sql),
-// тож окремий RPC більше не потрібен — normalizeRow забирає price з рядка.
-//
-// Параметр зберігаємо для зворотної сумісності виклику: коли false, price
-// обнуляємо в нормалізованому результаті (на випадок, якщо колись знадобиться
-// приховати суми для якоїсь ролі без зміни SQL).
+// Усі читають записи з view appointments_public. Суми (price) відкриті для всіх
+// authenticated прямо у view (див. supabase/appointment-prices-for-all.sql) — їх
+// бачать усі працівники, тож normalizeRow завжди забирає price з рядка.
 //
 // ⚠️ Поки supabase/rls-policies.sql + appointment-prices-for-all.sql не
 // застосовано (немає view) — записи просто не завантажаться. Накатай SQL.
-export async function fetchAppointments(canSeePrices = false): Promise<Appointment[]> {
+export async function fetchAppointments(): Promise<Appointment[]> {
   const { data, error } = await supabase
     .from("appointments_public")
     .select("*")
@@ -59,11 +57,7 @@ export async function fetchAppointments(canSeePrices = false): Promise<Appointme
     return []
   }
 
-  const rows = (data as unknown as AppointmentRow[]).map(normalizeRow)
-
-  if (!canSeePrices) return rows.map((r) => ({ ...r, price: 0 }))
-
-  return rows
+  return (data as unknown as AppointmentRow[]).map(normalizeRow)
 }
 
 export type AppointmentPayload = {
@@ -83,6 +77,9 @@ export type AppointmentPayload = {
   doctor: string
   comment: string
   created_by?: string
+  remind?: boolean
+  /** Скидання прапорця «вже надіслано» — щоб нагадування пішло знову (новий час). */
+  reminded_at?: string | null
 }
 
 export async function createAppointment(

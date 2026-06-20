@@ -5,15 +5,15 @@ import { Appointment } from "@/types"
 import { fetchAppointments } from "@/lib/appointments"
 import { supabase } from "@/lib/supabase"
 
-export function useAppointments(canSeePrices = false) {
+export function useAppointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
-    const data = await fetchAppointments(canSeePrices)
+    const data = await fetchAppointments()
     setAppointments(data)
     setLoading(false)
-  }, [canSeePrices])
+  }, [])
 
   useEffect(() => {
     // load() — async: усі setState відбуваються лише після await fetchAppointments,

@@ -31,6 +31,8 @@ function appt(over: Partial<Appointment>): Appointment {
     comment: "",
     price: 0,
     status: "Заплановано",
+    created_by: null,
+    remind: false,
     ...over,
   }
 }

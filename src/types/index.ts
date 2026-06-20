@@ -24,6 +24,10 @@ export type Appointment = {
   comment: string
   price: number
   status: AppointmentStatus
+  /** auth.uid автора запису — для перевірки прав на видалення (RLS + UI). */
+  created_by: string | null
+  /** Чи слати push-нагадування відповідальному лікарю перед прийомом. */
+  remind: boolean
 }
 
 export type Notice = {
@@ -81,4 +85,6 @@ export type AppointmentRow = {
   created_by: string | null
   created_at: string
   updated_at: string
+  remind: boolean | null
+  reminded_at: string | null
 }

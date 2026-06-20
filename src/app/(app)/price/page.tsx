@@ -48,9 +48,6 @@ export default function PricePage() {
         <h1 className="text-[22px] font-bold text-[var(--ink)] md:text-[28px]">
           Прайс
         </h1>
-        <p className="mt-1 text-[13px] font-medium text-[var(--muted-col)]">
-          Орієнтовні ціни. Уточнюйте на прийомі.
-        </p>
       </header>
 
       {/* Search */}

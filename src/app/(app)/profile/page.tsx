@@ -9,10 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import NotificationsCard from "@/components/NotificationsCard"
-import { roleForEmail, roleLabel } from "@/lib/doctors"
+import { roleLabel } from "@/lib/doctors"
 import { parseServices } from "@/lib/services"
 import { supabase } from "@/lib/supabase"
-import { useAuth } from "@/hooks/useAuth"
 
 function initials(name: string) {
   return name
@@ -37,8 +36,8 @@ function mostPopular(values: string[]) {
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { user, loading } = useAuth()
-  const { appointments, currentDoctor } = useCalendarContext()
+  // user/role/currentDoctor — з єдиного джерела (AuthProvider через фасад).
+  const { user, appointments, currentDoctor, role } = useCalendarContext()
   const metadata = user?.user_metadata ?? {}
   const metadataName =
     typeof metadata.display_name === "string"
@@ -49,7 +48,6 @@ export default function ProfilePage() {
   const fallbackName = user?.email?.split("@")[0] ?? "Користувач"
   const displayName = metadataName || fallbackName
   const currentDoctorName = currentDoctor
-  const role = roleForEmail(user?.email)
 
   const [nameDraft, setNameDraft] = useState<string | null>(null)
   const [newPassword, setNewPassword] = useState("")
@@ -131,14 +129,6 @@ export default function ProfilePage() {
     setSigningOut(true)
     await supabase.auth.signOut()
     router.replace("/login")
-  }
-
-  if (loading) {
-    return (
-      <div className="px-3.5 pt-3 md:px-0 md:pt-0">
-        <div className="py-8 text-center text-[14px] text-[var(--muted-col)]">Завантаження...</div>
-      </div>
-    )
   }
 
   return (

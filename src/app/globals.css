@@ -420,6 +420,16 @@
     min-height: var(--app-vh);
   }
 
+  /* На десктопі shell перестає бути фіксованим вікном з overflow:hidden —
+     сторінка скролиться нативно по body. Інакше .app-main (height:auto)
+     росте за контентом, але батьківський shell обрізає його на висоті
+     екрана й сам не скролиться (аналітика з багатьма блоками не гортається). */
+  .app-shell {
+    height: auto;
+    min-height: var(--app-vh);
+    overflow: visible;
+  }
+
   .app-main {
     height: auto;
     min-height: var(--app-vh);

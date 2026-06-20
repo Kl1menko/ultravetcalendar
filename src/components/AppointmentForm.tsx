@@ -12,6 +12,7 @@ import { isoDate, minutesFromTime, timeFromMinutes } from "@/lib/utils-app"
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/motion"
 import { createAppointment, updateAppointment } from "@/lib/appointments"
 import { ServicePicker } from "@/components/appointment/ServicePicker"
+import { ClientPicker, ClientPick } from "@/components/appointment/ClientPicker"
 
 type Props = {
   open: boolean
@@ -26,6 +27,8 @@ type Props = {
   userId?: string
   /** Чи показувати/дозволяти вводити поле ціни. Усі ролі вписують ціну при записі. */
   canEditPrice?: boolean
+  /** Усі записи — джерело для підтягування існуючого клієнта у новий запис. */
+  appointments?: Appointment[]
 }
 
 export default function AppointmentForm({
@@ -38,6 +41,7 @@ export default function AppointmentForm({
   duplicating,
   userId,
   canEditPrice = true,
+  appointments = [],
 }: Props) {
   const [date, setDate] = useState("")
   const [start, setStart] = useState("09:00")
@@ -54,8 +58,12 @@ export default function AppointmentForm({
   const [doctor, setDoctor] = useState<string>(DOCTORS[0])
   const [status, setStatus] = useState<AppointmentStatus>("Заплановано")
   const [comment, setComment] = useState("")
+  const [remind, setRemind] = useState(false)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState("")
+  // Яке з полів клієнта зараз у фокусі — керує показом випадного автодоповнення
+  // існуючих клієнтів під полем «Клієнт» / «Телефон».
+  const [focusedField, setFocusedField] = useState<"name" | "phone" | null>(null)
   // Інкрементується на кожен reset форми → ремоунтить ServicePicker, щоб його
   // лінивий operationsOpen перечитав свіжозаповнений services (див. нижче).
   const [pickerKey, setPickerKey] = useState(0)
@@ -91,6 +99,7 @@ export default function AppointmentForm({
         // (не успадковуємо «Завершено»/«Скасовано» зі старого запису).
         setStatus(editing ? editing.status : "Заплановано")
         setComment(source.comment)
+        setRemind(source.remind)
       } else {
         setDate(isoDate(selectedDate))
         setStart(prefillTime || "09:00")
@@ -107,11 +116,27 @@ export default function AppointmentForm({
         setDoctor(DOCTORS[0])
         setStatus("Заплановано")
         setComment("")
+        setRemind(false)
       }
     }, 0)
 
     return () => window.clearTimeout(timer)
   }, [open, editing, duplicating, selectedDate, prefillTime])
+
+  // Підтягування існуючого клієнта: заповнюємо контакти, а за наявності —
+  // дані обраної тварини (вид/вік/вага з її останнього візиту). Поля лишаються
+  // редагованими. Пусті значення з пікера не затирають уже введене.
+  const handlePickClient = (pick: ClientPick) => {
+    setClient(pick.client)
+    setPhone(pick.phone)
+    setAddress(pick.address)
+    if (pick.pet !== undefined) setPet(pick.pet)
+    if (pick.animal !== undefined) setAnimal(pick.animal)
+    if (pick.age !== undefined) setAge(pick.age)
+    if (pick.weight !== undefined) setWeight(pick.weight)
+    // Закриваємо список після вибору — інакше він перевідкриється на нове значення.
+    setFocusedField(null)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -141,6 +166,7 @@ export default function AppointmentForm({
       status,
       comment: comment.trim(),
       created_by: userId,
+      remind,
       // Ціну вписують усі ролі (асистенти записують клієнтів). Доступ до
       // загальної картини коштів (аналітика) лишається лише в head — це
       // контролюється окремо й цього payload не стосується.
@@ -149,7 +175,15 @@ export default function AppointmentForm({
 
     let err: Error | null
     if (editing) {
-      const res = await updateAppointment(editing.id, payload)
+      // Якщо при редагуванні змінили дату/час або щойно увімкнули нагадування —
+      // скидаємо reminded_at, щоб нагадування надіслалось (заново) на новий час.
+      const timeChanged = editing.date !== date || editing.start !== start
+      const remindToggledOn = remind && !editing.remind
+      const editPayload =
+        remind && (timeChanged || remindToggledOn)
+          ? { ...payload, reminded_at: null }
+          : payload
+      const res = await updateAppointment(editing.id, editPayload)
       err = res.error
     } else {
       const res = await createAppointment(payload)
@@ -223,12 +257,43 @@ export default function AppointmentForm({
             <div className={sectionGridClass}>
               <label className={labelClass}>
                 Клієнт
-                <input type="text" required value={client} onChange={(e) => setClient(e.target.value)} placeholder="Олена" className={fieldClass} />
+                <div className="relative w-full min-w-0">
+                  <input
+                    type="text"
+                    required
+                    value={client}
+                    onChange={(e) => setClient(e.target.value)}
+                    onFocus={() => setFocusedField("name")}
+                    onBlur={() => setFocusedField(null)}
+                    placeholder="Олена"
+                    autoComplete="off"
+                    className={fieldClass}
+                  />
+                  {/* Підтягнути існуючого клієнта — лише при створенні нового запису. */}
+                  {!editing && focusedField === "name" && (
+                    <ClientPicker appointments={appointments} query={client} mode="name" onPick={handlePickClient} />
+                  )}
+                </div>
               </label>
 
               <label className={labelClass}>
                 Телефон
-                <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+380671112233" className={fieldClass} />
+                <div className="relative w-full min-w-0">
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    onFocus={() => setFocusedField("phone")}
+                    onBlur={() => setFocusedField(null)}
+                    placeholder="+380671112233"
+                    autoComplete="off"
+                    className={fieldClass}
+                  />
+                  {!editing && focusedField === "phone" && (
+                    <ClientPicker appointments={appointments} query={phone} mode="phone" onPick={handlePickClient} />
+                  )}
+                </div>
               </label>
 
               <label className={`${labelClass} md:col-span-2`}>
@@ -327,6 +392,21 @@ export default function AppointmentForm({
                   })}
                 </div>
               </div>
+
+              {/* Нагадування: push відповідальному лікарю за кілька хвилин до
+                  прийому. Розсилку робить cron + Edge Function send-reminders. */}
+              <label className="flex w-full min-w-0 cursor-pointer items-center justify-between gap-3 rounded-xl border border-[var(--lg-border)] bg-white/55 px-3 py-2.5 md:col-span-2">
+                <span className="flex min-w-0 flex-col">
+                  <span className="text-[13px] font-semibold text-[var(--ink)]">Нагадати про прийом</span>
+                  <span className="text-[11px] font-normal text-[var(--muted-col)]">Нагадати за 5 хвилин до прийому лікарю</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={remind}
+                  onChange={(e) => setRemind(e.target.checked)}
+                  className="h-5 w-5 shrink-0 accent-[var(--teal)]"
+                />
+              </label>
             </div>
           </motion.section>
 

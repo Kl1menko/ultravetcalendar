@@ -8,6 +8,7 @@ function appt(over: Partial<Appointment>): Appointment {
     client: "Клієнт", phone: "0123456789", pet: "Барсик", animal: "Кіт",
     age: "", weight: "", address: "", service: "Огляд",
     doctor: "Остап (головний лікар)", comment: "", price: 0, status: "Заплановано",
+    created_by: null, remind: false,
     ...over,
   }
 }

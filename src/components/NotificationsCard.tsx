@@ -89,11 +89,6 @@ export default function NotificationsCard({ authorName }: { authorName: string }
         </p>
       ) : (
         <>
-          <p className="mt-4 text-[13px] leading-relaxed text-[var(--ink-2)]">
-            Отримуйте сповіщення про нові оголошення та відповіді на тікети — навіть
-            коли застосунок закрито.
-          </p>
-
           {!isStandalone && (
             <p className="mt-3 rounded-lg bg-[var(--teal-light)] px-3 py-2 text-[12px] leading-relaxed text-[var(--teal-dark)]">
               На iPhone сповіщення працюють лише якщо застосунок додано на головний

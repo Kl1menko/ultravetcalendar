@@ -18,6 +18,8 @@ type Props = {
   onDuplicate: (appt: Appointment) => void
   onDeleted: () => void
   canSeePrices?: boolean
+  /** Чи може користувач видалити цей запис (автор або head/admin). */
+  canDelete?: boolean
 }
 
 export default function AppointmentDetails({
@@ -27,6 +29,7 @@ export default function AppointmentDetails({
   onDuplicate,
   onDeleted,
   canSeePrices = false,
+  canDelete = false,
 }: Props) {
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -257,7 +260,7 @@ export default function AppointmentDetails({
               Повторити запис
             </button>
           )}
-          {confirmDelete ? (
+          {canDelete && confirmDelete ? (
             <>
               <button
                 type="button"
@@ -280,17 +283,19 @@ export default function AppointmentDetails({
               <button
                 type="button"
                 onClick={() => { onClose(); onEdit(appointment) }}
-                className="h-11 rounded-xl border border-[var(--line)] bg-[var(--paper)] text-[14px] font-semibold text-[var(--ink-2)] transition-transform active:scale-[0.98] md:h-12 md:rounded-2xl"
+                className={`h-11 rounded-xl border border-[var(--line)] bg-[var(--paper)] text-[14px] font-semibold text-[var(--ink-2)] transition-transform active:scale-[0.98] md:h-12 md:rounded-2xl ${canDelete ? "" : "col-span-2"}`}
               >
                 Редагувати
               </button>
-              <button
-                type="button"
-                onClick={() => setConfirmDelete(true)}
-                className="h-11 rounded-xl border border-red-200 bg-red-50 text-[14px] font-semibold text-red-600 transition-transform active:scale-[0.98] md:h-12 md:rounded-2xl"
-              >
-                Видалити
-              </button>
+              {canDelete && (
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(true)}
+                  className="h-11 rounded-xl border border-red-200 bg-red-50 text-[14px] font-semibold text-red-600 transition-transform active:scale-[0.98] md:h-12 md:rounded-2xl"
+                >
+                  Видалити
+                </button>
+              )}
             </>
           )}
         </div>
