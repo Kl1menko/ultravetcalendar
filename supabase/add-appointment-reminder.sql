@@ -15,6 +15,15 @@ alter table public.appointments
   add column if not exists remind      boolean     not null default false,
   add column if not exists reminded_at timestamptz;
 
+-- ⚠️ На appointments діють COLUMN-LEVEL grants (rls-policies.sql): authenticated
+-- має insert/update лише на перелічені колонки. Без явного grant на remind
+-- спроба зберегти його → "permission denied for table appointments". Видаємо
+-- права на нові колонки (reminded_at пишемо лише з фронту при скиданні — теж
+-- через authenticated, тож грантуємо й select/insert/update на нього).
+grant select (remind, reminded_at) on public.appointments to authenticated;
+grant insert (remind, reminded_at) on public.appointments to authenticated;
+grant update (remind, reminded_at) on public.appointments to authenticated;
+
 -- Частковий індекс під запит cron-функції: «незавершені нагадування».
 -- Покриває лише рядки, які реально треба перевіряти (remind=true, ще не слано).
 create index if not exists appointments_pending_reminders_idx

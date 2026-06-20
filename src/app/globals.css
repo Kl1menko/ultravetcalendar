@@ -367,6 +367,7 @@
   --teal-dark:  #000000;           /* hover головної дії */
   --teal-light: var(--uv-gray-100);/* активний фон навігації */
   --teal-mid:   var(--uv-gray-300);/* hover-бордюр */
+  --on-teal:    #ffffff;           /* текст/іконки на головній дії (--teal) */
   --ink:        var(--uv-ink);
   --ink-2:      var(--uv-gray-700);
   --muted-col:  var(--uv-gray-500);
@@ -394,6 +395,66 @@
   --bottom-nav-safe: max(env(safe-area-inset-bottom), 4px);
   --bottom-nav-total: calc(var(--bottom-nav-h) + var(--bottom-nav-safe));
   --app-vh: 100vh;
+}
+
+/* ─── UltraVet / Liquid Glass — ТЕМНА палітра ──────────────────────────────
+   ВАЖЛИВО: цей блок іде ПІСЛЯ обох :root (shadcn + UltraVet legacy-міст).
+   Селектор html.dark має специфічність (0,1,1) > :root (0,1,0) і стоїть пізніше
+   в коді — тож гарантовано перекриває світлі значення. Перевизначаємо лише
+   базовий шар (--uv-* / --lg-*) та акценти: legacy-міст (--ink/--paper/--teal…)
+   посилається на ці токени через var() і підхоплює темні значення сам. */
+html.dark {
+  --uv-bg:            #0d0d0f;
+  --uv-bg-soft:       #131316;
+  --uv-panel:         #1a1a1f;
+  --uv-panel-strong:  #202027;
+
+  --uv-black:         #f5f5f7;   /* «головна дія» інвертується у світлу */
+  --uv-ink:           #f5f5f7;
+  --uv-gray-900:      #e5e5ea;
+  --uv-gray-700:      #b4b4bd;   /* --ink-2: вторинний текст */
+  --uv-gray-500:      #8a8a94;   /* --muted-col: приглушений текст */
+  --uv-gray-300:      #3a3a42;   /* hover-бордюр / лінії-розділювачі */
+  --uv-gray-200:      #2c2c33;
+  --uv-gray-100:      #26262d;   /* активний фон навігації */
+
+  --uv-border:        rgba(255, 255, 255, 0.10);
+  --uv-border-strong: rgba(255, 255, 255, 0.18);
+
+  --uv-glass:         #1a1a1f;
+  --uv-glass-border:  rgba(255, 255, 255, 0.10);
+
+  --uv-shadow:        0 10px 30px rgba(0, 0, 0, 0.45);
+  --uv-shadow-soft:   0 2px 10px rgba(0, 0, 0, 0.35);
+
+  --lg-bg-base:       #0d0d0f;
+  --lg-fill:          #1a1a1f;
+  --lg-fill-strong:   #202027;
+  --lg-fill-soft:     #131316;
+  --lg-border:        rgba(255, 255, 255, 0.10);
+  --lg-border-strong: rgba(255, 255, 255, 0.18);
+  /* Світлий inset-блік на темному виглядає брудно — прибираємо. */
+  --lg-inset:         inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --lg-shadow:        0 1px 3px rgba(0, 0, 0, 0.5);
+  --lg-shadow-strong: 0 8px 24px rgba(0, 0, 0, 0.55);
+
+  /* Акцент бренду: у світлій темі «teal» = чорний; у темній — світлий,
+     інакше головна кнопка зіллється з фоном. teal-dark — hover. */
+  --teal:       #ffffff;
+  --teal-dark:  #e5e5ea;
+  --teal-light: #26262d;
+  --teal-mid:   #3a3a42;
+  --on-teal:    #0d0d0f;   /* тёмний текст на світлій кнопці */
+
+  /* Семантичні: текст яскравий, фони (-bg) — приглушені тёмні підкладки. */
+  --red:        #f87171;
+  --red-bg:     rgba(248, 113, 113, 0.14);
+  --amber:      #fbbf24;
+  --amber-bg:   rgba(251, 191, 36, 0.14);
+  --green:      #4ade80;
+  --green-bg:   rgba(74, 222, 128, 0.14);
+  --blue:       #60a5fa;
+  --blue-bg:    rgba(96, 165, 250, 0.14);
 }
 
 @supports (height: 100svh) {
@@ -779,3 +840,140 @@
 /* hide scrollbar but keep scroll */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* ─── DARK THEME — крайові випадки з хардкод-кольорами ──────────────────────
+   Базовий шар токенів уже перевизначено у .dark вище — але FullCalendar та
+   кілька компонентних поверхонь мають хардкод #ffffff/світлі rgba повз токени.
+   Перекриваємо їх тут точково під темну тему. */
+
+/* Компонентні скляні/білі поверхні → темна підкладка через токени. */
+.dark .glass,
+.dark .glass-strong,
+.dark .glass-chip {
+  background: var(--lg-fill);
+}
+.dark .search-field {
+  background-color: var(--lg-fill-strong);
+}
+/* Нижнє меню, шапка сторінки, модалки/шити, поповери, desktop-панель —
+   усі з хардкод #ffffff у світлій темі. */
+.dark .mobile-tab-nav {
+  background: var(--lg-fill);
+  border-top-color: var(--lg-border);
+}
+.dark .desktop-page-header,
+.dark .desktop-panel {
+  background: var(--lg-fill);
+}
+.dark [data-slot="sheet-content"],
+.dark [data-slot="popover-content"],
+.dark [data-slot="dialog-content"],
+.dark [data-slot="select-content"] {
+  background: var(--lg-fill-strong);
+}
+
+/* FullCalendar: колонки, лінії, заголовки, картки подій. */
+.dark .fc .fc-timegrid-col.fc-day,
+.dark .fc .fc-timegrid-col,
+.dark .fc-theme-standard .fc-timegrid-col,
+.dark .fc .fc-scrollgrid-sync-inner {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+.dark .fc .fc-timegrid-slot-lane {
+  border-bottom: 1px solid var(--lg-border) !important;
+}
+.dark .fc .fc-timegrid-slot-lane.fc-timegrid-slot-minor {
+  border-bottom: 1px dashed var(--lg-border) !important;
+}
+.dark .fc .fc-scrollgrid td,
+.dark .fc .fc-scrollgrid th,
+.dark .fc-theme-standard td,
+.dark .fc-theme-standard th {
+  border-color: var(--lg-border);
+}
+.dark .fc .fc-timegrid-slot-label {
+  color: var(--muted-col);
+}
+/* Картка події — темна поверхня замість білої. */
+.dark .fc .fc-event {
+  background: var(--lg-fill-strong) !important;
+  color: var(--ink) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 1px rgba(0, 0, 0, 0.4);
+}
+@media (hover: hover) and (pointer: fine) {
+  .dark .fc .fc-event:hover {
+    filter: brightness(1.15);
+  }
+}
+/* Місячна сітка: клітинки й «сьогодні». */
+.dark .fc .fc-daygrid-day {
+  background: rgba(255, 255, 255, 0.02);
+}
+.dark .fc .fc-daygrid-day.fc-day-today {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Картки прийому (.appt-card / matte) — теж білі в світлій темі. */
+.dark .matte-appt-card,
+.dark .appt-card-light,
+.dark .matte-appt-card__panel {
+  background: var(--lg-fill-strong);
+}
+
+/* ─── DARK: глобальне перекриття хардкод-білих утиліт ───────────────────────
+   Багато місць використовують суцільний bg-white та напівпрозорі bg-white/NN
+   (поля вводу, плашки візитів, активні сегменти табів/днів, header прайсу).
+   На темному вони дають світлі острівці. Перекриваємо самі утиліти в .dark —
+   одне місце замість 50+ правок у JSX. !important бо утиліти Tailwind теж мають
+   високу пріоритетність і часто йдуть інлайново в className. */
+
+/* Суцільний білий: активні сегменти, header-поверхні → піднята темна поверхня.
+   text-[var(--ink)] на них лишається світлим — контраст зберігається. */
+.dark .bg-white {
+  background-color: var(--lg-fill-strong) !important;
+}
+
+/* Напівпрозорі білі поверхні (поля, плашки) → ледь піднятий світлий шар на
+   темному. Один приглушений тон замість десятка різних alpha. */
+.dark .bg-white\/30,
+.dark .bg-white\/35,
+.dark .bg-white\/40,
+.dark .bg-white\/50,
+.dark .bg-white\/55,
+.dark .bg-white\/60,
+.dark .bg-white\/70,
+.dark .bg-white\/80,
+.dark .bg-white\/90,
+.dark .bg-white\/96 {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+/* Hover-стани на напівпрозорому білому — трохи яскравіше. */
+.dark .hover\:bg-white\/10:hover,
+.dark .hover\:bg-white\/40:hover,
+.dark .hover\:bg-white\/60:hover {
+  background-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* Пастельні семантичні бейджі (статуси тікетів, дублі) → приглушені тёмні
+   підкладки через семантичні токени. Текст лишаємо як є (яскравий). */
+.dark .bg-blue-50  { background-color: var(--blue-bg) !important; }
+.dark .bg-green-50 { background-color: var(--green-bg) !important; }
+.dark .bg-amber-50 { background-color: var(--amber-bg) !important; }
+.dark .bg-red-50   { background-color: var(--red-bg) !important; }
+.dark .bg-amber-100 { background-color: var(--amber-bg) !important; }
+.dark .bg-green-100 { background-color: var(--green-bg) !important; }
+
+/* Чіпи картки запису (час/лікар/тривалість/ціна) — у світлій темі майже білі
+   хардкодом. Робимо темні підкладки з достатнім контрастом тексту. */
+.dark .appt-chip-neutral {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--ink) !important;
+}
+.dark .appt-chip-time {
+  background: rgba(167, 139, 250, 0.18) !important;
+  color: #c4b5fd !important;
+}
+.dark .appt-chip-price {
+  background: rgba(255, 255, 255, 0.10) !important;
+  color: var(--ink) !important;
+}

@@ -64,7 +64,7 @@ export function ServicePicker({
         >
           <span className="truncate">Операція</span>
           {opCount > 0 && (
-            <span className="grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-[var(--teal)] px-1 text-[10px] font-bold text-white">
+            <span className="grid h-4 min-w-4 shrink-0 place-items-center rounded-full bg-[var(--teal)] px-1 text-[10px] font-bold text-[var(--on-teal)]">
               {opCount}
             </span>
           )}
@@ -144,7 +144,7 @@ function ServiceToggle({
         className={[
           "grid h-4 w-4 shrink-0 place-items-center rounded-[5px] border transition-colors",
           active
-            ? "border-[var(--teal)] bg-[var(--teal)] text-white"
+            ? "border-[var(--teal)] bg-[var(--teal)] text-[var(--on-teal)]"
             : "border-[var(--uv-gray-300)] bg-white",
         ].join(" ")}
       >

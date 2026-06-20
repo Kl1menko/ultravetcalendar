@@ -164,7 +164,7 @@ function NoticesTab({
             <Button
               type="submit"
               disabled={publishing || !text.trim()}
-              className="h-10 rounded-xl bg-[var(--teal)] px-5 text-[14px] font-semibold text-white transition-colors hover:bg-[var(--teal-dark)] disabled:opacity-40"
+              className="h-10 rounded-xl bg-[var(--teal)] px-5 text-[14px] font-semibold text-[var(--on-teal)] transition-colors hover:bg-[var(--teal-dark)] disabled:opacity-40"
             >
               {publishing ? "Надсилаю…" : "Надіслати"}
             </Button>
@@ -345,7 +345,7 @@ function FeedbackTab({
         <button
           type="submit"
           disabled={sending || !title.trim()}
-          className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--teal)] text-[15px] font-bold text-white shadow-lg shadow-[var(--teal)]/20 transition-all hover:bg-[var(--teal-dark)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+          className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--teal)] text-[15px] font-bold text-[var(--on-teal)] shadow-lg shadow-[var(--teal)]/20 transition-all hover:bg-[var(--teal-dark)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
         >
           <Send className="h-4 w-4" />
           {sending ? "Надсилаємо…" : "Надіслати"}
@@ -604,7 +604,7 @@ function FeedbackReplies({
               <Button
                 type="submit"
                 disabled={sending || !text.trim()}
-                className="h-9 rounded-xl bg-[var(--teal)] px-3 text-[13px] font-semibold text-white hover:bg-[var(--teal-dark)] disabled:opacity-40"
+                className="h-9 rounded-xl bg-[var(--teal)] px-3 text-[13px] font-semibold text-[var(--on-teal)] hover:bg-[var(--teal-dark)] disabled:opacity-40"
               >
                 <Send className="h-3.5 w-3.5" />
               </Button>

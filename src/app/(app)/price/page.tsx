@@ -86,7 +86,7 @@ export default function PricePage() {
               key={cat.title}
               className="glass-hover gap-0 rounded-2xl py-0"
             >
-              <CardHeader className="border-b border-[var(--lg-border)] bg-[#fafafa] px-4 py-3">
+              <CardHeader className="border-b border-[var(--lg-border)] bg-[var(--lg-fill-soft)] px-4 py-3">
                 <CardTitle className="text-[14px] font-semibold text-[var(--ink)]">{cat.title}</CardTitle>
                 {cat.subtitle && (
                   <p className="mt-0.5 text-[12px] font-normal text-[var(--muted-col)]">{cat.subtitle}</p>

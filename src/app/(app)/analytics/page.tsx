@@ -135,8 +135,8 @@ function Delta({ value }: { value: number | null }) {
   const color = isFlat
     ? "text-[var(--muted-col)] bg-[var(--paper)]"
     : isUp
-      ? "text-green-700 bg-green-50"
-      : "text-red-600 bg-red-50"
+      ? "text-[var(--green)] bg-[var(--green-bg)]"
+      : "text-[var(--red)] bg-[var(--red-bg)]"
   const arrow = isFlat ? "→" : isUp ? "↑" : "↓"
   return (
     <Badge className={`gap-0.5 rounded-md px-1.5 text-[10px] font-bold ${color}`}>
@@ -292,7 +292,7 @@ export default function AnalyticsPage() {
             className={[
               "h-9 shrink-0 rounded-xl border-[1.5px] px-3.5 text-[13px] font-semibold md:h-10 md:px-5 md:text-[14px]",
               p.value === period
-                ? "border-transparent bg-[var(--teal)] text-white hover:bg-[var(--teal-dark)] hover:text-white"
+                ? "border-transparent bg-[var(--teal)] text-[var(--on-teal)] hover:bg-[var(--teal-dark)] hover:text-[var(--on-teal)]"
                 : "glass-chip glass-hover text-[var(--ink-2)]",
             ].join(" ")}
           >

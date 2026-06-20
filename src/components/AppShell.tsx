@@ -104,7 +104,7 @@ export default function AppShell({ children }: Props) {
         {/* New appt button */}
         <button
           onClick={openNewAppointment}
-          className="mb-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--teal)] text-[14px] font-bold text-white shadow-lg shadow-black/15 transition-all hover:-translate-y-0.5 hover:bg-[var(--teal-dark)] active:scale-[0.98]"
+          className="mb-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--teal)] text-[14px] font-bold text-[var(--on-teal)] shadow-lg shadow-black/15 transition-all hover:-translate-y-0.5 hover:bg-[var(--teal-dark)] active:scale-[0.98]"
         >
           <span className="text-lg font-light leading-none">+</span>
           Новий запис
@@ -218,7 +218,7 @@ export default function AppShell({ children }: Props) {
         <button
           onClick={openNewAppointment}
           aria-label="Новий запис"
-          className="md:hidden fixed right-4 z-20 w-14 h-14 rounded-full bg-[var(--teal)] text-white text-2xl font-light leading-none shadow-lg shadow-black/20 flex items-center justify-center active:scale-[0.92] transition-transform"
+          className="md:hidden fixed right-4 z-20 w-14 h-14 rounded-full bg-[var(--teal)] text-[var(--on-teal)] text-2xl font-light leading-none shadow-lg shadow-black/20 flex items-center justify-center active:scale-[0.92] transition-transform"
           style={{ bottom: "calc(var(--bottom-nav-total) + 12px)" }}
         >
           +

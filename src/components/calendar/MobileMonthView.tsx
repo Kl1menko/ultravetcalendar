@@ -52,13 +52,13 @@ export function MobileMonthView({
               onClick={() => onDayNavigate(d)}
               className={[
                 "flex flex-col items-center gap-1 rounded-xl py-1.5 transition active:scale-95",
-                isSel ? "bg-[var(--teal)] text-white" : isToday ? "bg-[var(--teal-light)]" : "",
+                isSel ? "bg-[var(--teal)] text-[var(--on-teal)]" : isToday ? "bg-[var(--teal-light)]" : "",
               ].join(" ")}
             >
               <span
                 className={[
                   "text-[13px] font-bold",
-                  isSel ? "text-white" : inMonth ? "text-[var(--ink)]" : "text-[var(--uv-gray-300)]",
+                  isSel ? "text-[var(--on-teal)]" : inMonth ? "text-[var(--ink)]" : "text-[var(--uv-gray-300)]",
                 ].join(" ")}
               >
                 {d.getDate()}
@@ -69,7 +69,7 @@ export function MobileMonthView({
                     <span
                       key={i}
                       className="h-1.5 w-1.5 rounded-full"
-                      style={{ background: isSel ? "#fff" : "var(--teal)" }}
+                      style={{ background: isSel ? "var(--on-teal)" : "var(--teal)" }}
                     />
                   ))}
               </span>

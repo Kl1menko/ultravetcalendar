@@ -160,12 +160,12 @@ export default function ClientsPage() {
               onClick={() => setScope(item.key)}
               className={`flex h-9 items-center gap-2 rounded-lg border px-3 text-[13px] font-semibold transition-colors ${
                 active
-                  ? "border-[var(--teal)] bg-[var(--teal)] text-white shadow-sm"
+                  ? "border-[var(--teal)] bg-[var(--teal)] text-[var(--on-teal)] shadow-sm"
                   : "glass-chip border-transparent text-[var(--ink-2)]"
               }`}
             >
               <span>{item.label}</span>
-              <span className={`rounded-md px-1.5 py-0.5 text-[11px] ${active ? "bg-white/20 text-white" : "bg-[var(--paper)] text-[var(--muted-col)]"}`}>
+              <span className={`rounded-md px-1.5 py-0.5 text-[11px] ${active ? "bg-[var(--on-teal)]/15 text-[var(--on-teal)]" : "bg-[var(--paper)] text-[var(--muted-col)]"}`}>
                 {item.count}
               </span>
             </button>
@@ -274,7 +274,7 @@ export default function ClientsPage() {
                         <a
                           href={`tel:${c.phone}`}
                           aria-label={`Подзвонити ${c.client}`}
-                          className="flex h-10 flex-col items-center justify-center gap-0.5 rounded-lg bg-[var(--teal)] text-white transition-all hover:bg-[var(--teal-dark)] active:scale-95"
+                          className="flex h-10 flex-col items-center justify-center gap-0.5 rounded-lg bg-[var(--teal)] text-[var(--on-teal)] transition-all hover:bg-[var(--teal-dark)] active:scale-95"
                         >
                           <Phone className="h-[18px] w-[18px]" />
                         </a>

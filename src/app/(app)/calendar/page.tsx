@@ -98,7 +98,7 @@ export default function CalendarPage() {
           <button
             onClick={goToToday}
             aria-label="Сьогодні"
-            className="grid h-10 place-items-center rounded-2xl border-2 border-[var(--teal)] px-3.5 text-[14px] font-bold text-[var(--teal)] transition-colors hover:bg-[var(--teal-light)] md:px-4"
+            className="grid h-10 place-items-center rounded-2xl border border-[var(--teal)] px-3.5 text-[14px] font-bold text-[var(--teal)] transition-colors hover:bg-[var(--teal-light)] md:px-4"
           >
             Сьогодні
           </button>
@@ -143,7 +143,7 @@ export default function CalendarPage() {
             aria-label="Фільтр лікаря"
             className={`relative grid h-10 w-10 place-items-center rounded-2xl border transition-colors md:hidden ${
               doctorActive
-                ? "border-[var(--teal)] bg-[var(--teal)] text-white"
+                ? "border-[var(--teal)] bg-[var(--teal)] text-[var(--on-teal)]"
                 : "glass text-[var(--ink-2)]"
             }`}
           >
@@ -181,7 +181,7 @@ export default function CalendarPage() {
                 className={[
                   "my-1 flex-1 rounded-xl py-2 text-center text-[14px] font-semibold transition-all active:scale-[0.97]",
                   active
-                    ? "bg-[var(--uv-black)] text-white shadow-sm"
+                    ? "bg-[var(--uv-black)] text-[var(--on-teal)] shadow-sm"
                     : "text-[var(--muted-col)] hover:text-[var(--ink-2)]",
                 ].join(" ")}
               >

@@ -1,7 +1,7 @@
-import { supabase } from "./supabase"
-import { Appointment, AppointmentRow, AppointmentStatus } from "@/types"
-import { normalizeStatus } from "./status"
-import { logAppError } from "./error-log"
+import { supabase } from "./supabase";
+import { Appointment, AppointmentRow, AppointmentStatus } from "@/types";
+import { normalizeStatus } from "./status";
+import { logAppError } from "./error-log";
 
 function normalizeRow(row: AppointmentRow): Appointment {
   return {
@@ -23,13 +23,32 @@ function normalizeRow(row: AppointmentRow): Appointment {
     status: normalizeStatus(row.status) ?? "Заплановано",
     created_by: row.created_by,
     remind: row.remind ?? false,
-  }
+  };
 }
 
 // Помилка «об'єкта (view/таблиці) немає в схемі» — RLS SQL ще не застосовано.
 // PostgREST повертає PGRST205 (не знайдено в кеші схеми), Postgres — 42P01.
 function isMissingObject(code?: string) {
-  return code === "PGRST205" || code === "42P01"
+  return code === "PGRST205" || code === "42P01";
+}
+
+// Поля remind/reminded_at недоступні в БД — повна міграція ще не накатана.
+// Можливі коди:
+//   PGRST204 / 42703 — колонки взагалі немає в схемі (add-column не зроблено);
+//   42501            — колонка є, але немає column-level grant на неї
+//                      (rls-policies дає insert/update лише на перелік колонок).
+// У будь-якому з цих випадків повторюємо запит без полів нагадування.
+function isReminderFieldUnavailable(code?: string) {
+  return code === "PGRST204" || code === "42703" || code === "42501";
+}
+
+// Прибирає поля нагадування з payload — фолбек, якщо їх ще немає/недоступні в БД.
+// Базовий запис не має ламатись через відсутню опційну фічу нагадувань.
+function stripReminderFields<T extends Record<string, unknown>>(payload: T): T {
+  const rest = { ...payload };
+  delete rest.remind;
+  delete rest.reminded_at;
+  return rest;
 }
 
 // Усі читають записи з view appointments_public. Суми (price) відкриті для всіх
@@ -43,72 +62,90 @@ export async function fetchAppointments(): Promise<Appointment[]> {
     .from("appointments_public")
     .select("*")
     .order("date", { ascending: true })
-    .order("start_time", { ascending: true })
+    .order("start_time", { ascending: true });
 
   if (error) {
     if (isMissingObject(error.code)) {
       logAppError(
         "fetchAppointments",
-        "view appointments_public відсутній — застосуй supabase/rls-policies.sql"
-      )
+        "view appointments_public відсутній — застосуй supabase/rls-policies.sql",
+      );
     } else {
-      logAppError("fetchAppointments", error)
+      logAppError("fetchAppointments", error);
     }
-    return []
+    return [];
   }
 
-  return (data as unknown as AppointmentRow[]).map(normalizeRow)
+  return (data as unknown as AppointmentRow[]).map(normalizeRow);
 }
 
 export type AppointmentPayload = {
-  date: string
-  start_time: string
-  end_time: string
-  client: string
-  phone: string
-  pet: string
-  animal: string
-  age: string
-  weight: string
-  address: string
-  service: string
-  price?: number
-  status?: AppointmentStatus
-  doctor: string
-  comment: string
-  created_by?: string
-  remind?: boolean
+  date: string;
+  start_time: string;
+  end_time: string;
+  client: string;
+  phone: string;
+  pet: string;
+  animal: string;
+  age: string;
+  weight: string;
+  address: string;
+  service: string;
+  price?: number;
+  status?: AppointmentStatus;
+  doctor: string;
+  comment: string;
+  created_by?: string;
+  remind?: boolean;
   /** Скидання прапорця «вже надіслано» — щоб нагадування пішло знову (новий час). */
-  reminded_at?: string | null
-}
+  reminded_at?: string | null;
+};
 
 export async function createAppointment(
-  payload: AppointmentPayload
+  payload: AppointmentPayload,
 ): Promise<{ error: Error | null }> {
-  const { error } = await supabase.from("appointments").insert(payload)
-  if (error) logAppError("createAppointment", error)
-  return { error: error ? new Error(error.message) : null }
+  let { error } = await supabase.from("appointments").insert(payload);
+  // Фолбек: поля remind/reminded_at ще недоступні в БД — повторюємо без них,
+  // щоб базовий запис створювався навіть до повного накату міграції нагадувань.
+  if (error && isReminderFieldUnavailable(error.code)) {
+    ({ error } = await supabase
+      .from("appointments")
+      .insert(stripReminderFields(payload)));
+  }
+  if (error) logAppError("createAppointment", error);
+  return { error: error ? new Error(error.message) : null };
 }
 
 export async function updateAppointment(
   id: string,
-  payload: Partial<AppointmentPayload>
+  payload: Partial<AppointmentPayload>,
 ): Promise<{ error: Error | null }> {
-  const { error } = await supabase.from("appointments").update(payload).eq("id", id)
-  if (error) logAppError("updateAppointment", error)
-  return { error: error ? new Error(error.message) : null }
+  let { error } = await supabase
+    .from("appointments")
+    .update(payload)
+    .eq("id", id);
+  if (error && isReminderFieldUnavailable(error.code)) {
+    ({ error } = await supabase
+      .from("appointments")
+      .update(stripReminderFields(payload))
+      .eq("id", id));
+  }
+  if (error) logAppError("updateAppointment", error);
+  return { error: error ? new Error(error.message) : null };
 }
 
 // Тонка обгортка для швидкої зміни статусу з деталей запису.
 export async function updateStatus(
   id: string,
-  status: AppointmentStatus
+  status: AppointmentStatus,
 ): Promise<{ error: Error | null }> {
-  return updateAppointment(id, { status })
+  return updateAppointment(id, { status });
 }
 
-export async function deleteAppointment(id: string): Promise<{ error: Error | null }> {
-  const { error } = await supabase.from("appointments").delete().eq("id", id)
-  if (error) logAppError("deleteAppointment", error)
-  return { error: error ? new Error(error.message) : null }
+export async function deleteAppointment(
+  id: string,
+): Promise<{ error: Error | null }> {
+  const { error } = await supabase.from("appointments").delete().eq("id", id);
+  if (error) logAppError("deleteAppointment", error);
+  return { error: error ? new Error(error.message) : null };
 }

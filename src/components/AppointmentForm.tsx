@@ -450,7 +450,7 @@ export default function AppointmentForm({
             type="submit"
             form="appointment-form"
             disabled={saving}
-            className="h-11 rounded-xl bg-[var(--teal)] text-[14px] font-semibold text-white transition-all hover:bg-[var(--teal-dark)] active:scale-[0.98] disabled:opacity-60 md:h-12 md:rounded-2xl md:shadow-lg md:shadow-black/15"
+            className="h-11 rounded-xl bg-[var(--teal)] text-[14px] font-semibold text-[var(--on-teal)] transition-all hover:bg-[var(--teal-dark)] active:scale-[0.98] disabled:opacity-60 md:h-12 md:rounded-2xl md:shadow-lg md:shadow-black/15"
           >
             {saving ? "Зберігаю…" : "Зберегти"}
           </button>

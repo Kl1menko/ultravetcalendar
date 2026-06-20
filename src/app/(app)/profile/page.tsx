@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import NotificationsCard from "@/components/NotificationsCard"
+import ThemeToggle from "@/components/ThemeToggle"
 import { roleLabel } from "@/lib/doctors"
 import { parseServices } from "@/lib/services"
 import { supabase } from "@/lib/supabase"
@@ -143,7 +144,7 @@ export default function ProfilePage() {
         <div className="flex flex-col gap-4">
         <section className="glass rounded-xl p-4 md:rounded-[24px] md:p-6">
           <div className="flex items-center gap-4">
-            <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-[var(--teal)] text-[22px] font-bold text-white">
+            <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-[var(--teal)] text-[22px] font-bold text-[var(--on-teal)]">
               {initials(displayName)}
             </div>
             <div className="min-w-0">
@@ -183,7 +184,11 @@ export default function ProfilePage() {
         <section className="glass rounded-xl p-4 md:rounded-[24px] md:p-6">
           <h2 className="text-[17px] font-bold text-[var(--ink)]">Акаунт</h2>
 
-          <form className="mt-4 space-y-3" onSubmit={handleNameSubmit}>
+          <div className="mt-4 border-b border-[var(--line)] pb-5">
+            <ThemeToggle />
+          </div>
+
+          <form className="mt-5 space-y-3" onSubmit={handleNameSubmit}>
             <div className="space-y-1.5">
               <Label htmlFor="display-name">Ім’я відображення</Label>
               <Input

@@ -69,7 +69,7 @@ export default function WeekStrip({ selectedDate, onSelectDate }: Props) {
                 className={[
                   "text-[9px] font-bold uppercase tracking-[0.4px] leading-none",
                   isSelected
-                    ? "text-white/70"
+                    ? "text-[var(--on-teal)]/70"
                     : isTodayDay
                     ? "text-[var(--teal)]"
                     : "text-[var(--muted-col)]",
@@ -81,7 +81,7 @@ export default function WeekStrip({ selectedDate, onSelectDate }: Props) {
                 className={[
                   "text-[18px] font-bold leading-none",
                   isSelected
-                    ? "text-white"
+                    ? "text-[var(--on-teal)]"
                     : isTodayDay
                     ? "text-[var(--teal-dark)] font-bold"
                     : "text-[var(--ink)]",
