@@ -87,4 +87,6 @@ export type AppointmentRow = {
   updated_at: string
   remind: boolean | null
   reminded_at: string | null
+  /** Коли клієнту вже надіслано Telegram-нагадування (NULL = ще ні). */
+  client_reminded_at: string | null
 }

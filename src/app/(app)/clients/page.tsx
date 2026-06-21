@@ -13,13 +13,17 @@ import { Appointment } from "@/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { CalendarClock, ChevronDown, Check, Copy, MessageCircle, Phone, PawPrint, Search, X } from "lucide-react"
+import { CalendarClock, ChevronDown, Check, Copy, Phone, PawPrint, Search, X } from "lucide-react"
 
-/** Посилання на WhatsApp у міжнародному форматі (укр. номери). */
-function whatsappLink(phone: string) {
+/** Міжнародний номер для укр. телефонів: 0XXXXXXXXX → 380XXXXXXXXX. */
+function intlNumber(phone: string) {
   const d = digitsOnly(phone)
-  const intl = d.length === 10 && d.startsWith("0") ? "38" + d : d
-  return `https://wa.me/${intl}`
+  return d.length === 10 && d.startsWith("0") ? "38" + d : d
+}
+
+/** Посилання на чат у Viber (укр. номери, формат +380…). */
+function viberLink(phone: string) {
+  return `viber://chat?number=%2B${intlNumber(phone)}`
 }
 
 /** Майбутній/активний візит — дата ≥ сьогодні і не скасований/завершений. */
@@ -279,13 +283,11 @@ export default function ClientsPage() {
                           <Phone className="h-[18px] w-[18px]" />
                         </a>
                         <a
-                          href={whatsappLink(c.phone)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={`Написати ${c.client} у WhatsApp`}
+                          href={viberLink(c.phone)}
+                          aria-label={`Написати ${c.client} у Viber`}
                           className="flex h-10 items-center justify-center rounded-lg bg-[var(--paper)] text-[var(--ink-2)] transition-all hover:bg-[var(--line)] active:scale-95"
                         >
-                          <MessageCircle className="h-[18px] w-[18px]" />
+                          <span className="text-[12px] font-semibold">Viber</span>
                         </a>
                         <a
                           href={`sms:${c.phone}`}

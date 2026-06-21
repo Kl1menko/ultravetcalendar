@@ -48,6 +48,7 @@ function stripReminderFields<T extends Record<string, unknown>>(payload: T): T {
   const rest = { ...payload };
   delete rest.remind;
   delete rest.reminded_at;
+  delete rest.client_reminded_at;
   return rest;
 }
 
@@ -99,6 +100,8 @@ export type AppointmentPayload = {
   remind?: boolean;
   /** Скидання прапорця «вже надіслано» — щоб нагадування пішло знову (новий час). */
   reminded_at?: string | null;
+  /** Скидання Telegram-нагадування клієнту — щоб пішло знову на новий час. */
+  client_reminded_at?: string | null;
 };
 
 export async function createAppointment(

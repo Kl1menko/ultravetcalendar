@@ -181,7 +181,7 @@ export default function AppointmentForm({
       const remindToggledOn = remind && !editing.remind
       const editPayload =
         remind && (timeChanged || remindToggledOn)
-          ? { ...payload, reminded_at: null }
+          ? { ...payload, reminded_at: null, client_reminded_at: null }
           : payload
       const res = await updateAppointment(editing.id, editPayload)
       err = res.error
