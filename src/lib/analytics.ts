@@ -18,11 +18,13 @@ export const PERIODS: { value: Period; label: string }[] = [
 ]
 
 // Повний календарний діапазон [start..end] (включно) для періоду відносно
-// сьогодні. Включає майбутні записи в межах періоду (це планувальник).
+// якірної дати (anchor; за замовчуванням — сьогодні). Anchor дозволяє
+// дивитися конкретний місяць/рік у минулому, не лише поточний.
+// Включає майбутні записи в межах періоду (це планувальник).
 // "all" → null (без обмежень).
-export function periodRange(period: Period): { start: Date; end: Date } | null {
+export function periodRange(period: Period, anchor: Date = new Date()): { start: Date; end: Date } | null {
   if (period === "all") return null
-  const start = new Date()
+  const start = new Date(anchor)
   start.setHours(0, 0, 0, 0)
   const end = new Date(start)
 
@@ -48,8 +50,12 @@ export function periodRange(period: Period): { start: Date; end: Date } | null {
   return { start, end }
 }
 
-export function filterByPeriod(appointments: Appointment[], period: Period): Appointment[] {
-  const range = periodRange(period)
+export function filterByPeriod(
+  appointments: Appointment[],
+  period: Period,
+  anchor: Date = new Date()
+): Appointment[] {
+  const range = periodRange(period, anchor)
   if (!range) return appointments
   const startIso = isoDate(range.start)
   const endIso = isoDate(range.end)
@@ -61,9 +67,10 @@ export function filterByPeriod(appointments: Appointment[], period: Period): App
 // Для "all" порівняння немає (повертаємо null).
 export function filterByPreviousPeriod(
   appointments: Appointment[],
-  period: Period
+  period: Period,
+  anchor: Date = new Date()
 ): Appointment[] | null {
-  const range = periodRange(period)
+  const range = periodRange(period, anchor)
   if (!range) return null
   // Довжина поточного діапазону у днях (включно).
   const spanDays = Math.round((range.end.getTime() - range.start.getTime()) / 86_400_000) + 1
@@ -88,6 +95,49 @@ export function trendUnitLabel(period: Period): string {
   if (period === "day") return " по годинах"
   if (period === "year" || period === "all") return " по місяцях"
   return " по днях"
+}
+
+// ─── навігація по якірній даті (вибір конкретного місяця/року) ───────────────
+
+// Чи підтримує період листання в минуле/майбутнє (день/тиждень — ні, бо їх
+// надто багато; вибираємо лише місяць і рік).
+export function isNavigablePeriod(period: Period): boolean {
+  return period === "month" || period === "year"
+}
+
+const MONTHS_UK = [
+  "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
+  "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень",
+]
+
+// Зсув якоря на N кроків (місяців для "month", років для "year").
+// Для ненавігаційних періодів повертаємо anchor без змін.
+export function shiftAnchor(anchor: Date, period: Period, steps: number): Date {
+  const next = new Date(anchor)
+  next.setHours(0, 0, 0, 0)
+  if (period === "month") next.setMonth(next.getMonth() + steps, 1)
+  else if (period === "year") next.setFullYear(next.getFullYear() + steps, 0, 1)
+  return next
+}
+
+// Чи якір вже у поточному (або майбутньому) періоді — щоб блокувати кнопку «далі».
+export function isCurrentOrFuturePeriod(anchor: Date, period: Period): boolean {
+  const now = new Date()
+  if (period === "month") {
+    return (
+      anchor.getFullYear() > now.getFullYear() ||
+      (anchor.getFullYear() === now.getFullYear() && anchor.getMonth() >= now.getMonth())
+    )
+  }
+  if (period === "year") return anchor.getFullYear() >= now.getFullYear()
+  return true
+}
+
+// Людська мітка обраного якоря: «Травень 2025» / «2024».
+export function anchorLabel(anchor: Date, period: Period): string {
+  if (period === "month") return `${MONTHS_UK[anchor.getMonth()]} ${anchor.getFullYear()}`
+  if (period === "year") return String(anchor.getFullYear())
+  return ""
 }
 
 // Підпис для рядка порівняння під KPI-картками.

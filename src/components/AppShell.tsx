@@ -4,8 +4,7 @@ import { usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { supabase } from "@/lib/supabase"
-import { Shield } from "lucide-react"
-import { canSeeAdmin, canSeeClients, canSeePrices, roleLabel } from "@/lib/doctors"
+import { canSeeClients, roleLabel } from "@/lib/doctors"
 import { useAuth } from "@/context/auth"
 import { useNoticesContext } from "@/context/notices"
 import { useModalsContext } from "@/context/modals"
@@ -62,8 +61,12 @@ export default function AppShell({ children }: Props) {
   const { alertsBadge } = useNoticesContext()
   const { openNewAppointment, openSearch } = useModalsContext()
   const showClients = canSeeClients(role)
-  const showAnalytics = canSeePrices(role)
-  const showAdmin = canSeeAdmin(role)
+  // Аналітику в таб-меню показуємо лише головному лікарю (head) — він нею
+  // користується щодня. Адмін має доступ, але як лікар нею не користується,
+  // тож для нього аналітика та сторінка /admin живуть у Профілі (нижче), щоб
+  // не захаращувати таб-бар. canSeePrices/canSeeAdmin лишаються джерелом
+  // доступу — це лише про видимість пунктів у меню.
+  const showAnalytics = role === "head"
   const metadata = user.user_metadata ?? {}
   const displayName =
     (typeof metadata.display_name === "string" && metadata.display_name.trim()) ||
@@ -81,7 +84,6 @@ export default function AppShell({ children }: Props) {
     ...(showClients ? [{ href: "/clients", label: "Клієнти", icon: <ClientsIcon /> }] : []),
     { href: "/alerts", label: "Сповіщення", icon: <AlertsIcon /> },
     ...(showAnalytics ? [{ href: "/analytics", label: "Аналітика", icon: <AnalyticsIcon /> }] : []),
-    ...(showAdmin ? [{ href: "/admin", label: "Адмін", icon: <Shield className="w-5 h-5" strokeWidth={1.8} /> }] : []),
     { href: "/profile",   label: "Профіль",     icon: <ProfileIcon /> },
   ]
 

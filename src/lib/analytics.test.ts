@@ -9,6 +9,13 @@ import {
   peakHours,
   peakWeekdays,
   revenueTrend,
+  periodRange,
+  filterByPeriod,
+  filterByPreviousPeriod,
+  isNavigablePeriod,
+  shiftAnchor,
+  isCurrentOrFuturePeriod,
+  anchorLabel,
 } from "./analytics"
 import { Appointment } from "@/types"
 
@@ -130,5 +137,75 @@ describe("revenueTrend", () => {
     expect(res).toHaveLength(2)
     expect(res[0].revenue).toBe(800)
     expect(res[1].revenue).toBe(200)
+  })
+})
+
+describe("anchor-aware periods (вибір конкретного місяця/року)", () => {
+  it("periodRange для місяця прив'язується до anchor, а не до сьогодні", () => {
+    const anchor = new Date(2025, 4, 15) // травень 2025
+    const range = periodRange("month", anchor)!
+    expect(range.start.getFullYear()).toBe(2025)
+    expect(range.start.getMonth()).toBe(4)
+    expect(range.start.getDate()).toBe(1)
+    expect(range.end.getMonth()).toBe(4)
+    expect(range.end.getDate()).toBe(31) // травень — 31 день
+  })
+
+  it("periodRange для року охоплює весь рік anchor", () => {
+    const range = periodRange("year", new Date(2024, 6, 9))!
+    expect(range.start.getFullYear()).toBe(2024)
+    expect(range.start.getMonth()).toBe(0)
+    expect(range.start.getDate()).toBe(1)
+    expect(range.end.getMonth()).toBe(11)
+    expect(range.end.getDate()).toBe(31)
+  })
+
+  it("filterByPeriod з anchor вибирає лише записи обраного місяця", () => {
+    const data = [
+      appt({ id: "a", date: "2025-05-10" }),
+      appt({ id: "b", date: "2025-05-28" }),
+      appt({ id: "c", date: "2025-06-01" }),
+      appt({ id: "d", date: "2026-06-15" }),
+    ]
+    const res = filterByPeriod(data, "month", new Date(2025, 4, 15))
+    expect(res.map((a) => a.id).sort()).toEqual(["a", "b"])
+  })
+
+  it("filterByPreviousPeriod з anchor бере попередній місяць відносно anchor", () => {
+    const data = [
+      appt({ id: "prev", date: "2025-04-12" }),
+      appt({ id: "cur", date: "2025-05-12" }),
+    ]
+    const res = filterByPreviousPeriod(data, "month", new Date(2025, 4, 15))!
+    expect(res.map((a) => a.id)).toEqual(["prev"])
+  })
+
+  it("isNavigablePeriod — лише month і year", () => {
+    expect(isNavigablePeriod("month")).toBe(true)
+    expect(isNavigablePeriod("year")).toBe(true)
+    expect(isNavigablePeriod("week")).toBe(false)
+    expect(isNavigablePeriod("day")).toBe(false)
+    expect(isNavigablePeriod("all")).toBe(false)
+  })
+
+  it("shiftAnchor зсуває місяць/рік і нормалізує на 1-ше число", () => {
+    const back = shiftAnchor(new Date(2025, 4, 31), "month", -1)
+    expect(back.getMonth()).toBe(3) // квітень, без переповнення в травень
+    expect(back.getDate()).toBe(1)
+    const fwdYear = shiftAnchor(new Date(2024, 6, 9), "year", 1)
+    expect(fwdYear.getFullYear()).toBe(2025)
+    expect(fwdYear.getMonth()).toBe(0)
+  })
+
+  it("isCurrentOrFuturePeriod блокує листання вперед, минуле — дозволяє", () => {
+    const now = new Date()
+    expect(isCurrentOrFuturePeriod(now, "month")).toBe(true)
+    expect(isCurrentOrFuturePeriod(new Date(2000, 0, 1), "month")).toBe(false)
+    expect(isCurrentOrFuturePeriod(new Date(now.getFullYear() + 1, 0, 1), "year")).toBe(true)
+  })
+
+  it("anchorLabel дає людську мітку місяця і року", () => {
+    expect(anchorLabel(new Date(2025, 4, 1), "month")).toBe("Травень 2025")
+    expect(anchorLabel(new Date(2024, 0, 1), "year")).toBe("2024")
   })
 })

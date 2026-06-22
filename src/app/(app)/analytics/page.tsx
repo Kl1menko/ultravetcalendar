@@ -14,6 +14,10 @@ import {
   pctChange,
   trendUnitLabel,
   periodComparisonLabel,
+  isNavigablePeriod,
+  isCurrentOrFuturePeriod,
+  shiftAnchor,
+  anchorLabel,
   peakHours,
   peakWeekdays,
   revenueTrend,
@@ -66,7 +70,7 @@ function Bar({ value, max, label, sublabel, valueText, colorIdx = 0 }: {
   return (
     <div className="flex items-center gap-3 md:gap-3.5">
       {label !== "" && (
-        <span className="w-8 text-right text-[11px] font-bold text-[var(--muted-col)] shrink-0 md:w-10 md:text-[13px]">{label}</span>
+        <span className="w-8 text-right text-[11px] font-medium text-[var(--muted-col)] shrink-0 md:w-10 md:text-[13px]">{label}</span>
       )}
       <div className="h-7 min-w-0 flex-1 overflow-hidden rounded-lg bg-[var(--paper)] md:h-8">
         <div
@@ -81,7 +85,7 @@ function Bar({ value, max, label, sublabel, valueText, colorIdx = 0 }: {
           }}
         >
           {value > 0 && (
-            <span className="text-[11px] font-bold leading-none whitespace-nowrap md:text-[13px]" style={{ color: color.text }}>
+            <span className="text-[11px] font-semibold leading-none whitespace-nowrap md:text-[13px]" style={{ color: color.text }}>
               {text}
             </span>
           )}
@@ -110,8 +114,8 @@ function RevenueRow({ name, revenue, share, avg, max, colorIdx }: {
   return (
     <div className="flex flex-col gap-1 md:gap-1.5">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="min-w-0 truncate text-[13px] font-semibold text-[var(--ink)] md:text-[14px]">{name}</span>
-        <span className="shrink-0 text-[13px] font-bold text-[var(--ink)] md:text-[15px]">{formatMoney(revenue)}</span>
+        <span className="min-w-0 truncate text-[13px] font-medium text-[var(--ink)] md:text-[14px]">{name}</span>
+        <span className="shrink-0 text-[13px] font-semibold text-[var(--ink)] md:text-[15px]">{formatMoney(revenue)}</span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-[var(--paper)] md:h-2.5">
         <div
@@ -139,7 +143,7 @@ function Delta({ value }: { value: number | null }) {
       : "text-[var(--red)] bg-[var(--red-bg)]"
   const arrow = isFlat ? "→" : isUp ? "↑" : "↓"
   return (
-    <Badge className={`gap-0.5 rounded-md px-1.5 text-[10px] font-bold ${color}`}>
+    <Badge className={`gap-0.5 rounded-md px-1.5 text-[10px] font-semibold ${color}`}>
       {arrow} {Math.abs(value)}%
     </Badge>
   )
@@ -149,7 +153,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <Card className="glass-hover gap-0 rounded-2xl py-0">
       <CardHeader className="border-b border-[var(--line)] px-4 py-3 md:px-5 md:py-4">
-        <CardTitle className="text-[13px] font-bold text-[var(--ink)] md:text-[15px]">{title}</CardTitle>
+        <CardTitle className="text-[13px] font-semibold text-[var(--ink)] md:text-[15px]">{title}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-2 px-4 py-3 md:gap-2.5 md:px-5 md:py-4">{children}</CardContent>
     </Card>
@@ -161,11 +165,27 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function AnalyticsPage() {
   const { appointments, canSeePrices } = useCalendarContext()
   const [period, setPeriod] = useState<Period>("month")
+  // Якірна дата вибраного періоду. Для місяця/року нею керує навігатор
+  // (‹ Травень 2025 ›); для решти періодів — завжди «сьогодні».
+  const [anchor, setAnchor] = useState<Date>(() => new Date())
 
-  const scoped = useMemo(() => filterByPeriod(appointments, period), [appointments, period])
+  const navigable = isNavigablePeriod(period)
+  const atCurrent = isCurrentOrFuturePeriod(anchor, period)
+
+  // Зміна періоду скидає якір на сьогодні, щоб не «застрягти» в минулому
+  // місяці при переході, напр., на «Тиждень».
+  const changePeriod = (p: Period) => {
+    setPeriod(p)
+    setAnchor(new Date())
+  }
+
+  const scoped = useMemo(
+    () => filterByPeriod(appointments, period, anchor),
+    [appointments, period, anchor]
+  )
   const prevScoped = useMemo(
-    () => filterByPreviousPeriod(appointments, period),
-    [appointments, period]
+    () => filterByPreviousPeriod(appointments, period, anchor),
+    [appointments, period, anchor]
   )
 
   const total = scoped.length
@@ -203,9 +223,14 @@ export default function AnalyticsPage() {
   const deltaAvgCheck = hasComparison ? pctChange(avgCheck, prevAvgCheck) : null
 
   const handleExport = () => {
-    const today = isoDate(new Date())
+    // Для навігаційних періодів кодуємо вибраний місяць/рік (YYYY-MM / YYYY),
+    // інакше — сьогоднішню дату. Так файли різних періодів не конфліктують.
+    const isoAnchor = isoDate(anchor)
+    const stamp = navigable
+      ? period === "month" ? isoAnchor.slice(0, 7) : isoAnchor.slice(0, 4)
+      : isoDate(new Date())
     const periodKey = period === "all" ? "all" : period
-    downloadCsv(`appointments_${periodKey}_${today}.csv`, appointmentsToCsv(scoped))
+    downloadCsv(`appointments_${periodKey}_${stamp}.csv`, appointmentsToCsv(scoped))
   }
 
   // Повний бекап усіх записів (не лише за період) у JSON — повний зліпок для
@@ -224,10 +249,10 @@ export default function AnalyticsPage() {
     return (
       <div className="px-4 pt-4 md:px-0 md:pt-0">
         <header className="pb-4 md:desktop-page-header md:px-6 md:py-5">
-          <h1 className="text-[22px] font-bold text-[var(--ink)] md:text-[28px]">Аналітика</h1>
+          <h1 className="text-[22px] font-semibold text-[var(--ink)] md:text-[28px]">Аналітика</h1>
         </header>
         <div className="glass mx-auto mt-6 max-w-md rounded-2xl px-5 py-8 text-center">
-          <p className="text-[15px] font-bold text-[var(--ink)]">Доступ обмежено</p>
+          <p className="text-[15px] font-semibold text-[var(--ink)]">Доступ обмежено</p>
           <p className="mt-1.5 text-[13px] text-[var(--muted-col)]">
             Аналітика доступна лише головному лікарю.
           </p>
@@ -249,7 +274,7 @@ export default function AnalyticsPage() {
   return (
     <div className="flex flex-col gap-4 px-3.5 pt-3 pb-6 md:gap-5 md:px-0 md:pt-0">
       <header className="flex items-center justify-between gap-3 pb-1 md:desktop-page-header md:px-6 md:py-5">
-        <h1 className="text-[22px] md:text-[28px] font-bold tracking-tight text-[var(--ink)]">
+        <h1 className="text-[22px] md:text-[28px] font-semibold tracking-tight text-[var(--ink)]">
           Аналітика
         </h1>
         <div className="flex shrink-0 items-center gap-2">
@@ -288,7 +313,7 @@ export default function AnalyticsPage() {
           <Button
             key={p.value}
             variant="outline"
-            onClick={() => setPeriod(p.value)}
+            onClick={() => changePeriod(p.value)}
             className={[
               "h-9 shrink-0 rounded-xl border-[1.5px] px-3.5 text-[13px] font-semibold md:h-10 md:px-5 md:text-[14px]",
               p.value === period
@@ -301,15 +326,54 @@ export default function AnalyticsPage() {
         ))}
       </div>
 
+      {/* Навігатор по місяцях/роках — вибір конкретного періоду в минулому */}
+      {navigable && (
+        <div className="flex items-center justify-between gap-2 md:justify-start md:gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setAnchor((a) => shiftAnchor(a, period, -1))}
+            aria-label={period === "month" ? "Попередній місяць" : "Попередній рік"}
+            className="glass glass-hover h-9 w-9 shrink-0 rounded-xl p-0 text-[var(--ink-2)] hover:text-[var(--ink)] md:h-10 md:w-10 md:rounded-2xl"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </Button>
+          <span className="min-w-0 flex-1 text-center text-[15px] font-semibold text-[var(--ink)] md:flex-none md:min-w-[160px] md:text-[17px]">
+            {anchorLabel(anchor, period)}
+          </span>
+          <Button
+            variant="outline"
+            onClick={() => setAnchor((a) => shiftAnchor(a, period, 1))}
+            disabled={atCurrent}
+            aria-label={period === "month" ? "Наступний місяць" : "Наступний рік"}
+            className="glass glass-hover h-9 w-9 shrink-0 rounded-xl p-0 text-[var(--ink-2)] hover:text-[var(--ink)] disabled:opacity-40 md:h-10 md:w-10 md:rounded-2xl"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </Button>
+          {!atCurrent && (
+            <Button
+              variant="outline"
+              onClick={() => setAnchor(new Date())}
+              className="glass-chip glass-hover h-9 shrink-0 rounded-xl px-3 text-[12px] font-semibold text-[var(--ink-2)] hover:text-[var(--ink)] md:ml-1 md:h-10 md:rounded-2xl md:px-4 md:text-[13px]"
+            >
+              {period === "month" ? "Поточний місяць" : "Поточний рік"}
+            </Button>
+          )}
+        </div>
+      )}
+
       {/* Summary */}
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
         {summary.map((item) => (
           <Card key={item.label} className="glass-hover gap-1 rounded-2xl p-3 md:gap-1.5 md:p-5">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[18px] md:text-[26px] font-bold text-[var(--teal)] leading-none">{item.value}</span>
+              <span className="text-[18px] md:text-[26px] font-semibold text-[var(--teal)] leading-none">{item.value}</span>
               <Delta value={item.delta} />
             </div>
-            <span className="text-[10px] font-semibold text-[var(--muted-col)] leading-tight md:text-[12px]">{item.label}</span>
+            <span className="text-[10px] font-medium text-[var(--muted-col)] leading-tight md:text-[12px]">{item.label}</span>
           </Card>
         ))}
       </div>
@@ -344,19 +408,19 @@ export default function AnalyticsPage() {
             <Table className="min-w-[460px] text-[13px]">
               <TableHeader>
                 <TableRow className="border-b border-[var(--line)] text-[11px] uppercase tracking-[0.4px] text-[var(--muted-col)] hover:bg-transparent">
-                  <TableHead className="h-auto px-2 py-2 font-bold text-[var(--muted-col)]">Лікар</TableHead>
-                  <TableHead className="h-auto px-2 py-2 text-right font-bold text-[var(--muted-col)]">Записи</TableHead>
-                  <TableHead className="h-auto px-2 py-2 text-right font-bold text-[var(--muted-col)]">Виручка</TableHead>
-                  <TableHead className="h-auto px-2 py-2 text-right font-bold text-[var(--muted-col)]">Сер. чек</TableHead>
-                  <TableHead className="h-auto px-2 py-2 text-right font-bold text-[var(--muted-col)]">Завантаж.</TableHead>
+                  <TableHead className="h-auto px-2 py-2 font-medium text-[var(--muted-col)]">Лікар</TableHead>
+                  <TableHead className="h-auto px-2 py-2 text-right font-medium text-[var(--muted-col)]">Записи</TableHead>
+                  <TableHead className="h-auto px-2 py-2 text-right font-medium text-[var(--muted-col)]">Виручка</TableHead>
+                  <TableHead className="h-auto px-2 py-2 text-right font-medium text-[var(--muted-col)]">Сер. чек</TableHead>
+                  <TableHead className="h-auto px-2 py-2 text-right font-medium text-[var(--muted-col)]">Завантаж.</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {doctorStats.map((d) => (
                   <TableRow key={d.name} className="border-b border-[var(--line)] hover:bg-transparent">
-                    <TableCell className="px-2 py-2.5 font-semibold text-[var(--ink)]">{shortDoctor(d.name)}</TableCell>
+                    <TableCell className="px-2 py-2.5 font-medium text-[var(--ink)]">{shortDoctor(d.name)}</TableCell>
                     <TableCell className="px-2 py-2.5 text-right tabular-nums text-[var(--ink-2)]">{d.count}</TableCell>
-                    <TableCell className="px-2 py-2.5 text-right tabular-nums font-bold text-[var(--ink)]">
+                    <TableCell className="px-2 py-2.5 text-right tabular-nums font-semibold text-[var(--ink)]">
                       {d.revenue > 0 ? formatMoney(d.revenue) : "—"}
                     </TableCell>
                     <TableCell className="px-2 py-2.5 text-right tabular-nums text-[var(--ink-2)]">
@@ -368,11 +432,11 @@ export default function AnalyticsPage() {
               </TableBody>
               <TableFooter className="bg-transparent">
                 <TableRow className="border-t-2 border-[var(--teal-mid)] text-[var(--teal-dark)] hover:bg-transparent">
-                  <TableCell className="px-2 py-2.5 font-bold">Разом</TableCell>
-                  <TableCell className="px-2 py-2.5 text-right tabular-nums font-bold">{total}</TableCell>
-                  <TableCell className="px-2 py-2.5 text-right tabular-nums font-bold">{formatMoney(totalRevenue)}</TableCell>
-                  <TableCell className="px-2 py-2.5 text-right tabular-nums font-bold">{avgCheck > 0 ? formatMoney(avgCheck) : "—"}</TableCell>
-                  <TableCell className="px-2 py-2.5 text-right tabular-nums font-bold">{utilization.avgPct}%</TableCell>
+                  <TableCell className="px-2 py-2.5 font-semibold">Разом</TableCell>
+                  <TableCell className="px-2 py-2.5 text-right tabular-nums font-semibold">{total}</TableCell>
+                  <TableCell className="px-2 py-2.5 text-right tabular-nums font-semibold">{formatMoney(totalRevenue)}</TableCell>
+                  <TableCell className="px-2 py-2.5 text-right tabular-nums font-semibold">{avgCheck > 0 ? formatMoney(avgCheck) : "—"}</TableCell>
+                  <TableCell className="px-2 py-2.5 text-right tabular-nums font-semibold">{utilization.avgPct}%</TableCell>
                 </TableRow>
               </TableFooter>
             </Table>
@@ -386,7 +450,7 @@ export default function AnalyticsPage() {
           {total === 0 ? noData : (
             <>
               <div className="mb-1 flex items-baseline justify-between">
-                <span className="text-[28px] font-bold leading-none text-[var(--teal)] md:text-[34px]">{utilization.avgPct}%</span>
+                <span className="text-[28px] font-semibold leading-none text-[var(--teal)] md:text-[34px]">{utilization.avgPct}%</span>
                 <span className="text-[11px] text-[var(--muted-col)] md:text-[12px]">
                   середня зайнятість · {utilization.daysTracked} {utilization.daysTracked === 1 ? "день" : "дн."}
                 </span>
@@ -489,10 +553,10 @@ export default function AnalyticsPage() {
                 </div>
                 {/* Підсумок — головний акцент блоку */}
                 <div className="mt-3 flex items-center justify-between rounded-xl bg-[var(--teal-light)] px-3.5 py-2.5 md:px-4 md:py-3">
-                  <span className="text-[12px] font-bold uppercase tracking-[0.4px] text-[var(--teal-dark)] md:text-[13px]">
+                  <span className="text-[12px] font-medium uppercase tracking-[0.4px] text-[var(--teal-dark)] md:text-[13px]">
                     Разом
                   </span>
-                  <span className="text-[18px] font-bold text-[var(--teal-dark)] md:text-[20px]">
+                  <span className="text-[18px] font-semibold text-[var(--teal-dark)] md:text-[20px]">
                     {formatMoney(totalRevenue)}
                   </span>
                 </div>

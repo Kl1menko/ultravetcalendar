@@ -1,7 +1,8 @@
 "use client"
 
 import { FormEvent, useMemo, useState } from "react"
-import { KeyRound, LogOut, Save } from "lucide-react"
+import { BarChart3, ChevronRight, KeyRound, LogOut, Save, Shield } from "lucide-react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 
 import { useCalendarContext } from "@/context/calendar"
@@ -10,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import NotificationsCard from "@/components/NotificationsCard"
 import ThemeToggle from "@/components/ThemeToggle"
-import { roleLabel } from "@/lib/doctors"
+import { canSeeAdmin, roleLabel } from "@/lib/doctors"
 import { parseServices } from "@/lib/services"
 import { supabase } from "@/lib/supabase"
 
@@ -132,6 +133,18 @@ export default function ProfilePage() {
     router.replace("/login")
   }
 
+  // Пункти керування, які раніше були в таб-меню. Цей блок — лише для адміна:
+  // у нього аналітика й /admin прибрані з таб-бару (він ними як лікар не
+  // користується) і живуть тут. Для head аналітика лишається тільки в таб-барі,
+  // тож тут її не дублюємо.
+  const isAdmin = canSeeAdmin(role)
+  const managementLinks = isAdmin
+    ? [
+        { href: "/analytics", label: "Аналітика", desc: "Виручка, завантаженість, порівняння періодів", icon: BarChart3 },
+        { href: "/admin", label: "Адміністрування", desc: "Користувачі, ролі, системні дані", icon: Shield },
+      ]
+    : []
+
   return (
     <div className="px-3.5 pt-3 md:flex md:flex-col md:gap-5 md:px-0 md:pt-0">
       <header className="pb-4 md:desktop-page-header md:px-6 md:py-5">
@@ -177,6 +190,30 @@ export default function ProfilePage() {
             </p>
           )}
         </section>
+
+          {managementLinks.length > 0 && (
+            <section className="glass rounded-xl p-4 md:rounded-[24px] md:p-6">
+              <h2 className="text-[17px] font-semibold text-[var(--ink)]">Керування</h2>
+              <div className="mt-3 flex flex-col gap-2">
+                {managementLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="desktop-card-hover flex items-center gap-3 rounded-lg border border-[var(--line)] px-3.5 py-3 transition-colors hover:border-[var(--lg-border-strong)] md:rounded-2xl"
+                  >
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[var(--teal-light)] text-[var(--teal-dark)]">
+                      <link.icon className="size-[18px]" strokeWidth={1.8} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[14px] font-medium text-[var(--ink)]">{link.label}</span>
+                      <span className="block truncate text-[12px] text-[var(--muted-col)]">{link.desc}</span>
+                    </span>
+                    <ChevronRight className="size-4 shrink-0 text-[var(--muted-col)]" />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
           <NotificationsCard authorName={displayName} />
         </div>
