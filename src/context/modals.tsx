@@ -26,7 +26,7 @@ export function useModalsContext() {
 }
 
 export function ModalsProvider({ children }: { children: React.ReactNode }) {
-  const { user, role } = useAuth()
+  const { user } = useAuth()
   const { appointments, selectedDate, reload } = useAppointmentsContext()
 
   const [formOpen, setFormOpen] = useState(false)
@@ -98,12 +98,7 @@ export function ModalsProvider({ children }: { children: React.ReactNode }) {
         onDuplicate={(appt) => { setDetailsAppt(null); openDuplicateAppointment(appt) }}
         onDeleted={reload}
         canSeePrices={true}
-        canDelete={
-          // Видалити запис може автор або head/admin (узгоджено з RLS).
-          detailsAppt?.created_by === user.id ||
-          role === "head" ||
-          role === "admin"
-        }
+        canDelete={true}
       />
 
       <SearchDialog

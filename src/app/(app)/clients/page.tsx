@@ -38,9 +38,9 @@ function clientsCountLabel(count: number) {
 }
 
 export default function ClientsPage() {
-  const { appointments, reload, canSeeClients, role } = useCalendarContext()
-  // Видалення картки клієнта (масове видалення історії) — лише head/admin.
-  const canDeleteClient = role === "head" || role === "admin"
+  const { appointments, reload, canSeeClients } = useCalendarContext()
+  // Видалення картки клієнта (масове видалення історії) — доступне всім.
+  const canDeleteClient = true
   const [query, setQuery] = useState("")
   const [scope, setScope] = useState<"all" | "duplicates">("all")
   const [expanded, setExpanded] = useState<string | null>(null)
