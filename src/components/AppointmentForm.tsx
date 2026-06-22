@@ -58,7 +58,7 @@ export default function AppointmentForm({
   const [doctor, setDoctor] = useState<string>(DOCTORS[0])
   const [status, setStatus] = useState<AppointmentStatus>("Заплановано")
   const [comment, setComment] = useState("")
-  const [remind, setRemind] = useState(false)
+  const [remind, setRemind] = useState(true)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState("")
   // Яке з полів клієнта зараз у фокусі — керує показом випадного автодоповнення
@@ -116,7 +116,7 @@ export default function AppointmentForm({
         setDoctor(DOCTORS[0])
         setStatus("Заплановано")
         setComment("")
-        setRemind(false)
+        setRemind(true)
       }
     }, 0)
 
@@ -393,12 +393,13 @@ export default function AppointmentForm({
                 </div>
               </div>
 
-              {/* Нагадування: push відповідальному лікарю за кілька хвилин до
-                  прийому. Розсилку робить cron + Edge Function send-reminders. */}
+              {/* Нагадування вмикає дві розсилки (cron + Edge Functions):
+                  push лікарю за 5 хв (send-reminders) і Telegram клієнту за
+                  2 год (send-client-reminders). Увімкнено за замовчуванням. */}
               <label className="flex w-full min-w-0 cursor-pointer items-center justify-between gap-3 rounded-xl border border-[var(--lg-border)] bg-white/55 px-3 py-2.5 md:col-span-2">
                 <span className="flex min-w-0 flex-col">
                   <span className="text-[13px] font-semibold text-[var(--ink)]">Нагадати про прийом</span>
-                  <span className="text-[11px] font-normal text-[var(--muted-col)]">Нагадати за 5 хвилин до прийому лікарю</span>
+                  <span className="text-[11px] font-normal text-[var(--muted-col)]">Клієнту — за 2 год у Telegram, лікарю — за 5 хв</span>
                 </span>
                 <input
                   type="checkbox"
