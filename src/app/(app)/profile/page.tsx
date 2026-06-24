@@ -153,8 +153,8 @@ export default function ProfilePage() {
         </h1>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
-        <div className="flex flex-col gap-4">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="flex min-w-0 flex-col gap-4">
         <section className="glass rounded-xl p-4 md:rounded-[24px] md:p-6">
           <div className="flex items-center gap-4">
             <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-[var(--teal)] text-[22px] font-bold text-[var(--on-teal)]">
@@ -169,20 +169,24 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <div className="desktop-card-hover rounded-lg border border-[var(--line)] p-3 md:rounded-2xl md:p-4">
-              <div className="text-[12px] font-semibold text-[var(--muted-col)]">Всього записів</div>
-              <div className="mt-2 text-[26px] font-bold text-[var(--ink)]">{stats.total}</div>
+          {/* Статистика записів — лише для лікарів/head. Для адміна акаунт не
+              прив'язаний до лікаря, тож показники беззмістовні. */}
+          {!isAdmin && (
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <div className="desktop-card-hover rounded-lg border border-[var(--line)] p-3 md:rounded-2xl md:p-4">
+                <div className="text-[12px] font-semibold text-[var(--muted-col)]">Всього записів</div>
+                <div className="mt-2 text-[26px] font-bold text-[var(--ink)]">{stats.total}</div>
+              </div>
+              <div className="desktop-card-hover rounded-lg border border-[var(--line)] p-3 md:rounded-2xl md:p-4">
+                <div className="text-[12px] font-semibold text-[var(--muted-col)]">Цього місяця</div>
+                <div className="mt-2 text-[26px] font-bold text-[var(--ink)]">{stats.thisMonth}</div>
+              </div>
+              <div className="desktop-card-hover rounded-lg border border-[var(--line)] p-3 md:rounded-2xl md:p-4 min-w-0">
+                <div className="text-[12px] font-semibold text-[var(--muted-col)]">Топ послуга</div>
+                <div className="mt-2 truncate text-[15px] font-bold text-[var(--ink)]">{stats.service}</div>
+              </div>
             </div>
-            <div className="desktop-card-hover rounded-lg border border-[var(--line)] p-3 md:rounded-2xl md:p-4">
-              <div className="text-[12px] font-semibold text-[var(--muted-col)]">Цього місяця</div>
-              <div className="mt-2 text-[26px] font-bold text-[var(--ink)]">{stats.thisMonth}</div>
-            </div>
-            <div className="desktop-card-hover rounded-lg border border-[var(--line)] p-3 md:rounded-2xl md:p-4">
-              <div className="text-[12px] font-semibold text-[var(--muted-col)]">Топ послуга</div>
-              <div className="mt-2 text-[15px] font-bold text-[var(--ink)]">{stats.service}</div>
-            </div>
-          </div>
+          )}
 
           {!currentDoctorName && (
             <p className="mt-3 rounded-lg bg-[var(--teal-light)] px-3 py-2 text-[13px] text-[var(--teal-dark)]">

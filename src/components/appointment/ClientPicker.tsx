@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { Appointment } from "@/types"
 import { buildClients, ClientEntry } from "@/lib/clients"
@@ -43,6 +43,35 @@ export function ClientPicker({ appointments, query, mode, onPick }: Props) {
   // Розкритий клієнт — показуємо його тварин для вибору.
   const [openClient, setOpenClient] = useState<ClientEntry | null>(null)
 
+  // На мобільному екранна клавіатура перекриває нижню частину списку.
+  // Обмежуємо висоту панелі реальним вільним простором над клавіатурою
+  // (visualViewport.height звужується, коли клавіатура відкрита), щоб
+  // підказки скролились усередині видимої зони, а не ховались за нею.
+  const panelRef = useRef<HTMLDivElement | null>(null)
+  const [maxH, setMaxH] = useState(280)
+
+  useEffect(() => {
+    const vv = typeof window !== "undefined" ? window.visualViewport : null
+    if (!vv) return
+    const recompute = () => {
+      const panel = panelRef.current
+      if (!panel) return
+      const top = panel.getBoundingClientRect().top
+      // Низ видимої зони = offsetTop (зсув viewport) + його висота.
+      const visibleBottom = vv.offsetTop + vv.height
+      // 12px відступ від клавіатури; не даємо стиснути надто сильно.
+      const avail = Math.max(120, Math.min(280, visibleBottom - top - 12))
+      setMaxH(avail)
+    }
+    recompute()
+    vv.addEventListener("resize", recompute)
+    vv.addEventListener("scroll", recompute)
+    return () => {
+      vv.removeEventListener("resize", recompute)
+      vv.removeEventListener("scroll", recompute)
+    }
+  }, [query, openClient])
+
   const clients = useMemo(() => buildClients(appointments), [appointments])
 
   const matches = useMemo(() => {
@@ -81,6 +110,7 @@ export function ClientPicker({ appointments, query, mode, onPick }: Props) {
   return (
     <AnimatePresence>
       <motion.div
+        ref={panelRef}
         initial={{ opacity: 0, y: -4 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -4 }}
@@ -88,7 +118,10 @@ export function ClientPicker({ appointments, query, mode, onPick }: Props) {
         // спрацював до blur інпута, який інакше сховав би список.
         className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-xl border border-[var(--lg-border)] bg-white/90 shadow-lg shadow-black/10 backdrop-blur"
       >
-        <ul className="max-h-[280px] divide-y divide-[var(--line)] overflow-y-auto">
+        <ul
+          style={{ maxHeight: maxH }}
+          className="divide-y divide-[var(--line)] overflow-y-auto"
+        >
           {matches.map((c) => {
             const key = `${c.client}-${c.phone}`
             const isOpen = openClient && `${openClient.client}-${openClient.phone}` === key
