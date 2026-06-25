@@ -11,12 +11,16 @@ export type ClientEntry = {
   visits: number
   last: Appointment
   history: Appointment[]
+  // К-сть майбутніх/активних візитів. Рахуємо тут (один прохід по history), щоб
+  // бейдж на згорнутій картці не вимагав сортувати історію на кожному рендері.
+  upcomingCount: number
   duplicateCount: number
   duplicateReason: string
 }
 
-export function normalizeClientName(value: string) {
-  return value.trim().toLowerCase().replace(/\s+/g, " ")
+/** Майбутній/активний візит — дата ≥ today і не скасований/завершений. */
+function isUpcomingVisit(a: Appointment, today: string) {
+  return a.date >= today && a.status !== "Скасовано" && a.status !== "Завершено"
 }
 
 // Локальна нормалізація для групування клієнтів: зводимо до останніх 9 цифр,
@@ -32,7 +36,10 @@ export function normalizeClientPhone(value: string) {
   return digits
 }
 
-export function buildClients(appointments: Appointment[]): ClientEntry[] {
+export function buildClients(
+  appointments: Appointment[],
+  today: string = new Date().toISOString().slice(0, 10),
+): ClientEntry[] {
   const map = new Map<string, ClientEntry>()
   // сортуємо по даті щоб last завжди був найновішим
   const sorted = [...appointments].sort((a, b) =>
@@ -41,12 +48,13 @@ export function buildClients(appointments: Appointment[]): ClientEntry[] {
   sorted.forEach((a) => {
     const key = `${a.client}-${a.phone}`
     if (!map.has(key)) {
-      map.set(key, { client: a.client, phone: a.phone, pets: new Map(), visits: 0, last: a, history: [], duplicateCount: 0, duplicateReason: "" })
+      map.set(key, { client: a.client, phone: a.phone, pets: new Map(), visits: 0, last: a, history: [], upcomingCount: 0, duplicateCount: 0, duplicateReason: "" })
     }
     const entry = map.get(key)!
     entry.pets.set(a.pet, a.animal || a.pet)
     entry.visits += 1
     entry.history.push(a)
+    if (isUpcomingVisit(a, today)) entry.upcomingCount += 1
     // last — найновіший запис (sorted DESC)
     if (`${a.date} ${a.start}` > `${entry.last.date} ${entry.last.start}`) {
       entry.last = a
@@ -55,33 +63,26 @@ export function buildClients(appointments: Appointment[]): ClientEntry[] {
   const clients = [...map.values()]
   const duplicateGroups = new Map<string, ClientEntry[]>()
 
+  // Дубль визначаємо ЛИШЕ за збігом телефону. Клієнти групуються по (ім'я +
+  // телефон), тож той самий номер із різним написанням імені дає окремі картки —
+  // саме їх і позначаємо як можливий дубль. Збіг лише за іменем (різні номери —
+  // різні люди) дублем не вважаємо.
   clients.forEach((client) => {
     const phoneKey = normalizeClientPhone(client.phone)
-    const nameKey = normalizeClientName(client.client)
-    const keys = [
-      phoneKey.length >= 9 ? `phone:${phoneKey}` : "",
-      nameKey ? `name:${nameKey}` : "",
-    ].filter(Boolean)
-
-    keys.forEach((key) => {
-      const group = duplicateGroups.get(key) ?? []
-      group.push(client)
-      duplicateGroups.set(key, group)
-    })
+    if (phoneKey.length < 9) return
+    const key = `phone:${phoneKey}`
+    const group = duplicateGroups.get(key) ?? []
+    group.push(client)
+    duplicateGroups.set(key, group)
   })
 
   clients.forEach((client) => {
     const phoneKey = normalizeClientPhone(client.phone)
-    const nameKey = normalizeClientName(client.client)
-    const groups = [
-      phoneKey.length >= 9 ? { reason: "однаковий телефон", group: duplicateGroups.get(`phone:${phoneKey}`) ?? [] } : null,
-      nameKey ? { reason: "однакове ім'я клієнта", group: duplicateGroups.get(`name:${nameKey}`) ?? [] } : null,
-    ].filter((item): item is { reason: string; group: ClientEntry[] } => Boolean(item))
-    const duplicate = groups.find((item) => item.group.length > 1)
-
-    if (duplicate) {
-      client.duplicateCount = duplicate.group.length
-      client.duplicateReason = duplicate.reason
+    if (phoneKey.length < 9) return
+    const group = duplicateGroups.get(`phone:${phoneKey}`) ?? []
+    if (group.length > 1) {
+      client.duplicateCount = group.length
+      client.duplicateReason = "однаковий телефон"
     }
   })
 

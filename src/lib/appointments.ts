@@ -58,12 +58,26 @@ function stripReminderFields<T extends Record<string, unknown>>(payload: T): T {
 //
 // ⚠️ Поки supabase/rls-policies.sql + appointment-prices-for-all.sql не
 // застосовано (немає view) — записи просто не завантажаться. Накатай SQL.
-export async function fetchAppointments(): Promise<Appointment[]> {
-  const { data, error } = await supabase
+//
+// fromDate (ISO «YYYY-MM-DD», включно) обмежує вибірку нижньою межею дати, щоб
+// не тягнути всю історію в браузер. Це дефолтне «робоче вікно» календаря —
+// старіші записи довантажуються окремо (див. fetchAppointments({ fromDate: null })
+// для повної історії: клієнти/аналітика за весь час). Запит спирається на індекс
+// appointments_date_start_idx (supabase/add-appointments-date-index.sql).
+export async function fetchAppointments(
+  opts: { fromDate?: string | null } = {},
+): Promise<Appointment[]> {
+  let query = supabase
     .from("appointments_public")
     .select("*")
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
+
+  if (opts.fromDate) {
+    query = query.gte("date", opts.fromDate);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     if (isMissingObject(error.code)) {
@@ -137,6 +151,24 @@ export async function updateAppointment(
   return { error: error ? new Error(error.message) : null };
 }
 
+// Редагування «картки клієнта»: ім'я/телефон/адреса повторюються в усіх записах
+// клієнта (окремої таблиці клієнтів немає — вони виводяться з історії записів).
+// Тож оновлюємо ці спільні поля одразу в усіх його записах одним запитом по .in().
+export type ClientFields = { client: string; phone: string; address: string };
+
+export async function updateClientFields(
+  ids: string[],
+  fields: ClientFields,
+): Promise<{ error: Error | null }> {
+  if (ids.length === 0) return { error: null };
+  const { error } = await supabase
+    .from("appointments")
+    .update(fields)
+    .in("id", ids);
+  if (error) logAppError("updateClientFields", error);
+  return { error: error ? new Error(error.message) : null };
+}
+
 // Тонка обгортка для швидкої зміни статусу з деталей запису.
 export async function updateStatus(
   id: string,
@@ -150,5 +182,16 @@ export async function deleteAppointment(
 ): Promise<{ error: Error | null }> {
   const { error } = await supabase.from("appointments").delete().eq("id", id);
   if (error) logAppError("deleteAppointment", error);
+  return { error: error ? new Error(error.message) : null };
+}
+
+// Видалення кількох записів одним запитом (історія клієнта при видаленні картки).
+// Замість N окремих DELETE — один із .in(), щоб не навантажувати мережу.
+export async function deleteAppointments(
+  ids: string[],
+): Promise<{ error: Error | null }> {
+  if (ids.length === 0) return { error: null };
+  const { error } = await supabase.from("appointments").delete().in("id", ids);
+  if (error) logAppError("deleteAppointments", error);
   return { error: error ? new Error(error.message) : null };
 }

@@ -1,19 +1,20 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { motion } from "motion/react"
 import { useCalendarContext } from "@/context/calendar"
 import { staggerContainer, staggerItem } from "@/lib/motion"
 import { formatShortDate } from "@/lib/utils-app"
 import { phoneMatches, hasDigits, digitsOnly } from "@/lib/phone"
-import { deleteAppointment } from "@/lib/appointments"
+import { deleteAppointments, updateClientFields } from "@/lib/appointments"
 import { isoDate } from "@/lib/utils-app"
-import { buildClients } from "@/lib/clients"
+import { buildClients, ClientEntry } from "@/lib/clients"
 import { Appointment } from "@/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { CalendarClock, ChevronDown, Check, Copy, Phone, PawPrint, Search, X } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { CalendarClock, ChevronDown, Check, Copy, Pencil, Phone, PawPrint, Search, X } from "lucide-react"
 
 /** Міжнародний номер для укр. телефонів: 0XXXXXXXXX → 380XXXXXXXXX. */
 function intlNumber(phone: string) {
@@ -42,12 +43,27 @@ export default function ClientsPage() {
   // Видалення картки клієнта (масове видалення історії) — доступне всім.
   const canDeleteClient = true
   const [query, setQuery] = useState("")
+  // Дебаунсимо текст пошуку: інпут оновлюється миттєво (query), а важка
+  // фільтрація списку йде по debouncedQuery — щоб не перебирати всіх клієнтів
+  // на кожне натискання клавіші. ~150мс непомітно для ока, але прибирає лаг.
+  const [debouncedQuery, setDebouncedQuery] = useState("")
   const [scope, setScope] = useState<"all" | "duplicates">("all")
   const [expanded, setExpanded] = useState<string | null>(null)
   const [confirmDeleteKey, setConfirmDeleteKey] = useState<string | null>(null)
   const [deletingKey, setDeletingKey] = useState<string | null>(null)
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
+  // Редагування картки клієнта: ключ картки в режимі редагування + чернетка
+  // спільних полів (ім'я/телефон/адреса). Зберігаємо в усіх записах клієнта.
+  const [editingKey, setEditingKey] = useState<string | null>(null)
+  const [editDraft, setEditDraft] = useState({ client: "", phone: "", address: "" })
+  const [savingEditKey, setSavingEditKey] = useState<string | null>(null)
+  const [editError, setEditError] = useState("")
   const today = useMemo(() => isoDate(new Date()), [])
+
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedQuery(query), 150)
+    return () => clearTimeout(id)
+  }, [query])
 
   const handleCopyPhone = async (key: string, phone: string) => {
     try {
@@ -61,18 +77,55 @@ export default function ClientsPage() {
 
   const handleDeleteClient = async (key: string, history: Appointment[]) => {
     setDeletingKey(key)
-    await Promise.all(history.map((a) => deleteAppointment(a.id)))
+    await deleteAppointments(history.map((a) => a.id))
     setDeletingKey(null)
     setConfirmDeleteKey(null)
     setExpanded(null)
     reload()
   }
 
-  const allClients = useMemo(() => buildClients(appointments), [appointments])
+  const startEdit = (key: string, c: ClientEntry) => {
+    setEditingKey(key)
+    setEditDraft({ client: c.client, phone: c.phone, address: c.last.address })
+    setEditError("")
+    setConfirmDeleteKey(null)
+  }
+
+  const cancelEdit = () => {
+    setEditingKey(null)
+    setEditError("")
+  }
+
+  const handleSaveEdit = async (key: string, history: Appointment[]) => {
+    const client = editDraft.client.trim()
+    const phone = editDraft.phone.trim()
+    const address = editDraft.address.trim()
+    if (!client) {
+      setEditError("Вкажіть ім'я клієнта.")
+      return
+    }
+    if (!phone) {
+      setEditError("Вкажіть телефон.")
+      return
+    }
+    setSavingEditKey(key)
+    setEditError("")
+    const { error } = await updateClientFields(history.map((a) => a.id), { client, phone, address })
+    setSavingEditKey(null)
+    if (error) {
+      setEditError(error.message)
+      return
+    }
+    setEditingKey(null)
+    setExpanded(null)
+    reload()
+  }
+
+  const allClients = useMemo(() => buildClients(appointments, today), [appointments, today])
   const duplicatesCount = allClients.filter((client) => client.duplicateCount > 1).length
 
   const filtered = useMemo(() => {
-    const raw = query.trim()
+    const raw = debouncedQuery.trim()
     const base = scope === "duplicates"
       ? allClients.filter((client) => client.duplicateCount > 1)
       : allClients
@@ -86,7 +139,7 @@ export default function ClientsPage() {
       const phone = hasDigits(raw) && phoneMatches(c.phone, raw)
       return text || phone
     })
-  }, [allClients, query, scope])
+  }, [allClients, debouncedQuery, scope])
 
   const toggle = (key: string) => setExpanded((prev) => (prev === key ? null : key))
 
@@ -184,7 +237,7 @@ export default function ClientsPage() {
         </div>
       ) : (
         <motion.div
-          key={query.trim().toLowerCase()}
+          key={debouncedQuery.trim().toLowerCase()}
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
@@ -195,13 +248,20 @@ export default function ClientsPage() {
             const isOpen = expanded === key
             const initials = c.client.trim().split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
             const pets = [...c.pets.entries()]
-            const sortedHistory = [...c.history].sort((a, b) =>
-              `${b.date} ${b.start}`.localeCompare(`${a.date} ${a.start}`)
-            )
+            // Важкі сортування історії потрібні лише в розгорнутій картці —
+            // рахуємо їх ліниво (isOpen), а не для кожного клієнта на рендері.
+            // К-сть майбутніх візитів для бейджа вже є в c.upcomingCount.
+            const sortedHistory = isOpen
+              ? [...c.history].sort((a, b) =>
+                  `${b.date} ${b.start}`.localeCompare(`${a.date} ${a.start}`)
+                )
+              : []
             // Майбутні візити — окремим блоком зверху (від найближчого).
-            const upcoming = sortedHistory
-              .filter((a) => isUpcoming(a, today))
-              .sort((a, b) => `${a.date} ${a.start}`.localeCompare(`${b.date} ${b.start}`))
+            const upcoming = isOpen
+              ? sortedHistory
+                  .filter((a) => isUpcoming(a, today))
+                  .sort((a, b) => `${a.date} ${a.start}`.localeCompare(`${b.date} ${b.start}`))
+              : []
 
             return (
               <motion.div key={key} variants={staggerItem} className={`glass glass-hover overflow-hidden rounded-xl transition-colors md:rounded-lg ${
@@ -212,6 +272,8 @@ export default function ClientsPage() {
                 <button
                   type="button"
                   onClick={() => toggle(key)}
+                  aria-expanded={isOpen}
+                  aria-controls={`client-details-${key}`}
                   className="flex w-full items-center gap-2.5 p-2.5 text-left transition-colors active:bg-[var(--paper)] md:gap-3 md:p-4"
                 >
                   {/* Avatar */}
@@ -238,10 +300,10 @@ export default function ClientsPage() {
                           дубль
                         </Badge>
                       )}
-                      {upcoming.length > 0 && (
+                      {c.upcomingCount > 0 && (
                         <Badge className="flex h-5 flex-shrink-0 items-center gap-1 rounded-md bg-[var(--teal)]/12 px-1.5 text-[10px] font-semibold text-[var(--teal-dark)] md:h-6 md:px-2 md:text-[11px]">
                           <CalendarClock className="h-3 w-3" />
-                          <span>{upcoming.length}</span>
+                          <span>{c.upcomingCount}</span>
                         </Badge>
                       )}
                     </div>
@@ -263,11 +325,85 @@ export default function ClientsPage() {
 
                 {/* Expanded details */}
                 {isOpen && (
-                  <div className="border-t border-[var(--line)]">
-                    {/* Phone */}
+                  <div id={`client-details-${key}`} className="border-t border-[var(--line)]">
+                    {/* Phone + редагування картки клієнта */}
+                    {editingKey === key ? (
+                      <div className="border-b border-[var(--line)] px-4 py-3">
+                        <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.4px] text-[var(--muted-col)]">
+                          Редагування картки
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <div>
+                            <Label htmlFor={`edit-name-${key}`} className="text-[11px] text-[var(--muted-col)]">Ім&apos;я</Label>
+                            <Input
+                              id={`edit-name-${key}`}
+                              value={editDraft.client}
+                              onChange={(e) => setEditDraft((d) => ({ ...d, client: e.target.value }))}
+                              className="mt-1 h-10 rounded-lg text-[14px]"
+                              placeholder="Ім'я клієнта"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`edit-phone-${key}`} className="text-[11px] text-[var(--muted-col)]">Телефон</Label>
+                            <Input
+                              id={`edit-phone-${key}`}
+                              type="tel"
+                              inputMode="tel"
+                              value={editDraft.phone}
+                              onChange={(e) => setEditDraft((d) => ({ ...d, phone: e.target.value }))}
+                              className="mt-1 h-10 rounded-lg text-[14px] tabular-nums"
+                              placeholder="0XXXXXXXXX"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`edit-address-${key}`} className="text-[11px] text-[var(--muted-col)]">Адреса</Label>
+                            <Input
+                              id={`edit-address-${key}`}
+                              value={editDraft.address}
+                              onChange={(e) => setEditDraft((d) => ({ ...d, address: e.target.value }))}
+                              className="mt-1 h-10 rounded-lg text-[14px]"
+                              placeholder="Адреса (необов'язково)"
+                            />
+                          </div>
+                        </div>
+                        <p className="mt-2 text-[11px] text-[var(--muted-col)]">
+                          Зміни застосуються до всіх {c.visits} {c.visits === 1 ? "запису" : "записів"} клієнта.
+                        </p>
+                        {editError && <p className="mt-1 text-[11px] font-medium text-red-600">{editError}</p>}
+                        <div className="mt-3 flex gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={cancelEdit}
+                            className="h-9 flex-1 rounded-lg border-[var(--line)] bg-[var(--paper)] text-[13px] font-semibold text-[var(--ink-2)]"
+                          >
+                            Скасувати
+                          </Button>
+                          <Button
+                            disabled={savingEditKey === key}
+                            onClick={() => handleSaveEdit(key, c.history)}
+                            className="h-9 flex-1 rounded-lg bg-[var(--teal)] text-[13px] font-semibold text-[var(--on-teal)] hover:bg-[var(--teal-dark)]"
+                          >
+                            {savingEditKey === key ? "Зберігаю…" : "Зберегти"}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
                     <div className="border-b border-[var(--line)] px-4 py-3">
-                      <div className="mb-0.5 text-[10px] font-medium uppercase tracking-[0.4px] text-[var(--muted-col)]">Телефон</div>
-                      <a href={`tel:${c.phone}`} className="text-[14px] font-semibold tabular-nums text-[var(--ink)]">{c.phone}</a>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="mb-0.5 text-[10px] font-medium uppercase tracking-[0.4px] text-[var(--muted-col)]">Телефон</div>
+                          <a href={`tel:${c.phone}`} className="text-[14px] font-semibold tabular-nums text-[var(--ink)]">{c.phone}</a>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => startEdit(key, c)}
+                          aria-label={`Редагувати картку ${c.client}`}
+                          className="flex h-8 flex-shrink-0 items-center gap-1.5 rounded-lg bg-[var(--paper)] px-2.5 text-[12px] font-semibold text-[var(--ink-2)] transition-colors hover:bg-[var(--line)]"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          <span>Редагувати</span>
+                        </button>
+                      </div>
                       {c.duplicateCount > 1 && (
                         <div className="mt-1 text-[11px] font-medium text-amber-700">
                           Можливий дубль: {c.duplicateReason}, {c.duplicateCount} {clientsCountLabel(c.duplicateCount)}
@@ -310,6 +446,7 @@ export default function ClientsPage() {
                         </button>
                       </div>
                     </div>
+                    )}
 
                     {/* Upcoming visits */}
                     {upcoming.length > 0 && (

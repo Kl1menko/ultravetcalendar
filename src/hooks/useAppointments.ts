@@ -5,12 +5,21 @@ import { Appointment } from "@/types"
 import { fetchAppointments } from "@/lib/appointments"
 import { supabase } from "@/lib/supabase"
 
+// Дефолтне «робоче вікно» завантаження: від 1 січня минулого року. Покриває
+// календар (минулі/майбутні записи), аналітику за поточний і попередній рік та
+// нещодавніх клієнтів — але не тягне всю історію в браузер. Глибша історія —
+// окремий явний запит (Етап 2/3, ще не реалізовано).
+function defaultFromDate(): string {
+  const d = new Date()
+  return `${d.getFullYear() - 1}-01-01`
+}
+
 export function useAppointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
-    const data = await fetchAppointments()
+    const data = await fetchAppointments({ fromDate: defaultFromDate() })
     setAppointments(data)
     setLoading(false)
   }, [])
