@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react"
 import { motion } from "motion/react"
 import { useCalendarContext } from "@/context/calendar"
-import { staggerContainer, staggerItem } from "@/lib/motion"
+import { fadeInUp } from "@/lib/motion"
 import { formatShortDate } from "@/lib/utils-app"
 import { phoneMatches, hasDigits, digitsOnly } from "@/lib/phone"
 import { deleteAppointments, updateClientFields } from "@/lib/appointments"
@@ -237,8 +237,7 @@ export default function ClientsPage() {
         </div>
       ) : (
         <motion.div
-          key={debouncedQuery.trim().toLowerCase()}
-          variants={staggerContainer}
+          variants={fadeInUp}
           initial="hidden"
           animate="visible"
           className="flex flex-col gap-2 px-3 md:grid md:grid-cols-2 md:gap-2.5 md:px-0 xl:grid-cols-3"
@@ -264,7 +263,7 @@ export default function ClientsPage() {
               : []
 
             return (
-              <motion.div key={key} variants={staggerItem} className={`glass glass-hover overflow-hidden rounded-xl transition-colors md:rounded-lg ${
+              <div key={key} className={`glass glass-hover overflow-hidden rounded-xl transition-colors md:rounded-lg ${
                 c.duplicateCount > 1 ? "border-amber-200" : ""
               }`}>
 
@@ -565,7 +564,7 @@ export default function ClientsPage() {
                     )}
                   </div>
                 )}
-              </motion.div>
+              </div>
             )
           })}
         </motion.div>
