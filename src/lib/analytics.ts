@@ -307,6 +307,26 @@ export function byService(appointments: Appointment[]) {
     .sort((a, b) => b.count - a.count)
 }
 
+// Назва послуги «Сказ» — синхронно з SERVICES у services.ts. Один запис може
+// містити кілька послуг (поле service через роздільник), тож звіряємо через
+// parseServices, а не точним рядком.
+export const RABIES_SERVICE = "Сказ"
+
+// Скільки разів послугу «Сказ» зробили ВСІ лікарі разом за календарний тиждень
+// (Пн–Нд) і за календарний місяць — відносно anchor (за замовчуванням сьогодні).
+// Період рахуємо тим самим periodRange, що й сторінка аналітики.
+export function rabiesCounts(
+  appointments: Appointment[],
+  anchor: Date = new Date()
+): { week: number; month: number } {
+  const countRabies = (period: Period) =>
+    filterByPeriod(appointments, period, anchor).reduce(
+      (n, a) => (parseServices(a.service).includes(RABIES_SERVICE) ? n + 1 : n),
+      0
+    )
+  return { week: countRabies("week"), month: countRabies("month") }
+}
+
 export function byDoctor(appointments: Appointment[]) {
   const counts: Record<string, { count: number; revenue: number }> = {}
   appointments.forEach((a) => {

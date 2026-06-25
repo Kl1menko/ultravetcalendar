@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import NotificationsCard from "@/components/NotificationsCard"
 import ThemeToggle from "@/components/ThemeToggle"
+import { rabiesCounts } from "@/lib/analytics"
 import { canSeeAdmin, roleLabel } from "@/lib/doctors"
 import { parseServices } from "@/lib/services"
 import { supabase } from "@/lib/supabase"
@@ -73,6 +74,9 @@ export default function ProfilePage() {
       service: mostPopular(ownAppointments.flatMap((appointment) => parseServices(appointment.service))),
     }
   }, [appointments, currentDoctorName])
+
+  // Послуга «Сказ» по всій клініці (усі лікарі разом) за поточний тиждень і місяць.
+  const rabies = useMemo(() => rabiesCounts(appointments), [appointments])
 
   async function handleNameSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -184,6 +188,26 @@ export default function ProfilePage() {
               <div className="desktop-card-hover rounded-lg border border-[var(--line)] p-3 md:rounded-2xl md:p-4 min-w-0">
                 <div className="text-[12px] font-semibold text-[var(--muted-col)]">Топ послуга</div>
                 <div className="mt-2 truncate text-[15px] font-bold text-[var(--ink)]">{stats.service}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Послуга «Сказ» по всій клініці (усіма лікарями разом). Для адміна
+              ховаємо разом з рештою показників. */}
+          {!isAdmin && (
+            <div className="mt-4 rounded-lg border border-[var(--line)] p-3 md:rounded-2xl md:p-4">
+              <div className="text-[12px] font-semibold text-[var(--muted-col)]">
+                Зроблено послуг зі Сказу
+              </div>
+              <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                <div className="flex items-baseline justify-between rounded-lg bg-[var(--teal-light)] px-3 py-2">
+                  <span className="text-[13px] text-[var(--teal-dark)]">За тиждень</span>
+                  <span className="text-[22px] font-bold text-[var(--ink)]">{rabies.week}</span>
+                </div>
+                <div className="flex items-baseline justify-between rounded-lg bg-[var(--teal-light)] px-3 py-2">
+                  <span className="text-[13px] text-[var(--teal-dark)]">За місяць</span>
+                  <span className="text-[22px] font-bold text-[var(--ink)]">{rabies.month}</span>
+                </div>
               </div>
             </div>
           )}
