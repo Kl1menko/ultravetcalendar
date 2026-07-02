@@ -16,7 +16,11 @@ export const SERVICES = [
   "Інфузія",
   "Чіпування",
   "Титр антитіл до сказу",
-  "Сказ",
+  "Сказ (коти)",
+  "Сказ (собаки)",
+  "Тонометрія",
+  "Повторний огляд",
+  "Огляд перед хірургічним втручанням",
 ] as const
 
 export type ServiceName = (typeof SERVICES)[number]
@@ -25,6 +29,7 @@ export type ServiceName = (typeof SERVICES)[number]
 // зберігаються як окремі послуги (нарівні з рештою) у тому ж кому-роздільному
 // полі appointment.service. Тобто запис на кастрацію має service = «Кастрація».
 export const OPERATION_TYPES = [
+  "Хірургія",
   "Кастрація",
   "ОГЕ",
   "Видалення новоутворення",

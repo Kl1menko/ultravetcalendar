@@ -307,23 +307,39 @@ export function byService(appointments: Appointment[]) {
     .sort((a, b) => b.count - a.count)
 }
 
-// Назва послуги «Сказ» — синхронно з SERVICES у services.ts. Один запис може
-// містити кілька послуг (поле service через роздільник), тож звіряємо через
-// parseServices, а не точним рядком.
-export const RABIES_SERVICE = "Сказ"
+// Послуги вакцинації від сказу — синхронно з SERVICES у services.ts. «Сказ»
+// розділено на котів і собак; старі записи в БД ще містять єдину назву «Сказ»,
+// тож рахуємо і її теж. Один запис може містити кілька послуг (поле service
+// через роздільник), тож звіряємо через parseServices, а не точним рядком.
+export const RABIES_CATS = "Сказ (коти)"
+export const RABIES_DOGS = "Сказ (собаки)"
+// Старі записи без розділення виду тварини (до розбиття «Сказ» на котів/собак).
+export const RABIES_LEGACY = "Сказ"
+export const RABIES_SERVICES = [RABIES_CATS, RABIES_DOGS, RABIES_LEGACY] as const
 
-// Скільки разів послугу «Сказ» зробили ВСІ лікарі разом за календарний тиждень
-// (Пн–Нд) і за календарний місяць — відносно anchor (за замовчуванням сьогодні).
-// Період рахуємо тим самим periodRange, що й сторінка аналітики.
+// Розбивка кількості послуг зі сказу за один запис: коти / собаки / без виду
+// (старі записи «Сказ»). Один запис може містити кілька з них — рахуємо кожну.
+type RabiesBreakdown = { cats: number; dogs: number; other: number; total: number }
+
+// Кількість послуг зі сказу ВСІМА лікарями разом за календарний тиждень (Пн–Нд)
+// і за календарний місяць — відносно anchor (за замовчуванням сьогодні). Кожен
+// період розбито на котів/собак (+ старі записи без виду). Період рахуємо тим
+// самим periodRange, що й сторінка аналітики.
 export function rabiesCounts(
   appointments: Appointment[],
   anchor: Date = new Date()
-): { week: number; month: number } {
-  const countRabies = (period: Period) =>
-    filterByPeriod(appointments, period, anchor).reduce(
-      (n, a) => (parseServices(a.service).includes(RABIES_SERVICE) ? n + 1 : n),
-      0
-    )
+): { week: RabiesBreakdown; month: RabiesBreakdown } {
+  const countRabies = (period: Period): RabiesBreakdown => {
+    const acc: RabiesBreakdown = { cats: 0, dogs: 0, other: 0, total: 0 }
+    filterByPeriod(appointments, period, anchor).forEach((a) => {
+      const services = parseServices(a.service)
+      if (services.includes(RABIES_CATS)) acc.cats++
+      if (services.includes(RABIES_DOGS)) acc.dogs++
+      if (services.includes(RABIES_LEGACY)) acc.other++
+    })
+    acc.total = acc.cats + acc.dogs + acc.other
+    return acc
+  }
   return { week: countRabies("week"), month: countRabies("month") }
 }
 

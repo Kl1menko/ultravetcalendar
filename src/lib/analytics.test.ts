@@ -75,24 +75,24 @@ describe("rabiesCounts — «Сказ» усіма лікарями за тиж�
   // Anchor — середа 2026-06-17; тиждень = Пн 15 .. Нд 21, місяць = червень.
   const anchor = new Date("2026-06-17T12:00:00")
 
-  it("рахує «Сказ» у межах тижня й місяця, незалежно від лікаря", () => {
+  it("розбиває сказ на котів/собак/старі записи в межах тижня й місяця, незалежно від лікаря", () => {
     const res = rabiesCounts(
       [
-        appt({ date: "2026-06-16", service: "Сказ", doctor: "Остап" }), // у тижні
-        appt({ date: "2026-06-18", service: "Огляд, Сказ", doctor: "Юрій" }), // у тижні, мультипослуга
-        appt({ date: "2026-06-03", service: "Сказ", doctor: "Аня" }), // лише в місяці
-        appt({ date: "2026-05-30", service: "Сказ" }), // поза місяцем
+        appt({ date: "2026-06-16", service: "Сказ (коти)", doctor: "Остап" }), // у тижні
+        appt({ date: "2026-06-18", service: "Огляд, Сказ (собаки)", doctor: "Юрій" }), // у тижні, мультипослуга
+        appt({ date: "2026-06-03", service: "Сказ", doctor: "Аня" }), // лише в місяці, старий запис
+        appt({ date: "2026-05-30", service: "Сказ (коти)" }), // поза місяцем
       ],
       anchor
     )
-    expect(res.week).toBe(2)
-    expect(res.month).toBe(3)
+    expect(res.week).toEqual({ cats: 1, dogs: 1, other: 0, total: 2 })
+    expect(res.month).toEqual({ cats: 1, dogs: 1, other: 1, total: 3 })
   })
 
   it("ігнорує інші послуги", () => {
     const res = rabiesCounts([appt({ date: "2026-06-16", service: "Огляд" })], anchor)
-    expect(res.week).toBe(0)
-    expect(res.month).toBe(0)
+    expect(res.week).toEqual({ cats: 0, dogs: 0, other: 0, total: 0 })
+    expect(res.month).toEqual({ cats: 0, dogs: 0, other: 0, total: 0 })
   })
 })
 

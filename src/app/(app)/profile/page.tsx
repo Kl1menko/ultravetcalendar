@@ -37,6 +37,38 @@ function mostPopular(values: string[]) {
   return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "Немає даних"
 }
 
+// Показники сказу за період (тиждень/місяць) з розбивкою на котів і собак.
+// «other» — старі записи «Сказ» без виду тварини; показуємо лише якщо є.
+function RabiesPeriod({
+  label,
+  data,
+}: {
+  label: string
+  data: { cats: number; dogs: number; other: number; total: number }
+}) {
+  return (
+    <div className="rounded-lg bg-[var(--teal-light)] px-3 py-2">
+      <div className="flex items-baseline justify-between">
+        <span className="text-[13px] text-[var(--teal-dark)]">{label}</span>
+        <span className="text-[22px] font-bold text-[var(--ink)]">{data.total}</span>
+      </div>
+      <div className="mt-1.5 flex items-center gap-3 text-[12px] text-[var(--teal-dark)]">
+        <span>
+          🐱 Коти: <span className="font-semibold text-[var(--ink)]">{data.cats}</span>
+        </span>
+        <span>
+          🐶 Собаки: <span className="font-semibold text-[var(--ink)]">{data.dogs}</span>
+        </span>
+        {data.other > 0 && (
+          <span>
+            Без виду: <span className="font-semibold text-[var(--ink)]">{data.other}</span>
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function ProfilePage() {
   const router = useRouter()
   // user/role/currentDoctor — з єдиного джерела (AuthProvider через фасад).
@@ -75,7 +107,8 @@ export default function ProfilePage() {
     }
   }, [appointments, currentDoctorName])
 
-  // Послуга «Сказ» по всій клініці (усі лікарі разом) за поточний тиждень і місяць.
+  // Послуги зі сказу по всій клініці (усі лікарі разом) за поточний тиждень і
+  // місяць, з розбивкою на котів і собак.
   const rabies = useMemo(() => rabiesCounts(appointments), [appointments])
 
   async function handleNameSubmit(event: FormEvent<HTMLFormElement>) {
@@ -192,22 +225,16 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Послуга «Сказ» по всій клініці (усіма лікарями разом). Для адміна
-              ховаємо разом з рештою показників. */}
+          {/* Послуги зі сказу по всій клініці (усіма лікарями разом), розбиті на
+              котів і собак. Для адміна ховаємо разом з рештою показників. */}
           {!isAdmin && (
             <div className="mt-4 rounded-lg border border-[var(--line)] p-3 md:rounded-2xl md:p-4">
               <div className="text-[12px] font-semibold text-[var(--muted-col)]">
                 Зроблено послуг зі Сказу
               </div>
               <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                <div className="flex items-baseline justify-between rounded-lg bg-[var(--teal-light)] px-3 py-2">
-                  <span className="text-[13px] text-[var(--teal-dark)]">За тиждень</span>
-                  <span className="text-[22px] font-bold text-[var(--ink)]">{rabies.week}</span>
-                </div>
-                <div className="flex items-baseline justify-between rounded-lg bg-[var(--teal-light)] px-3 py-2">
-                  <span className="text-[13px] text-[var(--teal-dark)]">За місяць</span>
-                  <span className="text-[22px] font-bold text-[var(--ink)]">{rabies.month}</span>
-                </div>
+                <RabiesPeriod label="За тиждень" data={rabies.week} />
+                <RabiesPeriod label="За місяць" data={rabies.month} />
               </div>
             </div>
           )}
