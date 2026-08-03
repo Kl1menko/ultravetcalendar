@@ -64,34 +64,53 @@ function stripReminderFields<T extends Record<string, unknown>>(payload: T): T {
 // старіші записи довантажуються окремо (див. fetchAppointments({ fromDate: null })
 // для повної історії: клієнти/аналітика за весь час). Запит спирається на індекс
 // appointments_date_start_idx (supabase/add-appointments-date-index.sql).
+//
+// PostgREST за замовчуванням обрізає відповідь до 1000 рядків (max-rows), тож при
+// зростанні бази найдальші за датою записи (сортування зростає) мовчки губились —
+// їх просто не було у відповіді, хоча в БД вони існували. Довантажуємо сторінками
+// по PAGE_SIZE, поки чергова сторінка не виявиться неповною.
+const PAGE_SIZE = 1000;
+
 export async function fetchAppointments(
   opts: { fromDate?: string | null } = {},
 ): Promise<Appointment[]> {
-  let query = supabase
-    .from("appointments_public")
-    .select("*")
-    .order("date", { ascending: true })
-    .order("start_time", { ascending: true });
+  const rows: AppointmentRow[] = [];
+  let from = 0;
 
-  if (opts.fromDate) {
-    query = query.gte("date", opts.fromDate);
-  }
+  for (;;) {
+    let query = supabase
+      .from("appointments_public")
+      .select("*")
+      .order("date", { ascending: true })
+      .order("start_time", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
 
-  const { data, error } = await query;
-
-  if (error) {
-    if (isMissingObject(error.code)) {
-      logAppError(
-        "fetchAppointments",
-        "view appointments_public відсутній — застосуй supabase/rls-policies.sql",
-      );
-    } else {
-      logAppError("fetchAppointments", error);
+    if (opts.fromDate) {
+      query = query.gte("date", opts.fromDate);
     }
-    return [];
+
+    const { data, error } = await query;
+
+    if (error) {
+      if (isMissingObject(error.code)) {
+        logAppError(
+          "fetchAppointments",
+          "view appointments_public відсутній — застосуй supabase/rls-policies.sql",
+        );
+      } else {
+        logAppError("fetchAppointments", error);
+      }
+      return [];
+    }
+
+    const page = data as unknown as AppointmentRow[];
+    rows.push(...page);
+
+    if (page.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
   }
 
-  return (data as unknown as AppointmentRow[]).map(normalizeRow);
+  return rows.map(normalizeRow);
 }
 
 export type AppointmentPayload = {
