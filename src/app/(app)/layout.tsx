@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { registerServiceWorker } from "@/lib/push"
 import AppShell from "@/components/AppShell"
+import UpdateBanner from "@/components/UpdateBanner"
 import { AuthProvider } from "@/context/auth"
 import { AppointmentsProvider } from "@/context/appointments"
 import { NoticesProvider } from "@/context/notices"
@@ -19,6 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <AppointmentsProvider>
         <NoticesProvider>
           <ModalsProvider>
+            <UpdateBanner />
             <AppShell>{children}</AppShell>
           </ModalsProvider>
         </NoticesProvider>

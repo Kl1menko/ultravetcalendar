@@ -7,7 +7,14 @@ self.addEventListener("install", (e) => {
   e.waitUntil(
     caches.open(CACHE).then((cache) => cache.addAll(STATIC))
   );
-  self.skipWaiting();
+  // Не активуємось одразу — лишаємось у стані "waiting", доки користувач сам
+  // не натисне «Оновити» (UpdateBanner шле SKIP_WAITING). Так усі відкриті
+  // вкладки встигають доробити поточну дію на старій версії, а не обриваються
+  // на середині запиту.
+});
+
+self.addEventListener("message", (e) => {
+  if (e.data === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", (e) => {
